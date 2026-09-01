@@ -12,8 +12,6 @@ Keenetic-style CLI поверх чистого OpenWrt. Написана на C,
 `aarch64_cortex-a53_musl`):
 
 ```sh
-make                      # берёт тулчейн/sysroot из /home/uni/openwrt-upstream
-# или явно:
 make OPENWRT_DIR=/path/to/openwrt-upstream
 ```
 

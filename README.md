@@ -45,7 +45,8 @@ Running on real hardware right now:
 - Network Rules: Port Forwarding, Firewall
 - Management: System (firmware download/flash, config+package backup,
   bootloader partition dumps), Applications (an install catalog built
-  on top of `apk`)
+  on top of `apk`; needs `luci-app-package-manager` installed, which
+  `deploy.sh` takes care of)
 
 Not built yet: DDNS, Wi-Fi ACL, IntelliQoS, Mobile/DSL/Wireless ISP
 connection types, the application traffic analyzer, a diagnostics

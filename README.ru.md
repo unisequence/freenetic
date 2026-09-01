@@ -43,7 +43,8 @@ Bootstrap — Freenetic пропал, выбрал обратно — всё в�
 - Network Rules: Port Forwarding, Firewall
 - Management: System (скачивание/прошивка образа, бэкап конфигов и
   списка пакетов, дампы разделов загрузчика), Applications (каталог
-  устанавливаемых компонентов поверх `apk`)
+  устанавливаемых компонентов поверх `apk`; нужен установленный
+  `luci-app-package-manager` — `deploy.sh` ставит его сам)
 
 Не готово: DDNS, Wi-Fi ACL, IntelliQoS, Mobile/DSL/Wireless ISP
 подключения, анализатор трафика приложений, страница диагностики,

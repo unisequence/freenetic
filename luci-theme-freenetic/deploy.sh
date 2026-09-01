@@ -9,6 +9,13 @@ cd "$(dirname "$0")"
 # before every extract/copy — tar and cp only ever add/overwrite, so a file
 # renamed or deleted locally (e.g. swapping which font ships) would otherwise
 # survive forever on the router across deploys.
+# The Applications page shells out to package-manager-call, which ships
+# in luci-app-package-manager (declared as a real package dependency in
+# Makefile — this only matters for the opkg/apk install path). deploy.sh
+# bypasses that entirely by copying files over SSH, so it has to ensure
+# the dependency itself; skip if already installed.
+ssh "$ROUTER" 'apk info -e luci-app-package-manager >/dev/null 2>&1 || apk add luci-app-package-manager'
+
 ssh "$ROUTER" 'rm -rf /tmp/freenetic-pkg && mkdir -p /tmp/freenetic-pkg'
 tar czf - htdocs root ucode | ssh "$ROUTER" 'tar xzf - -C /tmp/freenetic-pkg'
 ssh "$ROUTER" '
