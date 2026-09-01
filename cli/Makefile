@@ -3,7 +3,9 @@
 # libuci/libubox/libblobmsg_json, что уже стоят на роутере, никаких
 # новых рантайм-зависимостей.
 
-OPENWRT_DIR ?= /home/uni/openwrt-upstream
+ifndef OPENWRT_DIR
+$(error OPENWRT_DIR is not set — point it at your OpenWrt buildroot, e.g. make OPENWRT_DIR=/path/to/openwrt)
+endif
 TOOLCHAIN   ?= $(OPENWRT_DIR)/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.4.0_musl
 SYSROOT     ?= $(OPENWRT_DIR)/staging_dir/target-aarch64_cortex-a53_musl
 
