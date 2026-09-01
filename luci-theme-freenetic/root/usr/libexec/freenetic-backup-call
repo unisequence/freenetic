@@ -1,0 +1,19 @@
+#!/bin/sh
+# Builds the "startup-config" backup: the stock sysupgrade /etc archive
+# (same file set /etc/sysupgrade.conf already governs) plus a snapshot of
+# currently installed apk packages, written into /etc so it rides along in
+# that same archive with no custom tar logic needed.
+set -e
+
+mkdir -p /etc/freenetic
+apk list -I 2>/dev/null | sort > /etc/freenetic/installed-packages.list
+
+# sysupgrade only backs up known packages' conffiles plus whatever this
+# lists — a plain file dropped under /etc isn't automatically included.
+touch /etc/sysupgrade.conf
+grep -qxF /etc/freenetic /etc/sysupgrade.conf || echo /etc/freenetic >> /etc/sysupgrade.conf
+
+out=/tmp/freenetic-startup-config.tar.gz
+rm -f "$out"
+sysupgrade --create-backup "$out" >/dev/null 2>&1
+echo "$out"

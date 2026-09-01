@@ -1,0 +1,48 @@
+{
+	"luci-theme-freenetic": {
+		"description": "Grant access to the Freenetic theme's views: status/dashboard, network (WAN/LAN/Wi-Fi/DHCP/firewall) configuration, firmware backup and flashing",
+		"read": {
+			"cgi-io": [ "download" ],
+			"ubus": {
+				"network.interface": [ "status", "dump" ],
+				"network.device": [ "status" ],
+				"network.wireless": [ "status" ],
+				"iwinfo": [ "info", "assoclist", "devices", "phyname", "survey", "countrylist" ],
+				"system": [ "board", "info" ],
+				"luci": [ "getBuiltinEthernetPorts", "getConntrackList" ],
+				"luci-rpc": [ "getDHCPLeases" ],
+				"file": [ "read", "exec", "stat" ]
+			},
+			"file": {
+				"/proc/net/arp": [ "read" ],
+				"/proc/stat": [ "read" ],
+				"/proc/sys/net/netfilter/nf_conntrack_count": [ "read" ],
+				"/proc/sys/net/netfilter/nf_conntrack_max": [ "read" ],
+				"/proc/mtd": [ "read" ],
+				"/dev/mtdblock[0-9]*": [ "read" ],
+				"/tmp/freenetic-startup-config.tar.gz": [ "read" ],
+				"/usr/libexec/package-manager-call list-installed": [ "exec" ]
+			},
+			"uci": [ "network", "wireless", "dhcp", "firewall", "attendedsysupgrade" ]
+		},
+		"write": {
+			"cgi-io": [ "upload" ],
+			"ubus": {
+				"network": [ "reload" ],
+				"file": [ "exec", "write", "remove" ],
+				"system": [ "validate_firmware_image" ]
+			},
+			"file": {
+				"/sbin/ifup": [ "exec" ],
+				"/sbin/sysupgrade --test /tmp/firmware.bin": [ "exec" ],
+				"/sbin/sysupgrade /tmp/firmware.bin": [ "exec" ],
+				"/tmp/firmware.bin": [ "write" ],
+				"/usr/libexec/freenetic-backup-call": [ "exec" ],
+				"/usr/libexec/freenetic-clear-luci-cache": [ "exec" ],
+				"/usr/libexec/package-manager-call install *": [ "exec" ],
+				"/usr/libexec/package-manager-call remove *": [ "exec" ]
+			},
+			"uci": [ "network", "wireless", "dhcp", "firewall" ]
+		}
+	}
+}

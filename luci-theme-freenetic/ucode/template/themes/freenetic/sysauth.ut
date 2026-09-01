@@ -1,0 +1,151 @@
+{#
+ Copyright 2026 Freenetic contributors
+ Licensed to the public under the Apache License 2.0.
+-#}
+
+{%
+	const boardinfo = ubus.call('system', 'board');
+	const model = replace(boardinfo.model ?? boardinfo.hostname ?? '?', / \(.*\)$/, '');
+	const brand = `FREENETIC ${model}`;
+
+	// Same mechanism as System > Language and Style (luci.main.lang / luci.languages),
+	// applied directly here since this page renders before a session exists.
+	const wantlang = http.formvalue('_lang');
+	if (wantlang && wantlang != uci.get('luci', 'main', 'lang')) {
+		uci.set('luci', 'main', 'lang', wantlang);
+		uci.commit('luci');
+	}
+
+	const langs = { auto: _('auto'), en: 'English' };
+	for (let k, v in uci.get_all('luci', 'languages'))
+		if (substr(k, 0, 1) != '.')
+			langs[k] = v;
+	const curlang = uci.get('luci', 'main', 'lang') ?? 'auto';
+-%}
+
+{% include('header', { blank_page: true }) %}
+
+<div class="fn-login-page">
+	<div class="fn-login-card">
+		<div class="fn-login-card-inner">
+			<button type="button" id="fn-theme-toggle" class="fn-theme-toggle" aria-label="{{ _('Switch color theme') }}">
+				<svg class="fn-icon-sun" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+				<svg class="fn-icon-moon" viewBox="0 0 24 24" width="16" height="16"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+			</button>
+			<h1>{{ _('Sign in to the web configurator') }}</h1>
+
+			<form method="post" id="fn-login-form">
+				<div class="fn-field">
+					<input name="luci_username" id="luci_username" type="text" autocomplete="username"
+						placeholder="{{ _('Username') }}" value="{{ entityencode(duser, true) }}">
+				</div>
+				<div class="fn-field fn-field-password">
+					<input name="luci_password" id="luci_password" type="password" autocomplete="current-password"
+						placeholder="{{ _('Password') }}">
+					<button type="button" class="fn-eye-toggle" aria-label="{{ _('Show password') }}">
+						<svg viewBox="0 0 24 24" width="18" height="18"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+					</button>
+				</div>
+
+				{% if (fuser): %}
+				<div class="alert-message error">
+					{{ _('Invalid username and/or password! Please try again.') }}
+				</div>
+				{% endif %}
+
+				<button type="submit" class="fn-login-submit">{{ _('Log in') }}</button>
+			</form>
+
+			<form method="post" id="fn-lang-form">
+				<div class="fn-field fn-lang-field">
+					<select name="_lang" id="fn-lang-select">
+						{% for (let code, label in langs): %}
+						<option value="{{ code }}" {{ code == curlang ? 'selected' : '' }}>{{ label }}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</form>
+
+			<div class="fn-login-links">
+				<a href="#" id="fn-cant-signin">{{ _("Can't sign in") }}</a>
+				<span class="fn-login-links-sep">|</span>
+				<a href="#" id="fn-support-center">{{ _('Support Center') }}</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="fn-login-banner">
+		<div class="fn-login-banner-inner fn-login-glitch">
+			<span class="fn-login-glyph" aria-hidden="true">
+				<svg viewBox="0 0 24 24" width="56" height="56">
+					<rect x="3" y="10" width="18" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+					<path d="M8 10V6M16 10V6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+					<circle cx="8" cy="5" r="1" fill="currentColor"/>
+					<circle cx="16" cy="5" r="1" fill="currentColor"/>
+					<circle cx="7" cy="14" r=".8" fill="currentColor"/>
+					<circle cx="10" cy="14" r=".8" fill="currentColor"/>
+					<circle cx="13" cy="14" r=".8" fill="currentColor"/>
+				</svg>
+			</span>
+			<div class="fn-login-model">{{ striptags(brand) }}</div>
+		</div>
+		<a href="#" class="fn-login-more" id="fn-more-options">{{ _('Other management options') }}</a>
+	</div>
+</div>
+
+<div id="fn-cant-signin-dialog" class="fn-dialog" hidden>
+	<div class="fn-dialog-box">
+		<h3>{{ _("Can't sign in?") }}</h3>
+		<p>{{ sprintf(_('The default username is %s.'), '<code>root</code>') }}</p>
+		<p>{{ _('If you forgot the password, press and hold the Reset button on the device for 10 seconds to restore factory defaults. This will erase your configuration.') }}</p>
+		<button type="button" class="fn-dialog-close">{{ _('Close') }}</button>
+	</div>
+</div>
+
+<div id="fn-support-dialog" class="fn-dialog" hidden>
+	<div class="fn-dialog-box">
+		<h3>{{ _('Support Center') }}</h3>
+		<p><a href="https://forum.openwrt.org/" target="_blank" rel="noreferrer">forum.openwrt.org</a></p>
+		<p><a href="https://github.com/openwrt/openwrt" target="_blank" rel="noreferrer">github.com/openwrt/openwrt</a></p>
+		<button type="button" class="fn-dialog-close">{{ _('Close') }}</button>
+	</div>
+</div>
+
+<script>
+	(function() {
+		var toggle = document.querySelector('.fn-eye-toggle');
+		var pw = document.querySelector('#luci_password');
+		toggle.addEventListener('click', function() {
+			pw.type = (pw.type === 'password') ? 'text' : 'password';
+		});
+		document.querySelector('#luci_username').focus();
+
+		document.querySelector('#fn-lang-select').addEventListener('change', function(ev) {
+			ev.target.form.submit();
+		});
+
+		document.querySelector('#fn-theme-toggle').addEventListener('click', function() {
+			var isDark = document.querySelector(':root').getAttribute('data-darkmode') === 'true';
+			window.freeneticSetTheme(isDark ? 'light' : 'dark');
+		});
+
+		function wire(openId, dlgId) {
+			var dlg = document.querySelector(dlgId);
+			document.querySelector(openId).addEventListener('click', function(ev) {
+				ev.preventDefault();
+				dlg.hidden = false;
+			});
+			dlg.querySelector('.fn-dialog-close').addEventListener('click', function() {
+				dlg.hidden = true;
+			});
+			dlg.addEventListener('click', function(ev) {
+				if (ev.target === dlg) dlg.hidden = true;
+			});
+		}
+		wire('#fn-cant-signin', '#fn-cant-signin-dialog');
+		wire('#fn-support-center', '#fn-support-dialog');
+		wire('#fn-more-options', '#fn-support-dialog');
+	})();
+</script>
+
+{% include('footer', { blank_page: true }) %}

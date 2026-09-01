@@ -1,0 +1,2234 @@
+/*!
+ * Freenetic LuCI theme
+ * Own CSS, targets LuCI's standard CBI markup (.cbi-*, .btn, .modal, ...).
+ * Visual reference: KeeneticOS web panel (palette/layout), reimplemented
+ * independently — no code or assets copied from Keenetic.
+ */
+
+/* ---------- pixel fonts ---------- */
+/* Press Start 2P (Google Fonts, SIL OFL 1.1 — see fonts/PressStart2P-OFL.txt)
+   — display-only. Scoped to the brand wordmark and headings. */
+@font-face {
+	font-family: "PressStart2P";
+	src: url("fonts/PressStart2P-Regular.ttf") format("truetype");
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+/* Jersey 10 (Google Fonts, SIL OFL 1.1 — see fonts/Jersey10-OFL.txt) —
+   TEST: lighter pixel font tried on body text, see --fn-font below. */
+@font-face {
+	font-family: "Jersey10";
+	src: url("fonts/Jersey10-Regular.ttf") format("truetype");
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+/* Noto Sans (Google Fonts, SIL OFL 1.1 — see fonts/NotoSans-OFL.txt) —
+   plain readable text, not a pixel font. Used for description/body copy
+   (--fn-font-text below) where Jersey10's pixel look hurts long-form
+   readability — headings/labels keep the pixel fonts. */
+@font-face {
+	font-family: "NotoSans";
+	src: url("fonts/NotoSans-Regular.ttf") format("truetype");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "NotoSans";
+	src: url("fonts/NotoSans-Medium.ttf") format("truetype");
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+/* ---------- design tokens ---------- */
+
+:root {
+	--fn-accent: #0097dc;
+	--fn-accent-hover: #0f1011;
+	--fn-accent-soft: #ecf5fa;
+	--fn-accent-contrast: #ffffff;
+	--fn-bg: #f2f4f5;
+	--fn-surface: #ffffff;
+	--fn-surface-alt: #f5fafc;
+	--fn-border: #ebebeb;
+	--fn-border-strong: #dbe9f2;
+
+	--fn-text: #000000;
+	--fn-text-secondary: #6e6e6e;
+	--fn-text-disabled: #949b9f;
+	--fn-text-on-accent: #ffffff;
+
+	--fn-danger: #ff6d54;
+	--fn-danger-soft: #fff0ed;
+	--fn-warning: #d98c14;
+	--fn-warning-soft: #fbf1de;
+	--fn-success: #0097dc;
+	--fn-success-soft: #ecf5fa;
+
+	--fn-radius-sm: 4px;
+	--fn-radius: 6px;
+	--fn-radius-lg: 10px;
+
+	--fn-shadow-1: 0 1px 2px rgba(20, 24, 26, .06), 0 1px 1px rgba(20, 24, 26, .04);
+	--fn-shadow-2: 0 4px 16px rgba(20, 24, 26, .10);
+
+	--fn-sidebar-w: 270px;
+	--fn-sidebar-w-collapsed: 72px;
+	--fn-topbar-h: 52px;
+
+	/* Sidebar is its own fixed dark surface, independent of light/dark
+	   theme mode — same values in both, unlike --fn-surface which flips. */
+	--fn-sidebar-bg: #161c27;
+	--fn-sidebar-border: rgba(255, 255, 255, .08);
+	--fn-sidebar-text: #c9d1d9;
+	--fn-sidebar-text-secondary: #8b95a5;
+	--fn-sidebar-hover-bg: rgba(255, 255, 255, .06);
+	--fn-sidebar-active-bg: #2e3d57;
+
+	--fn-font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--fn-font: "Jersey10", var(--fn-font-system); /* TEST — lighter pixel font on body text, revert to var(--fn-font-system) after */
+	--fn-font-display: "PressStart2P", var(--fn-font-system);
+	--fn-font-text: "NotoSans", var(--fn-font-system); /* long-form description/body copy, not pixel */
+
+	--fn-tc-0: #0097dc;
+	--fn-tc-1: #7ed321;
+	--fn-tc-2: #f5a623;
+	--fn-tc-3: #bd10e0;
+	--fn-tc-4: #50e3c2;
+	--fn-tc-other: #9b9b9b;
+}
+
+:root[data-darkmode="true"] {
+	--fn-bg: #1b2434;
+	--fn-surface: #1b2434;
+	--fn-surface-alt: #2e3d57;
+	--fn-border: #4d545f;
+	--fn-border-strong: #2c4661;
+
+	--fn-text: #c2c2c2;
+	--fn-text-secondary: #949b9f;
+	--fn-text-disabled: #6f737b;
+
+	--fn-accent: #0097dc;
+	--fn-accent-hover: #86a2c6;
+	--fn-accent-soft: #33455e;
+	--fn-danger-soft: #3a2320;
+	--fn-warning-soft: #382d17;
+	--fn-success-soft: #1a2b3c;
+
+	--fn-shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
+	--fn-shadow-2: 0 8px 24px rgba(0, 0, 0, .45);
+}
+
+* { box-sizing: border-box; }
+
+/* Single scale point: every font-size in this file is now rem, so bumping
+   this one value (TEST: +25% for the Jersey 10 body-text experiment) scales
+   the whole UI's text at once instead of hunting down individual px rules. */
+html {
+	font-size: 17px;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+	background: var(--fn-bg);
+	color: var(--fn-text);
+}
+
+/* font-size lives on body alone now — html already carries its own font-size
+   rule above; a second "html, body { font-size: ... }" rule here used to have
+   equal specificity and, coming later in the cascade, silently won, pinning
+   html's real font-size to 14px (0.875rem x the 16px UA default) no matter
+   what the "single scale point" rule above said. Every rem value in this
+   file was computed against that phantom 14px root all along. */
+body {
+	font-family: var(--fn-font);
+	font-size: 0.875rem;
+	line-height: 1.5;
+	letter-spacing: .020em;
+}
+
+a { color: var(--fn-accent); text-decoration: none; }
+a:hover { color: var(--fn-accent-hover); text-decoration: underline; }
+
+h1, h2, h3, h4, h5 { font-family: var(--fn-font-display); font-weight: 700; margin: 0 0 .5em; color: var(--fn-text); letter-spacing: .02em; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 0.75rem; }
+
+hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
+
+.left { float: left; }
+.right { float: right; }
+.pull-left { float: left; }
+.pull-right { float: right; }
+.top { vertical-align: top; }
+.middle { vertical-align: middle; }
+.bottom { vertical-align: bottom; }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.hidden { display: none !important; }
+
+.fade-in { animation: fn-fade-in .15s ease-in both; }
+.fade-out { animation: fn-fade-out .15s ease-in both; }
+@keyframes fn-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fn-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+.spinning {
+	position: relative;
+	padding-left: 22px;
+	color: var(--fn-text-secondary);
+}
+.spinning::before {
+	content: "";
+	position: absolute;
+	left: 0; top: 2px;
+	width: 14px; height: 14px;
+	border: 2px solid var(--fn-border-strong);
+	border-top-color: var(--fn-accent);
+	border-radius: 50%;
+	animation: fn-spin .7s linear infinite;
+}
+@keyframes fn-spin { to { transform: rotate(360deg); } }
+
+/* ---------- app shell: topbar / sidebar / content ---------- */
+
+/* Themed scrollbar for every scrollable box in the theme (shell, sidebar,
+   settings panel, modals, tables with overflow-x, ...), not just #fn-shell. */
+* {
+	scrollbar-color: var(--fn-border-strong) var(--fn-surface);
+	scrollbar-width: thin;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: var(--fn-surface); }
+*::-webkit-scrollbar-thumb {
+	background: var(--fn-border-strong);
+	border-radius: 5px;
+	border: 2px solid var(--fn-surface);
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--fn-accent); }
+
+/* #fn-shell is a non-scrolling flex column (topbar row + scrolling body
+   below); on wide viewports it also tracks the fixed-width shell's edge
+   instead of floating out at the browser window edge. #fn-scroll (not
+   #fn-shell, not html/body) is the actual scroll container, kept below
+   #fn-topbar so the scrollbar never paints over the topbar area. */
+#fn-shell {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	max-width: 1920px;
+	margin: 0 auto;
+	background: var(--fn-surface);
+}
+
+#fn-scroll {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#fn-topbar {
+	flex: 0 0 auto;
+	height: var(--fn-topbar-h);
+	background: var(--fn-surface);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 16px;
+	z-index: 60;
+}
+
+.fn-brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--fn-text);
+	font-weight: 700;
+	font-size: 0.875rem;
+	letter-spacing: .02em;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.fn-brand:hover { text-decoration: none; color: var(--fn-text); }
+
+.fn-brand-name {
+	font-family: var(--fn-font-display);
+	text-overflow: ellipsis;
+	overflow: hidden;
+	text-transform: uppercase;
+	font-size: 1.1rem;
+	letter-spacing: .02em;
+	color: #0097dc;
+}
+
+.fn-brand-model {
+	font-family: var(--fn-font-display);
+	text-overflow: ellipsis;
+	overflow: hidden;
+	text-transform: uppercase;
+	font-size: 1.1rem;
+	letter-spacing: .02em;
+	color: #c2c2c2;
+}
+
+.fn-topbar-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+#indicators {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 0 0 auto;
+	color: var(--fn-text-secondary);
+	font-size: 0.8125rem;
+}
+#indicators > * { display: inline-flex; align-items: center; }
+[data-indicator="poll-status"] { font-size: 1.5rem; }
+
+#fn-settings { flex: 0 0 auto; }
+
+.fn-icon-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border: none;
+	border-radius: var(--fn-radius-sm);
+	background: transparent;
+	color: var(--fn-text-secondary);
+	cursor: pointer;
+}
+.fn-icon-btn:hover { background: var(--fn-surface-alt); color: var(--fn-text); }
+.fn-icon-btn-active { background: var(--fn-accent-soft); color: var(--fn-accent); }
+
+/* Settings is a persistent third column (like the sidebar), not a floating
+   dropdown — collapsed to 0 width until #fn-shell.fn-settings-open. */
+#fn-settings-panel {
+	flex: 0 0 auto;
+	width: 0;
+	overflow: hidden;
+	position: sticky;
+	top: 0;
+	height: calc(100vh - var(--fn-topbar-h));
+	background: var(--fn-surface);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	transition: width .15s ease;
+}
+#fn-shell.fn-settings-open #fn-settings-panel {
+	width: 280px;
+	border-left: 1px solid var(--fn-border);
+}
+
+.fn-settings-top,
+.fn-settings-bottom {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 16px;
+	width: 280px;
+}
+
+.fn-settings-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+.fn-settings-field label {
+	font-size: 1.125rem;
+	color: var(--fn-text-secondary);
+}
+.fn-settings-field select,
+.fn-settings-field input,
+.fn-input {
+	width: 100%;
+	padding: 6px 8px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background-color: var(--fn-surface);
+	color: var(--fn-text);
+	font: inherit;
+}
+.fn-settings-field select {
+	padding-right: 28px;
+}
+#fn-settings-theme, #fn-settings-lang { font-size: 1.3rem; }
+
+.fn-settings-link {
+	display: block;
+	padding: 6px 0;
+	color: var(--fn-accent);
+	font-size: 1.25rem;
+}
+.fn-settings-link:hover { text-decoration: underline; }
+.fn-settings-link[hidden] { display: none; }
+
+.fn-settings-btn {
+	display: block;
+	width: 100%;
+	text-align: center;
+	padding: 9px 12px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	color: var(--fn-text);
+	font: inherit;
+	font-size: 1.25rem;
+	cursor: pointer;
+}
+.fn-settings-btn:hover { background: var(--fn-surface-alt); text-decoration: none; }
+.fn-settings-btn-primary {
+	background: var(--fn-accent);
+	border-color: var(--fn-accent);
+	color: var(--fn-text-on-accent);
+}
+.fn-settings-btn-primary:hover { background: var(--fn-accent-hover); }
+
+@media (max-width: 960px) {
+	#fn-shell.fn-settings-open #fn-settings-panel {
+		position: fixed;
+		top: var(--fn-topbar-h);
+		right: 0;
+		z-index: 65;
+		box-shadow: var(--fn-shadow-2);
+	}
+}
+
+/* No min-height:0 here on purpose: #fn-scroll is the scroll container, so
+   this needs to grow to its full content height (its overflow is what
+   #fn-scroll scrolls) — capping it at the viewport height left #fn-sidebar's
+   sticky containing block exactly as tall as the sidebar itself, i.e. zero
+   room to stick, so it just scrolled away with the page instead. */
+#fn-body {
+	flex: 1 1 auto;
+	display: flex;
+}
+
+#fn-sidebar {
+	position: sticky;
+	top: 0;
+	align-self: flex-start;
+	height: calc(100vh - var(--fn-topbar-h));
+	width: var(--fn-sidebar-w);
+	flex: 0 0 auto;
+	background: var(--fn-sidebar-bg);
+	display: flex;
+	flex-direction: column;
+	transition: width .15s ease;
+	z-index: 50;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-color: rgba(255, 255, 255, .2) transparent;
+	scrollbar-width: thin;
+}
+#fn-sidebar::-webkit-scrollbar { width: 6px; }
+#fn-sidebar::-webkit-scrollbar-track,
+#fn-sidebar::-webkit-scrollbar-track-piece,
+#fn-sidebar::-webkit-scrollbar-corner { background: transparent; border: none; }
+#fn-sidebar::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+#fn-sidebar::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, .2);
+	border-radius: 3px;
+	border: none;
+}
+#fn-sidebar::-webkit-scrollbar-thumb:hover { background: var(--fn-accent); }
+
+#fn-shell.fn-sidebar-collapsed #fn-sidebar {
+	width: var(--fn-sidebar-w-collapsed);
+}
+
+#sidebar-menu {
+	list-style: none;
+	margin: 0;
+	padding: 8px;
+	flex: 1 1 auto;
+}
+
+.fn-nav-item { margin-bottom: 2px; }
+
+.fn-nav-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 9px 10px;
+	border-radius: var(--fn-radius-sm);
+	color: var(--fn-sidebar-text);
+	font-weight: 500;
+	font-size: 1.4rem;
+	letter-spacing: .015em;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.fn-nav-head:hover { background: var(--fn-sidebar-hover-bg); text-decoration: none; }
+.fn-icon { flex: 0 0 auto; display: inline-flex; color: var(--fn-sidebar-text-secondary); }
+.fn-icon svg { display: block; }
+.fn-nav-label { text-overflow: ellipsis; overflow: hidden; }
+
+/* square tile behind each sidebar icon */
+.fn-nav-head .fn-icon {
+	width: 38px;
+	height: 38px;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-sidebar-hover-bg);
+}
+
+
+.fn-nav-sub {
+	list-style: none;
+	margin: 2px 0 6px 0;
+	padding: 0 0 0 40px;
+	display: none;
+}
+.fn-nav-item.fn-open > .fn-nav-sub { display: block; }
+.fn-nav-sub > li > a {
+	display: block;
+	padding: 6px 8px;
+	border-radius: var(--fn-radius-sm);
+	color: var(--fn-sidebar-text-secondary);
+	font-size: 1.2rem;
+	letter-spacing: .03em;
+}
+.fn-nav-sub > li > a:hover { background: var(--fn-sidebar-hover-bg); text-decoration: none; color: var(--fn-sidebar-text); }
+.fn-nav-sub > li.fn-active > a { background: var(--fn-sidebar-active-bg); }
+
+#fn-shell.fn-sidebar-collapsed .fn-nav-label,
+#fn-shell.fn-sidebar-collapsed .fn-nav-sub {
+	display: none;
+}
+
+/* collapsed rail: center icons, no accordion chevron affordance needed since
+   sub-items are unreachable until expanded — click still expands the whole rail */
+#fn-shell.fn-sidebar-collapsed .fn-nav-head {
+	justify-content: center;
+	padding: 9px;
+}
+
+#fn-sidebar-toggle {
+	flex: 0 0 auto;
+	border: none;
+	border-top: 1px solid var(--fn-sidebar-border);
+	background: transparent;
+	color: var(--fn-sidebar-text-secondary);
+	padding: 12px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+#fn-sidebar-toggle:hover { background: var(--fn-sidebar-hover-bg); color: var(--fn-sidebar-text); }
+
+#fn-main {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+#tabmenu:empty { display: none; }
+#tabmenu {
+	flex: 0 0 auto;
+	background: var(--fn-surface);
+	border-bottom: 1px solid var(--fn-border);
+	padding: 0 24px;
+}
+#tabmenu ul.tabs {
+	list-style: none;
+	display: flex;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+}
+#tabmenu ul.tabs li a {
+	display: block;
+	padding: 15px 12px;
+	color: var(--fn-text-secondary);
+	font-weight: 500;
+	border-bottom: 2px solid transparent;
+}
+#tabmenu ul.tabs li a:hover { color: var(--fn-text); text-decoration: none; }
+#tabmenu ul.tabs li.active a { color: var(--fn-accent); border-bottom-color: var(--fn-accent); }
+#tabmenu ul.tabs li.tabmenu-item-hidden { display: none; }
+
+#maincontent.container {
+	flex: 1 1 auto;
+	padding: 24px 40px 40px;
+	width: 100%;
+}
+
+
+@media (max-width: 860px) {
+	#fn-sidebar { position: fixed; left: 0; bottom: 0; z-index: 55; }
+	#fn-shell:not(.fn-sidebar-collapsed) #fn-sidebar { width: var(--fn-sidebar-w-collapsed); }
+	#fn-shell:not(.fn-sidebar-collapsed) .fn-nav-label,
+	#fn-shell:not(.fn-sidebar-collapsed) .fn-nav-sub { display: none; }
+	#fn-main { margin-left: var(--fn-sidebar-w-collapsed); }
+}
+
+/* ---------- alert messages ---------- */
+
+.alert-message {
+	padding: 12px 16px;
+	border-radius: var(--fn-radius);
+	border: 1px solid var(--fn-border);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text);
+	margin-bottom: 16px;
+}
+.alert-message h4 { margin: 0 0 4px; font-size: 0.875rem; }
+.alert-message p { margin: 0; }
+.alert-message.warning { background: var(--fn-warning-soft); border-color: var(--fn-warning); color: var(--fn-text); }
+.alert-message.error, .alert-message.danger { background: var(--fn-danger-soft); border-color: var(--fn-danger); }
+.alert-message.success { background: var(--fn-success-soft); border-color: var(--fn-success); }
+.alert-message.notice, .alert-message.info { background: var(--fn-accent-soft); border-color: var(--fn-accent); }
+
+/* ui.addNotification() toggles fade-in/fade-out classes but defines no
+   transition of its own — animate height-affecting props too (not just
+   opacity) so the node removal on transitionend doesn't leave a gap that
+   snaps shut. notify() in each view times the removal itself since
+   ui.addTimeLimitedNotification() would strip the node before this can play. */
+.alert-message {
+	overflow: hidden;
+	max-height: 400px;
+}
+.alert-message.fade-out {
+	transition: opacity .4s ease, transform .4s ease, max-height .4s ease,
+		margin-bottom .4s ease, padding-top .4s ease, padding-bottom .4s ease,
+		border-width .4s ease;
+	opacity: 0;
+	transform: translateY(-8px);
+	max-height: 0;
+	margin-bottom: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	border-width: 0;
+}
+@keyframes fn-alert-in {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+		max-height: 0;
+		margin-bottom: 0;
+		padding-top: 0;
+		padding-bottom: 0;
+		border-width: 0;
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		max-height: 400px;
+		margin-bottom: 16px;
+		padding-top: 12px;
+		padding-bottom: 12px;
+		border-width: 1px;
+	}
+}
+.alert-message.fade-in { animation: fn-alert-in .4s ease; }
+
+/* corner toast variant, used for the "no password set" nag */
+@keyframes fn-toast-in {
+	from { opacity: 0; transform: translateY(16px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fn-toast-out {
+	from { opacity: 1; transform: translateY(0); }
+	to { opacity: 0; transform: translateY(16px); }
+}
+.fn-toast {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	max-width: 340px;
+	z-index: 500;
+	box-shadow: var(--fn-shadow-2);
+	margin: 0;
+	padding-right: 36px;
+	animation: fn-toast-in .25s ease;
+}
+.fn-toast.fn-toast-closing { animation: fn-toast-out .18s ease forwards; }
+.fn-toast .right { margin-top: 8px; }
+.fn-toast p { font-size: 1.2rem; }
+.fn-toast .btn { font-size: 1rem; }
+.fn-toast-close {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--fn-text-secondary);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.fn-toast-close:hover { background: rgba(0, 0, 0, .08); color: var(--fn-text); }
+
+/* ---------- buttons ---------- */
+
+.btn, .cbi-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 14px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	color: var(--fn-text);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+	line-height: 1.4;
+}
+.btn:hover, .cbi-button:hover, .btn:focus, .cbi-button:focus {
+	background: var(--fn-surface-alt);
+	text-decoration: none;
+	color: var(--fn-text);
+}
+.btn[disabled], .cbi-button[disabled] {
+	opacity: .5;
+	cursor: not-allowed;
+}
+
+.btn.important, .cbi-button-positive, .cbi-button-save, .cbi-button-apply, .cbi-button-add {
+	background: var(--fn-accent);
+	border-color: var(--fn-accent);
+	color: var(--fn-text-on-accent);
+}
+.btn.important:hover, .cbi-button-positive:hover, .cbi-button-save:hover,
+.cbi-button-apply:hover, .cbi-button-add:hover {
+	background: var(--fn-accent-hover);
+	border-color: var(--fn-accent-hover);
+	color: var(--fn-text-on-accent);
+}
+
+.cbi-button-negative, .cbi-button-remove, .cbi-button-reset, .btn.danger, .btn.error {
+	background: var(--fn-surface);
+	border-color: var(--fn-danger);
+	color: var(--fn-danger);
+}
+.cbi-button-negative:hover, .cbi-button-remove:hover, .cbi-button-reset:hover {
+	background: var(--fn-danger-soft);
+}
+
+.cbi-button-neutral, .cbi-button-edit, .cbi-button-find, .cbi-button-reload,
+.cbi-button-up, .cbi-button-down, .cbi-button-download, .cbi-button-fieldadd,
+.cbi-button-action, .cbi-button-link {
+	background: var(--fn-surface);
+	color: var(--fn-text);
+}
+
+/* ---------- cards / CBI sections ---------- */
+
+.cbi-map { display: block; }
+
+/* Long-form description/body copy — plain readable text, not the pixel
+   font used for labels/headings elsewhere in the theme. */
+.cbi-map-descr, .cbi-section-descr, .cbi-tab-descr,
+.cbi-value-description, .cbi-section-table-descr > .th,
+.fn-info-empty, .fn-qr-desc, .fn-apps-desc {
+	font-family: var(--fn-font-text);
+}
+
+.cbi-map-descr, .cbi-section-descr, .cbi-tab-descr {
+	color: var(--fn-text-secondary);
+	margin-bottom: 12px;
+}
+
+.cbi-section {
+	background: var(--fn-surface);
+	border: 1px solid var(--fn-border);
+	border-radius: var(--fn-radius-lg);
+	box-shadow: var(--fn-shadow-1);
+	padding: 18px 20px;
+	margin-bottom: 20px;
+}
+
+.cbi-section > legend, .cbi-section > h3:first-child {
+	font-size: 0.9375rem;
+	font-weight: 700;
+	margin-bottom: 10px;
+}
+
+.cbi-section-error {
+	color: var(--fn-danger);
+	background: var(--fn-danger-soft);
+	border-radius: var(--fn-radius-sm);
+	padding: 8px 10px;
+	margin-bottom: 10px;
+}
+
+.cbi-section-node { border-top: 1px solid transparent; }
+
+.cbi-value {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 4px 20px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--fn-border);
+}
+.cbi-value:last-child { border-bottom: none; padding-bottom: 0; }
+.cbi-value:first-child { padding-top: 0; }
+
+.cbi-value label.cbi-value-title {
+	flex: 0 0 240px;
+	max-width: 240px;
+	color: var(--fn-text);
+	font-weight: 500;
+	padding-top: 6px;
+}
+
+.cbi-value-field {
+	flex: 1 1 280px;
+	min-width: 0;
+}
+
+.cbi-value-description {
+	flex-basis: 100%;
+	color: var(--fn-text-secondary);
+	font-size: 0.75rem;
+	margin-top: 4px;
+}
+
+.cbi-value-error input, .cbi-input-invalid {
+	border-color: var(--fn-danger) !important;
+}
+.cbi-value-error .cbi-value-title { color: var(--fn-danger); }
+
+.cbi-value > .cbi-section,
+.cbi-value > .cbi-tblsection {
+	flex-basis: 100%;
+	border: 1px solid var(--fn-border);
+	box-shadow: none;
+}
+
+@media (max-width: 700px) {
+	.cbi-value { flex-direction: column; }
+	.cbi-value label.cbi-value-title { flex-basis: auto; max-width: none; padding-top: 0; }
+}
+
+.cbi-section-create {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-top: 12px;
+}
+.cbi-section-create > input {
+	flex: 0 1 240px;
+}
+
+.cbi-section-actions, .cbi-page-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid var(--fn-border);
+}
+.cbi-page-actions .secondary-action { margin-right: auto; }
+.cbi-page-actions .secondary-action a { color: var(--fn-text-secondary); }
+
+/* Some third-party luci-app views (e.g. luci-app-https-dns-proxy's status
+   widget) render .cbi-value rows directly under an <h2>, outside any
+   .cbi-section — so they get row styling from the .cbi-value rules above
+   but none of .cbi-section's card chrome. Card-wrap that pattern generically
+   (by DOM position, not a package-specific class) so any such view gets the
+   same look as a real .cbi-section for free, with zero per-package CSS. */
+#view > div > h2 + .cbi-value {
+	margin-top: 10px;
+	border: 1px solid var(--fn-border);
+	border-bottom: none;
+	border-radius: var(--fn-radius-lg) var(--fn-radius-lg) 0 0;
+	background: var(--fn-surface);
+	box-shadow: var(--fn-shadow-1);
+	padding: 10px 20px 4px;
+}
+#view > div > .cbi-value + .cbi-value {
+	border: 1px solid var(--fn-border);
+	border-top: none;
+	border-bottom: none;
+	background: var(--fn-surface);
+	padding: 4px 20px;
+	margin-top: -1px;
+}
+#view > div > .cbi-value:not(:has(+ .cbi-value)) {
+	border-bottom: 1px solid var(--fn-border);
+	border-radius: 0 0 var(--fn-radius-lg) var(--fn-radius-lg);
+	padding-bottom: 14px;
+	margin-bottom: 20px;
+	box-shadow: var(--fn-shadow-1);
+}
+
+.cbi-optionals { margin-top: 10px; }
+
+/* ---------- inputs ---------- */
+
+input[type="text"], input[type="password"], input[type="number"],
+input[type="email"], input[type="search"], input[type="url"], textarea {
+	width: 100%;
+	padding: 7px 10px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	color: var(--fn-text);
+	font: inherit;
+}
+/* Plain native <select> elements (LuCI's form.ListValue renders a bare
+   <select class="cbi-input-select">, not wrapped in anything stylable —
+   e.g. Firewall's Input/Output/Forward policy pickers) otherwise fall back
+   to the browser's unstyled native control. Match the same box look as
+   text inputs, with a custom chevron since appearance:none drops the
+   native one; the two rules below only differ by the arrow's stroke color
+   so it reads correctly in both themes. */
+select {
+	width: auto;
+	padding: 7px 28px 7px 10px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background-color: var(--fn-surface);
+	color: var(--fn-text);
+	font: inherit;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236e6e6e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	background-size: 10px 6px;
+}
+:root[data-darkmode="true"] select {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23949b9f' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+select::-ms-expand { display: none; }
+select[multiple] {
+	padding-right: 10px;
+	background-image: none;
+}
+.cbi-select select {
+	border: none;
+	background-color: transparent;
+	background-image: none;
+	padding: 0;
+	width: 100%;
+}
+
+input:focus, textarea:focus, select:focus {
+	outline: none;
+	border-color: var(--fn-accent);
+	box-shadow: 0 0 0 3px var(--fn-accent-soft);
+}
+input[disabled], textarea[disabled], select[disabled] {
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-disabled);
+}
+
+.cbi-checkbox, .cbi-radio {
+	width: 16px;
+	height: 16px;
+	accent-color: var(--fn-accent);
+	vertical-align: middle;
+}
+
+.cbi-select {
+	display: inline-block;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	padding: 6px 10px;
+	min-width: 140px;
+}
+
+/* LuCI's own <div class="cbi-dropdown"><ul>...</ul></div> web-component widget
+   (form.ListValue/RichListValue when the underlying <select> is swapped for a
+   richer picker — e.g. the per-option descriptions on Firewall's "Flow
+   offloading type"). Its JS (ui.js) drives visibility purely through the
+   [open]/[empty]/[display]/.dropdown attributes and classes below; without
+   matching CSS every <li> just renders inline, unstyled, all at once. */
+.cbi-dropdown:not(.btn):not(.cbi-button) {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	position: relative;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	padding: 6px 10px;
+	min-width: 160px;
+	max-width: 400px;
+	cursor: pointer;
+	outline: none;
+}
+.cbi-dropdown:not(.btn):not(.cbi-button):focus,
+.cbi-dropdown:not(.btn):not(.cbi-button)[open] {
+	border-color: var(--fn-accent);
+	box-shadow: 0 0 0 3px var(--fn-accent-soft);
+}
+.cbi-dropdown[disabled]:not(.btn):not(.cbi-button) {
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-disabled);
+	cursor: not-allowed;
+}
+
+.cbi-dropdown > ul { margin: 0; padding: 0; list-style: none; flex: 1 1 auto; min-width: 0; }
+.cbi-dropdown > ul > li { display: none; }
+.cbi-dropdown > ul > li[display] {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cbi-dropdown > .more,
+.cbi-dropdown:not(.btn):not(.cbi-button) > ul > li[placeholder] {
+	color: var(--fn-text-secondary);
+	display: none;
+}
+.cbi-dropdown[empty] > .more { display: block; }
+.cbi-dropdown > .open { flex: 0 0 auto; color: var(--fn-text-secondary); font-size: 0.6875rem; }
+
+/* closed state: only the selected item's compact label shows */
+.cbi-dropdown > ul > li .hide-open { display: inline; }
+.cbi-dropdown > ul > li .hide-close { display: none; }
+
+/* open state: the <ul> (JS adds/removes the .dropdown class on toggle)
+   detaches into a floating panel listing every choice, each with its
+   full title + description */
+.cbi-dropdown[open] > ul.dropdown {
+	display: block;
+	position: absolute;
+	left: 0;
+	top: calc(100% + 4px);
+	z-index: 60;
+	min-width: 100%;
+	max-width: none;
+	width: max-content;
+	max-height: 280px;
+	overflow-y: auto;
+	background: var(--fn-surface);
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	box-shadow: var(--fn-shadow-2);
+	padding: 4px;
+}
+.cbi-dropdown[open] > ul.dropdown > li {
+	display: block;
+	padding: 6px 10px;
+	border-radius: var(--fn-radius-sm);
+	white-space: normal;
+}
+.cbi-dropdown[open] > ul.dropdown > li:hover,
+.cbi-dropdown[open] > ul.dropdown > li[selected] {
+	background: var(--fn-accent-soft);
+}
+.cbi-dropdown[open] > ul.dropdown > li .hide-open { display: none; }
+.cbi-dropdown[open] > ul.dropdown > li .hide-close { display: block; }
+.cbi-dropdown[open] > ul.dropdown > li .hide-close strong { color: var(--fn-text); }
+.cbi-dropdown[open] > ul.dropdown > li .hide-close span { color: var(--fn-text-secondary); font-size: 0.75rem; }
+.cbi-dropdown[optional][open] > ul.dropdown > li[placeholder] { display: block; color: var(--fn-text-secondary); }
+
+.cbi-dynlist {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 4px 0;
+}
+.cbi-dynlist > .item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+	background: var(--fn-accent-soft);
+	color: var(--fn-accent);
+	border-radius: 999px;
+	font-size: 0.75rem;
+}
+.cbi-dynlist > .item::after {
+	content: "\00d7";
+	cursor: pointer;
+	font-weight: 700;
+}
+.cbi-dynlist > .item.drag-over { outline: 2px dashed var(--fn-accent); }
+.cbi-dynlist > .add-item { display: inline-flex; gap: 4px; }
+.cbi-dynlist > .add-item > input { width: auto; min-width: 160px; }
+
+.cbi-filebrowser { display: block; }
+
+.cbi-progressbar {
+	position: relative;
+	height: 18px;
+	border-radius: 999px;
+	background: var(--fn-surface-alt);
+	border: 1px solid var(--fn-border);
+	overflow: hidden;
+}
+.cbi-progressbar > div {
+	height: 100%;
+	background: var(--fn-accent);
+}
+
+/* Two distinct users of this markup: (1) a static per-element
+   <label class="cbi-tooltip-container">icon<div class="cbi-tooltip">...</div></label>
+   revealed on hover/focus, and (2) a single global .cbi-tooltip div ui.js
+   appends to <body> once and repositions/opens via inline style.top/left
+   plus style.opacity=1 on hover of any [data-tooltip] element elsewhere on
+   the page (closing sets opacity back to 0, then strips the style attribute
+   entirely after the fade — at which point only this stylesheet's default
+   applies again). Both need "invisible unless actively shown" as the
+   default or the tooltip renders as a permanently visible floating box. */
+.cbi-tooltip-container { position: relative; display: inline-block; }
+.cbi-tooltip {
+	position: absolute;
+	z-index: 60;
+	background: var(--fn-text);
+	color: var(--fn-surface);
+	padding: 4px 8px;
+	border-radius: var(--fn-radius-sm);
+	font-size: 0.75rem;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity .15s ease;
+}
+.cbi-tooltip-container:hover > .cbi-tooltip,
+.cbi-tooltip-container:focus-within > .cbi-tooltip {
+	opacity: 1;
+}
+
+/* ---------- tables ---------- */
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.tr { display: table-row; }
+.td, .th { display: table-cell; padding: 8px 10px; border-bottom: 1px solid var(--fn-border); vertical-align: middle; }
+.th { color: var(--fn-text-secondary); font-weight: 600; text-align: left; font-size: 0.75rem; text-transform: uppercase; }
+
+.cbi-section-table { width: 100%; border-collapse: collapse; }
+.cbi-section-table-titles { color: var(--fn-text-secondary); font-size: 0.75rem; text-transform: uppercase; }
+.cbi-section-table-titles > .th { border-bottom: 1px solid var(--fn-border); font-weight: 600; padding: 8px 10px; }
+.cbi-section-table-descr > .th { color: var(--fn-text-secondary); font-weight: 400; text-transform: none; padding: 0 10px 8px; }
+.cbi-section-table-row { border-bottom: 1px solid var(--fn-border); }
+.cbi-section-table-row:hover { background: var(--fn-surface-alt); }
+.cbi-section-table-row > .td { padding: 10px; }
+.cbi-rowstyle-2 { background: var(--fn-surface-alt); }
+.cbi-section-remove { text-align: right; }
+
+.network-status-table .td { border-bottom: none; }
+
+/* ---------- tabs (view-level, e.g. inside a section) ---------- */
+
+.cbi-tabmenu {
+	list-style: none;
+	display: flex;
+	gap: 4px;
+	margin: 0 0 16px;
+	padding: 0;
+	border-bottom: 1px solid var(--fn-border);
+}
+.cbi-tabmenu > li > a {
+	display: block;
+	padding: 8px 12px;
+	color: var(--fn-text-secondary);
+	border-bottom: 2px solid transparent;
+	font-weight: 500;
+}
+.cbi-tabmenu > li.cbi-tab > a { color: var(--fn-accent); border-bottom-color: var(--fn-accent); }
+.cbi-tab-disabled > a { color: var(--fn-text-disabled) !important; pointer-events: none; }
+
+.tabs { list-style: none; margin: 0; padding: 0; }
+.tab-content { padding-top: 12px; }
+
+.breadcrumb { list-style: none; display: flex; gap: 6px; margin: 0; padding: 0; }
+.breadcrumb li:not(:last-child)::after { content: "/"; margin-left: 6px; color: var(--fn-text-disabled); }
+
+/* ---------- dropdown (menu-style, not cbi-dropdown widget) ---------- */
+
+.dropdown { position: relative; }
+.dropdown-menu {
+	position: absolute;
+	background: var(--fn-surface);
+	border: 1px solid var(--fn-border);
+	border-radius: var(--fn-radius);
+	box-shadow: var(--fn-shadow-2);
+	padding: 6px;
+	min-width: 180px;
+	z-index: 70;
+}
+
+/* ---------- modal / dialog ---------- */
+
+#modal_overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 20, 25, .45);
+	z-index: 900;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity .12s ease-in;
+	overflow: auto;
+}
+body.modal-overlay-active #modal_overlay { opacity: 1; visibility: visible; }
+body.modal-overlay-active { overflow: hidden; }
+
+.modal {
+	width: 90%;
+	max-width: 480px;
+	margin: 8vh auto;
+	background: var(--fn-surface);
+	border-radius: var(--fn-radius-lg);
+	box-shadow: var(--fn-shadow-2);
+	padding: 24px;
+}
+.modal > * { margin-bottom: 12px; }
+.modal > h4:first-child {
+	font-size: 0.875rem;
+	margin-bottom: 16px;
+}
+.modal > pre, .modal > textarea { white-space: pre-wrap; overflow: auto; width: 100%; }
+.modal > .button-row { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ---------- login page ---------- */
+
+.fn-login-page {
+	--fn-login-bg: #ffffff;
+
+	display: flex;
+	min-height: 100vh;
+	background: var(--fn-login-bg);
+	color: var(--fn-text);
+}
+
+:root[data-darkmode="true"] .fn-login-page {
+	--fn-login-bg: #141a22;
+}
+
+.fn-login-card {
+	flex: 1 1 50%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 24px;
+}
+
+.fn-login-card-inner form { margin: 0; }
+
+.fn-login-card-inner {
+	width: 100%;
+	max-width: 340px;
+	background: var(--fn-surface);
+	border: 1px solid var(--fn-border);
+	border-radius: var(--fn-radius-lg);
+	box-shadow: var(--fn-shadow-1);
+	padding: 32px;
+}
+
+.fn-login-card-inner { position: relative; }
+
+.fn-login-card h1 {
+	font-size: 1.3rem;
+	line-height: 1.25;
+	text-align: center;
+	margin: 0 0 24px;
+}
+
+.fn-theme-toggle {
+	position: absolute;
+	top: -10px;
+	right: -10px;
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: 50%;
+	background: var(--fn-surface);
+	color: var(--fn-text-secondary);
+	cursor: pointer;
+	box-shadow: var(--fn-shadow-1);
+}
+.fn-theme-toggle:hover { color: var(--fn-text); background: var(--fn-surface-alt); }
+
+.fn-theme-toggle .fn-icon-moon { display: none; }
+:root[data-darkmode="true"] .fn-theme-toggle .fn-icon-sun { display: none; }
+:root[data-darkmode="true"] .fn-theme-toggle .fn-icon-moon { display: block; }
+
+.fn-field { margin-bottom: 14px; position: relative; }
+.fn-field input {
+	padding: 10px 12px;
+	border-radius: var(--fn-radius);
+	font-size: 1.3rem;
+}
+.fn-field input:focus { border-color: var(--fn-accent); }
+.fn-field input::placeholder { font-size: 1.3rem; }
+
+.fn-field-password input { padding-right: 40px; }
+.fn-eye-toggle {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	border: none;
+	background: none;
+	color: var(--fn-text-secondary);
+	cursor: pointer;
+	padding: 4px;
+	display: flex;
+}
+.fn-eye-toggle:hover { color: var(--fn-text); }
+
+.fn-login-submit {
+	display: block;
+	width: 100%;
+	padding: 11px;
+	margin-top: 6px;
+	border: none;
+	border-radius: var(--fn-radius);
+	background: var(--fn-accent);
+	color: var(--fn-text-on-accent);
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+.fn-login-submit:hover { background: var(--fn-accent-hover); }
+
+.fn-lang-field { margin-top: 16px; margin-bottom: 0; }
+.fn-lang-field select {
+	width: 100%;
+	padding: 9px 30px 9px 12px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background-color: var(--fn-surface);
+	color: var(--fn-text);
+	font: inherit;
+	font-size: 1.3rem;
+}
+
+.fn-login-links {
+	margin-top: 20px;
+	text-align: center;
+	font-size: 1.3rem;
+}
+.fn-login-links a { color: var(--fn-text-secondary); }
+.fn-login-links a:hover { color: var(--fn-text); }
+.fn-login-links #fn-support-center { color: var(--fn-accent); }
+.fn-login-links-sep { margin: 0 8px; color: var(--fn-border-strong); }
+
+.fn-login-banner {
+	position: relative;
+	flex: 1 1 50%;
+	background: var(--fn-accent);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.fn-login-glitch { position: relative; display: flex; align-items: center; justify-content: center; }
+
+.fn-login-glyph {
+	position: absolute;
+	color: var(--fn-text-on-accent);
+	animation: fn-glyph-out .4s steps(3, end) 1000ms forwards;
+}
+
+.fn-login-model {
+	font-family: var(--fn-font-display);
+	color: var(--fn-text-on-accent);
+	font-size: 1.625rem;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	text-align: center;
+	padding: 0 24px;
+	opacity: 0;
+	animation: fn-model-in .4s steps(3, end) 1000ms forwards,
+		fn-model-glitch 2.6s ease-in-out 1400ms infinite,
+		fn-model-glitch-b 3.9s ease-in-out 2200ms infinite;
+}
+
+@keyframes fn-glyph-out {
+	0%   { opacity: 1; transform: translate(0, 0); filter: none; }
+	20%  { opacity: 1; transform: translate(-3px, 2px); filter: drop-shadow(2px 0 var(--fn-danger)) drop-shadow(-2px 0 #4fd8ff); clip-path: inset(0 0 45% 0); }
+	40%  { opacity: 1; transform: translate(3px, -2px); clip-path: inset(55% 0 0 0); }
+	60%  { opacity: .5; transform: translate(-2px, 1px); clip-path: inset(20% 0 30% 0); }
+	100% { opacity: 0; transform: translate(0, 0); clip-path: inset(0 0 100% 0); }
+}
+@keyframes fn-model-in {
+	0%   { opacity: 0; transform: translate(3px, 0); clip-path: inset(0 0 100% 0); text-shadow: none; }
+	30%  { opacity: 1; transform: translate(-3px, 0); clip-path: inset(0 0 55% 0); text-shadow: 2px 0 var(--fn-danger), -2px 0 #4fd8ff; }
+	55%  { transform: translate(2px, 0); clip-path: inset(0 0 20% 0); }
+	100% { opacity: 1; transform: translate(0, 0); clip-path: inset(0 0 0 0); text-shadow: none; }
+}
+
+@keyframes fn-model-glitch {
+	0%, 85%, 100% { transform: translate(0, 0); text-shadow: none; clip-path: inset(0 0 0 0); opacity: 1; }
+	87%  { transform: translate(-4px, 1px); text-shadow: 2px 0 var(--fn-danger), -2px 0 #4fd8ff; clip-path: inset(0 0 45% 0); opacity: 1; }
+	88%  { transform: translate(3px, -2px); clip-path: inset(55% 0 0 0); opacity: .6; }
+	89.5% { transform: translate(-2px, 0); clip-path: inset(15% 0 25% 0); opacity: 1; }
+	91%, 100% { transform: translate(0, 0); text-shadow: none; clip-path: inset(0 0 0 0); opacity: 1; }
+}
+@keyframes fn-model-glitch-b {
+	0%, 91%, 100% { transform: translate(0, 0); text-shadow: none; clip-path: inset(0 0 0 0); opacity: 1; }
+	92.5% { transform: translate(3px, -1px); text-shadow: -2px 0 #4fd8ff, 2px 0 var(--fn-danger); clip-path: inset(60% 0 0 0); opacity: .7; }
+	93.5% { transform: translate(-3px, 2px); clip-path: inset(0 0 50% 0); opacity: 1; }
+	94.5% { transform: translate(1px, -1px); clip-path: inset(30% 0 10% 0); opacity: .8; }
+	96%, 100% { transform: translate(0, 0); text-shadow: none; clip-path: inset(0 0 0 0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fn-login-glyph { display: none; }
+	.fn-login-model { opacity: 1; animation: none; }
+}
+
+.fn-login-more {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 32px;
+	text-align: center;
+	color: var(--fn-text-on-accent);
+	opacity: .85;
+	font-size: 1.5rem;
+}
+.fn-login-more:hover { opacity: 1; text-decoration: underline; }
+
+.fn-dialog {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 20, 25, .45);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 900;
+}
+.fn-dialog[hidden] { display: none; }
+.fn-dialog-box {
+	background: var(--fn-surface);
+	border-radius: var(--fn-radius-lg);
+	box-shadow: var(--fn-shadow-2);
+	padding: 24px;
+	max-width: 420px;
+	width: 90%;
+}
+.fn-dialog-box h3 { margin-bottom: 14px; font-size: 1.375rem; }
+.fn-dialog-box p {
+	margin: 0 0 12px;
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-system);
+	font-size: 1.0625rem;
+	line-height: 1.6;
+}
+.fn-dialog-box code {
+	background: var(--fn-surface-alt);
+	padding: 2px 7px;
+	border-radius: 3px;
+	color: var(--fn-text);
+	font-size: 1.0625rem;
+}
+.fn-dialog-close {
+	margin-top: 6px;
+	padding: 8px 18px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	color: #ffffff;
+	font-family: var(--fn-font-system);
+	font-size: 1.0625rem;
+	cursor: pointer;
+}
+
+@media (max-width: 760px) {
+	.fn-login-page { flex-direction: column; }
+	.fn-login-banner { order: -1; min-height: 200px; }
+	.fn-login-more { position: static; margin-top: 16px; display: block; }
+}
+
+/* ---------- badges (network status widgets) ---------- */
+
+.ifacebox {
+	display: inline-flex;
+	flex-direction: column;
+	border: 1px solid var(--fn-border);
+	border-radius: var(--fn-radius);
+	overflow: hidden;
+	min-width: 120px;
+}
+.ifacebadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+	border-radius: 999px;
+	background: var(--fn-surface-alt);
+	border: 1px solid var(--fn-border);
+	font-size: 0.75rem;
+}
+.ifacebadge-active { background: var(--fn-success-soft); border-color: var(--fn-success); color: var(--fn-success); }
+
+.zonebadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 8px;
+	border-radius: 999px;
+	background: var(--fn-accent-soft);
+	color: var(--fn-accent);
+	font-size: 0.75rem;
+}
+.zonebadge-empty { background: var(--fn-surface-alt); color: var(--fn-text-disabled); }
+.zone-forwards { color: var(--fn-text-secondary); }
+
+.label {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-secondary);
+	font-size: 0.6875rem;
+	font-weight: 600;
+}
+
+/* ---------- misc ---------- */
+
+.control-group { margin-bottom: 12px; }
+.close { cursor: pointer; color: var(--fn-text-secondary); }
+.close:hover { color: var(--fn-text); }
+.flash { background: var(--fn-accent-soft); }
+
+.uci-dialog { max-width: 640px; }
+.uci-change-legend { display: flex; gap: 16px; margin-bottom: 10px; }
+.uci-change-legend-label { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--fn-text-secondary); }
+.uci-change-list { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow: auto; }
+.uci-change-list li { padding: 4px 0; border-bottom: 1px solid var(--fn-border); font-size: 0.8125rem; }
+
+.cbi-title-ref { color: var(--fn-text-secondary); }
+.assoclist { list-style: none; margin: 0; padding: 0; }
+
+.actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- Freenetic dashboard (Status > Dashboard) ---------- */
+
+.fn-dash {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+	gap: 20px;
+	align-items: start;
+}
+
+.fn-dash-col {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+}
+
+.fn-card {
+	background: var(--fn-surface);
+	border: 1px solid var(--fn-border);
+	border-radius: var(--fn-radius-lg);
+	box-shadow: var(--fn-shadow-1);
+	overflow: hidden;
+	transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.fn-card:hover {
+	box-shadow: var(--fn-shadow-2);
+	border-color: var(--fn-border-strong);
+	transform: translateY(-2px);
+}
+
+.fn-card-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--fn-border);
+}
+.fn-card-head h3 {
+	flex: 1 1 auto;
+	margin: 0;
+	font-size: 0.875rem;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+}
+.fn-card-head .fn-icon { color: var(--fn-accent); }
+
+.fn-status-pill {
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 1.5rem;
+	font-weight: 600;
+	letter-spacing: .05em;
+}
+.fn-status-ok { background: var(--fn-success-soft); color: var(--fn-success); }
+.fn-status-off { background: var(--fn-surface-alt); color: var(--fn-text-disabled); }
+
+/* Internet card: one block per distinct uplink (multi-WAN), stacked with dividers */
+.fn-conn-list { display: flex; flex-direction: column; gap: 20px; }
+.fn-conn-block-secondary { padding-top: 20px; border-top: 1px solid var(--fn-border); }
+.fn-conn-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.fn-conn-title { margin: 0; font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; color: var(--fn-text-secondary); }
+
+.fn-card-body { padding: 20px; }
+
+.fn-spark { width: 100%; height: 90px; }
+.fn-spark-svg { width: 100%; height: 100%; display: block; }
+.fn-spark-area { fill: var(--fn-accent-soft); stroke: none; }
+.fn-spark-line-rx { fill: none; stroke: var(--fn-accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.fn-spark-line-tx { fill: none; stroke: var(--fn-text-secondary); stroke-width: 1.5; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+
+.fn-spark-legend {
+	display: flex;
+	gap: 20px;
+	margin: 10px 0 18px;
+	font-size: 1.2rem;
+	color: var(--fn-text-secondary);
+}
+.fn-legend-dot {
+	display: inline-block;
+	width: 8px; height: 8px;
+	border-radius: 50%;
+	margin-right: 5px;
+	vertical-align: middle;
+}
+.fn-legend-rx { background: var(--fn-accent); }
+.fn-legend-tx { background: var(--fn-text-secondary); }
+
+.fn-info-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 14px 20px;
+}
+.fn-info-label { font-size: 1.125rem; color: var(--fn-text-secondary); margin-bottom: 2px; }
+.fn-info-value { font-size: 1.375rem; color: var(--fn-text); word-break: break-word; }
+.fn-info-empty { color: var(--fn-text-secondary); font-size: 1.125rem; }
+
+/* Simple div-based table (Client List) */
+.fn-table { display: flex; flex-direction: column; }
+
+/* Each of the 3 client groups (Unregistered/Registered/Blocked) gets its own
+   boxed, color-accented section so the groups read as clearly distinct
+   states rather than one continuous list with plain subheadings. */
+.fn-client-section {
+	border: 1px solid var(--fn-border);
+	border-left: 3px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+	padding: 16px 18px;
+	margin-bottom: 20px;
+}
+.fn-client-section:last-child { margin-bottom: 0; }
+.fn-client-section-registered { border-left-color: var(--fn-accent); }
+.fn-client-section-blocked { border-left-color: var(--fn-danger); }
+.fn-table-row {
+	display: grid;
+	grid-template-columns: 1.3fr 1.5fr 1fr 1.3fr auto;
+	gap: 12px;
+	padding: 10px 4px;
+	border-bottom: 1px solid var(--fn-border);
+	font-size: 1.0625rem;
+	align-items: center;
+}
+.fn-table-row:last-child { border-bottom: none; }
+.fn-table-head {
+	font-size: 0.9375rem;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+	color: var(--fn-text-secondary);
+	font-weight: 600;
+}
+.fn-table-sub { font-size: 1rem; color: var(--fn-text-secondary); margin-top: 1px; }
+.fn-table-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.fn-table-actions .fn-settings-btn { display: inline-block; width: auto; padding: 5px 12px; font-size: 1rem; }
+.fn-settings-btn-danger { border-color: var(--fn-danger); color: var(--fn-danger); }
+.fn-settings-btn-danger:hover { background: var(--fn-danger-soft); }
+
+/* Port Forwarding: add/edit rule panel, shown above the rule table */
+.fn-pf-form { padding: 16px; margin-bottom: 16px; border-radius: var(--fn-radius); }
+.fn-pf-row { display: flex; gap: 16px; }
+.fn-pf-row[hidden] { display: none; }
+.fn-pf-row .fn-settings-field { flex: 1; }
+.fn-pf-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+/* Firewall: rule table needs its own column layout (toggle/name/action/
+   protocol/traffic/buttons) — more columns than Port Forwarding's grid. */
+.fn-fw-row { grid-template-columns: 44px 1.2fr 0.8fr 0.8fr 1.6fr auto; align-items: center; }
+.fn-fw-allow { color: var(--fn-success); font-weight: 600; }
+.fn-fw-block { color: var(--fn-danger); font-weight: 600; }
+.fn-client-dot {
+	display: inline-block;
+	width: 8px; height: 8px;
+	border-radius: 50%;
+	margin-right: 8px;
+	vertical-align: middle;
+}
+.fn-client-online { background: var(--fn-success); }
+.fn-client-offline { background: var(--fn-text-disabled); }
+.fn-clients-subhead {
+	margin: 0 0 10px;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .02em;
+	color: var(--fn-text-secondary);
+}
+.fn-client-section-registered .fn-clients-subhead { color: var(--fn-accent); }
+.fn-client-section-blocked .fn-clients-subhead { color: var(--fn-danger); }
+@media (max-width: 900px) {
+	.fn-table-row { grid-template-columns: 1fr 1fr; }
+	.fn-table-head { display: none; }
+}
+
+/* Stacked label/value rows (used by "My Networks & Wi-Fi"), as opposed to
+   .fn-info-grid's side-by-side columns (used by the Internet card). */
+.fn-info-list { display: flex; flex-direction: column; gap: 12px; }
+.fn-info-row { display: flex; gap: 16px; font-size: 0.8125rem; align-items: center; }
+.fn-info-row .fn-info-label { flex: 0 0 150px; color: var(--fn-text-secondary); }
+.fn-info-row .fn-info-value { flex: 1 1 auto; color: var(--fn-text); word-break: break-word; }
+
+/* "About System" card: label/meter/value rows (CPU, RAM) plus grouped
+   sub-sections (System / System updates / Device), each headed by a
+   .fn-info-group-title — same fn-info-row grid as everything else here. */
+.fn-info-group-title {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: var(--fn-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: .03em;
+	margin-top: 6px;
+}
+.fn-info-group-title:first-child { margin-top: 0; }
+
+.fn-meter-wrap { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; }
+.fn-meter {
+	flex: 1 1 auto;
+	max-width: 220px;
+	height: 4px;
+	border-radius: 999px;
+	background: var(--fn-border);
+	overflow: hidden;
+}
+.fn-meter-fill { height: 100%; width: 0; background: var(--fn-accent); transition: width .3s ease; }
+.fn-meter-value { flex: 0 0 auto; font-size: 1.3rem; color: var(--fn-text); white-space: nowrap; }
+
+.fn-wifi-list { display: flex; flex-direction: column; gap: 4px; }
+.fn-wifi-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--fn-border);
+}
+.fn-wifi-row:last-child { border-bottom: none; }
+.fn-wifi-main { flex: 1 1 auto; min-width: 0; }
+.fn-wifi-ssid { font-weight: 600; font-size: 1.125rem; }
+.fn-wifi-meta { font-size: 1rem; color: var(--fn-text-secondary); }
+.fn-wifi-edit { flex: 0 0 auto; font-size: 1rem; }
+.fn-wifi-qr { width: 28px; height: 28px; flex: 0 0 auto; }
+
+/* Wi-Fi QR-code dialog: fades/scales in and out instead of snapping via [hidden] */
+.fn-qr-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 20, 25, .45);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 900;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity .18s ease, visibility 0s linear .18s;
+}
+.fn-qr-overlay.fn-qr-open {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity .18s ease;
+}
+.fn-qr-box {
+	background: var(--fn-surface);
+	border-radius: var(--fn-radius-lg);
+	box-shadow: var(--fn-shadow-2);
+	padding: 26px;
+	max-width: 460px;
+	width: 92%;
+	transform: translateY(8px) scale(.98);
+	opacity: 0;
+	transition: transform .18s ease, opacity .18s ease;
+}
+.fn-qr-overlay.fn-qr-open .fn-qr-box {
+	transform: translateY(0) scale(1);
+	opacity: 1;
+}
+.fn-qr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.fn-qr-title { margin: 0 0 4px; font-size: 0.9375rem; }
+.fn-qr-subtitle { font-size: 0.9375rem; font-weight: 600; color: var(--fn-text-secondary); }
+.fn-qr-close {
+	flex: 0 0 auto;
+	width: 28px; height: 28px;
+	border: none;
+	border-radius: 50%;
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-secondary);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.fn-qr-close:hover { background: var(--fn-border); color: var(--fn-text); }
+.fn-qr-desc { color: var(--fn-text-secondary); font-size: 0.8125rem; margin: 10px 0 20px; }
+.fn-qr-body { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.fn-qr-canvas-wrap { background: #fff; padding: 12px; border-radius: var(--fn-radius); flex: 0 0 auto; line-height: 0; }
+.fn-qr-canvas-wrap canvas { display: block; width: 160px; height: 160px; }
+.fn-qr-fields { flex: 1 1 180px; min-width: 160px; display: flex; flex-direction: column; gap: 16px; }
+.fn-qr-field-label { font-size: 0.75rem; color: var(--fn-text-secondary); margin-bottom: 2px; }
+.fn-qr-field-value { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; word-break: break-word; }
+.fn-qr-copy { border: none; background: none; cursor: pointer; color: var(--fn-text-secondary); padding: 2px; display: flex; flex: 0 0 auto; }
+.fn-qr-copy:hover { color: var(--fn-accent); }
+
+/* "My Networks & Wi-Fi" card: collapsible Home / Guest sections */
+.fn-net-section + .fn-net-section { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--fn-border); }
+.fn-net-section-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	cursor: pointer;
+	user-select: none;
+}
+.fn-net-section-title { font-weight: 600; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .02em; color: var(--fn-text-secondary); }
+.fn-net-chevron {
+	width: 18px; height: 18px;
+	flex: 0 0 auto;
+	background: none;
+	position: relative;
+	transition: transform .15s ease;
+}
+.fn-net-chevron::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 8px; height: 8px;
+	border-right: 2px solid var(--fn-text-secondary);
+	border-bottom: 2px solid var(--fn-text-secondary);
+	transform: rotate(45deg) translate(-2px, -2px);
+}
+.fn-net-chevron-open { transform: rotate(180deg); }
+.fn-net-section-body { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.fn-net-section-body.fn-collapsed { display: none; }
+.fn-net-counts { font-size: 1.3rem; color: var(--fn-text-secondary); }
+.fn-net-counts b { color: var(--fn-text); font-weight: 600; }
+
+.fn-guest-form { display: flex; flex-direction: column; gap: 4px; }
+.fn-guest-form .fn-settings-field { margin-bottom: 0; }
+.fn-guest-form .fn-settings-btn { margin-top: 8px; }
+
+.fn-ports-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+.fn-port {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+}
+.fn-port-icon {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 40px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	color: var(--fn-text-secondary);
+	font-size: 0.8125rem;
+	font-weight: 600;
+}
+.fn-port-wan .fn-port-icon { color: var(--fn-accent); border-color: var(--fn-accent); }
+.fn-port-dot {
+	position: absolute;
+	top: -4px;
+	right: -4px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--fn-border-strong);
+}
+.fn-port-dot-active { background: var(--fn-success); }
+.fn-port-speed { font-size: 0.9375rem; color: var(--fn-text-secondary); text-align: center; }
+
+.fn-survey-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.fn-survey-tab {
+	padding: 6px 12px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+	color: var(--fn-text-secondary);
+	font: inherit;
+	font-size: 0.8125rem;
+	cursor: pointer;
+}
+.fn-survey-tab.fn-active { background: var(--fn-accent-soft); border-color: var(--fn-accent); color: var(--fn-accent); }
+
+.fn-survey-chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 4px;
+	height: 120px;
+	min-height: 120px;
+}
+.fn-survey-bar {
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	height: 100%;
+	gap: 4px;
+}
+.fn-survey-bar-track {
+	flex: 1 1 auto;
+	width: 100%;
+	display: flex;
+	align-items: flex-end;
+	background: var(--fn-surface-alt);
+	border-radius: 2px;
+	overflow: hidden;
+}
+.fn-survey-bar-fill { width: 100%; }
+.fn-survey-low { background: var(--fn-success); }
+.fn-survey-mid { background: var(--fn-warning); }
+.fn-survey-high { background: var(--fn-danger); }
+.fn-survey-bar-label { font-size: 0.875rem; color: var(--fn-text-secondary); }
+
+/* Traffic Monitor: donut chart of per-client bandwidth share */
+.fn-traffic-body { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.fn-donut-wrap { position: relative; width: 120px; height: 120px; flex: 0 0 auto; }
+.fn-donut { width: 100%; height: 100%; border-radius: 50%; }
+.fn-donut-hole {
+	position: absolute;
+	inset: 18px;
+	border-radius: 50%;
+	background: var(--fn-surface);
+}
+.fn-traffic-legend { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.fn-traffic-row { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; }
+.fn-traffic-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.fn-traffic-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--fn-text);
+}
+.fn-traffic-value { flex: 0 0 auto; color: var(--fn-text-secondary); font-variant-numeric: tabular-nums; }
+
+/* iOS-style toggle switch, used for Wi-Fi enable/disable */
+.fn-switch {
+	position: relative;
+	flex: 0 0 auto;
+	width: 38px;
+	height: 22px;
+	display: inline-block;
+}
+.fn-switch-input {
+	position: absolute;
+	opacity: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	cursor: pointer;
+}
+.fn-switch-slider {
+	position: absolute;
+	inset: 0;
+	background: var(--fn-border-strong);
+	border-radius: 999px;
+	transition: background .15s ease;
+	pointer-events: none;
+}
+.fn-switch-slider::before {
+	content: "";
+	position: absolute;
+	top: 2px; left: 2px;
+	width: 18px; height: 18px;
+	background: #fff;
+	border-radius: 50%;
+	box-shadow: var(--fn-shadow-1);
+	transition: transform .15s ease;
+}
+.fn-switch-input:checked + .fn-switch-slider { background: var(--fn-accent); }
+.fn-switch-input:checked + .fn-switch-slider::before { transform: translateX(16px); }
+
+/* Themed checkbox/radio inputs, everywhere in the theme (the .fn-switch-input
+   toggle above is a separate, already-hidden input and isn't affected). */
+input[type="checkbox"],
+input[type="radio"] {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
+	margin: 0;
+	border: 1.5px solid var(--fn-border-strong);
+	border-radius: 4px;
+	background: var(--fn-surface);
+	position: relative;
+	vertical-align: middle;
+	cursor: pointer;
+	transition: background .15s ease, border-color .15s ease;
+}
+input[type="radio"] { border-radius: 50%; }
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) { border-color: var(--fn-accent); }
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+	background: var(--fn-accent);
+	border-color: var(--fn-accent);
+}
+input[type="checkbox"]:checked::after {
+	content: "";
+	position: absolute;
+	left: 5px; top: 1px;
+	width: 5px; height: 9px;
+	border: solid #fff;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+input[type="radio"]:checked::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 6px; height: 6px;
+	border-radius: 50%;
+	background: #fff;
+}
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+	opacity: .5;
+	cursor: not-allowed;
+}
+input[type="checkbox"].fn-switch-input,
+input[type="checkbox"].fn-switch-input:checked {
+	appearance: auto;
+	-webkit-appearance: auto;
+	width: 100%;
+	height: 100%;
+	border: none;
+	border-radius: 0;
+	background: none;
+}
+input[type="checkbox"].fn-switch-input::after { content: none; }
+
+/* My Networks & Wi-Fi segment page (Home / Guest tabs) */
+/* The outer card/column fills the row like every other dashboard card (no
+   artificial cap, so its border reaches the shell edge); only the actual
+   form controls inside stay a reasonable reading width. */
+.fn-mn-panel .fn-settings-field,
+.fn-mn-wifi-card,
+.fn-mn-dhcp-range,
+.fn-mn-radio-row,
+.fn-mn-checkbox-row,
+.fn-mn-save,
+.fn-mn-delete {
+	max-width: 560px;
+}
+.fn-tabs {
+	display: flex;
+	gap: 4px;
+	border-bottom: 1px solid var(--fn-border);
+	margin-bottom: 20px;
+}
+.fn-tab {
+	border: none;
+	background: none;
+	color: var(--fn-text-secondary);
+	font: inherit;
+	font-size: 1.0625rem;
+	padding: 10px 4px;
+	margin-right: 20px;
+	cursor: pointer;
+	border-bottom: 2px solid transparent;
+}
+.fn-tab:hover { color: var(--fn-text); }
+.fn-tab.fn-active { color: var(--fn-accent); border-bottom-color: var(--fn-accent); }
+
+.fn-mn-panel[hidden] { display: none; }
+.fn-mn-subhead {
+	font-size: 1rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+	color: var(--fn-text-secondary);
+	margin: 24px 0 10px;
+}
+.fn-mn-panel > .fn-settings-field:first-child { margin-top: 0; }
+
+.fn-mn-wifi-card { margin-bottom: 12px; padding: 14px 16px; }
+.fn-mn-wifi-card:hover { transform: none; }
+.fn-mn-wifi-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+.fn-mn-wifi-body { margin-top: 12px; }
+.fn-mn-wifi-body[hidden] { display: none; }
+.fn-mn-password[hidden] { display: none; }
+
+.fn-mn-radio-row {
+	display: flex;
+	gap: 24px;
+	margin: 4px 0 16px;
+	font-size: 0.875rem;
+}
+.fn-mn-radio-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.fn-mn-dhcp-range { display: flex; gap: 16px; }
+.fn-mn-dhcp-range .fn-settings-field { flex: 1; }
+
+.fn-mn-save { width: auto; padding: 9px 24px; margin-top: 8px; }
+.fn-mn-delete { width: auto; padding: 8px 16px; margin-bottom: 20px; border-color: var(--fn-danger); color: var(--fn-danger); }
+.fn-mn-delete:hover { background: color-mix(in srgb, var(--fn-danger) 10%, transparent); }
+
+.fn-mn-checkbox-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	font-size: 0.875rem;
+	margin-bottom: 14px;
+	cursor: pointer;
+}
+.fn-mn-checkbox-row input[type="checkbox"] { margin-top: 3px; }
+.fn-mn-hint { font-size: 0.75rem; color: var(--fn-text-secondary); margin-top: 2px; }
+
+.fn-mn-details-toggle {
+	display: inline-block;
+	color: var(--fn-accent);
+	font-size: 0.8125rem;
+	margin: 4px 0 12px;
+}
+.fn-mn-details-toggle:hover { text-decoration: underline; }
+
+.fn-mn-dhcp-details.fn-collapsed { display: none; }
+
+.fn-mn-advanced-body { padding-top: 4px; }
+.fn-mn-advanced-body.fn-collapsed { display: none; }
+
+.fn-mn-link-row { margin-bottom: 10px; }
+.fn-mn-linked-note { margin-bottom: 10px; }
+.fn-mn-linked-note[hidden] { display: none; }
+
+/* Keenetic-style field: label sits as a "cut-in" legend on the top border
+   (like a <fieldset><legend>) instead of a line above the box — see the
+   Keenetic demo's Ethernet-connection page. Narrow/fixed-width so several
+   fields flow onto one line inside a wrapping row, instead of each one
+   stretching to the full card width. */
+.fn-kn-row { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.fn-kn-group { display: contents; }
+.fn-kn-group[hidden] { display: none; }
+.fn-kn-field {
+	position: relative;
+	width: 280px;
+	max-width: 100%;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	padding: 13px 10px 9px;
+	background: var(--fn-surface);
+}
+.fn-kn-field > label {
+	position: absolute;
+	top: -8px;
+	left: 9px;
+	padding: 0 4px;
+	background: var(--fn-surface);
+	font-size: 0.9375rem;
+	color: var(--fn-text-secondary);
+	white-space: nowrap;
+}
+.fn-kn-field select,
+.fn-kn-field input {
+	display: block;
+	width: 100%;
+	border: none;
+	padding: 0;
+	background-color: transparent;
+	color: var(--fn-text);
+	font-family: inherit;
+	font-size: 1.3rem;
+}
+.fn-kn-field select { padding-right: 20px; background-position: right 0 center; cursor: pointer; }
+.fn-kn-field .fn-field-password { border: none; padding: 0; margin-bottom: 0; }
+.fn-kn-field .fn-eye-toggle { right: 0; }
+
+/* This view's cbi-dropdown widget sits flush inside the legend box, same
+   treatment as the plain select/input above — the box itself carries the
+   border, so the widget's own border/focus-ring is suppressed here. */
+.fn-kn-field .cbi-dropdown {
+	width: 100%;
+	min-width: 0;
+	max-width: none;
+	border: none;
+	padding: 0;
+	background: transparent;
+}
+.fn-kn-field .cbi-dropdown:focus,
+.fn-kn-field .cbi-dropdown[open] {
+	border-color: transparent;
+	box-shadow: none;
+}
+
+/* Same accent focus treatment as every other input/select in the theme
+   (see the global `input:focus, select:focus` rule) — applied to the whole
+   legend-box here since the control itself has no border of its own to
+   highlight. */
+.fn-kn-field:focus-within {
+	border-color: var(--fn-accent);
+	box-shadow: 0 0 0 3px var(--fn-accent-soft);
+}
+.fn-kn-field select:focus,
+.fn-kn-field input:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+/* Applications ("Приложения") component catalog */
+.fn-apps-group { margin-bottom: 20px; }
+.fn-apps-list { border: 1px solid var(--fn-border); border-radius: var(--fn-radius); overflow: hidden; }
+.fn-apps-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	border-bottom: 1px solid var(--fn-border);
+	background: var(--fn-surface);
+}
+.fn-apps-row:last-child { border-bottom: none; }
+.fn-apps-row > .fn-icon { flex: 0 0 auto; color: var(--fn-text-secondary); }
+.fn-apps-info { flex: 1 1 auto; min-width: 0; }
+.fn-apps-name { font-weight: 600; font-size: 1.125rem; letter-spacing: .03em; }
+.fn-apps-desc { font-size: 0.75rem; color: var(--fn-text-secondary); margin-top: 2px; }
+.fn-apps-row .fn-status-pill { flex: 0 0 auto; margin-right: 4px; letter-spacing: .08em; }
+.fn-apps-row .fn-settings-btn { flex: 0 0 auto; width: auto; padding: 7px 16px; }

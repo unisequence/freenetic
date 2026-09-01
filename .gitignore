@@ -1,0 +1,17 @@
+# extracted/generated firmware images — never commit
+*.bin
+!uboot/**/*.bin
+*.img
+factory/
+
+# device logs
+logs/
+
+# Python bytecode cache
+__pycache__/
+
+# scratch/generated, not meant to be tracked
+*.zip
+graphify-out/
+cli/graphify-out/
+uboot/

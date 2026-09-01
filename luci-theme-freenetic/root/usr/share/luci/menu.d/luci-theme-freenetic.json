@@ -1,0 +1,172 @@
+{
+	"admin/status/dashboard": {
+		"title": "Dashboard",
+		"order": 0,
+		"action": {
+			"type": "view",
+			"path": "status/freenetic-dashboard"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/status/clients": {
+		"title": "Client List",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "status/freenetic-clients"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/status/traffic": {
+		"title": "Traffic Monitor",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "status/freenetic-traffic"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/status/wifimonitor": {
+		"title": "Wi-Fi Monitor",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "status/freenetic-wifimonitor"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/internet": {
+		"title": "Internet",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-wan"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/home_network": {
+		"title": "Home Network",
+		"order": 5,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-mynetworks"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/guest_network": {
+		"title": "Guest Network",
+		"order": 6,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-mynetworks"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/port_forwarding": {
+		"title": "Port Forwarding",
+		"order": 7,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-portforward"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/firewall": {
+		"title": "Firewall",
+		"order": 7.5,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-firewall"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			]
+		}
+	},
+	"admin/system/system": {
+		"title": "System",
+		"order": 7.8,
+		"action": {
+			"type": "view",
+			"path": "system/freenetic-system"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			]
+		}
+	},
+	"admin/system/applications": {
+		"title": "Applications",
+		"order": 8,
+		"action": {
+			"type": "view",
+			"path": "system/freenetic-apps"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	}
+}

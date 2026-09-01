@@ -1,0 +1,115 @@
+{#
+ Copyright 2026 Freenetic contributors
+ Licensed to the public under the Apache License 2.0.
+-#}
+
+{%
+	import { getuid, getspnam } from 'luci.core';
+
+	const boardinfo = ubus.call('system', 'board');
+	const model = replace(boardinfo.model ?? boardinfo.hostname ?? '?', / \(.*\)$/, '');
+	const brand = `FREENETIC ${model}`;
+
+	http.prepare_content('text/html; charset=UTF-8');
+-%}
+
+<!DOCTYPE html>
+<html lang="{{ dispatcher.lang }}">
+	<head>
+		<meta charset="utf-8">
+		<title>{{ striptags(`${boardinfo.hostname ?? '?'}${dispatched?.title ? ` | ${_(dispatched.title)}` : ''}`) }}</title>
+		<script>
+			(function() {
+				var STORE_KEY = 'freenetic-theme'; // 'light' | 'dark' | absent -> follow system
+				var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+				var root = document.querySelector(':root');
+
+				function apply() {
+					var override = null;
+					try { override = localStorage.getItem(STORE_KEY); } catch (e) {}
+					var dark = override ? (override === 'dark') : mediaQuery.matches;
+					root.setAttribute('data-darkmode', dark);
+				}
+
+				window.freeneticSetTheme = function(mode) {
+					try {
+						if (mode === 'auto') localStorage.removeItem(STORE_KEY);
+						else localStorage.setItem(STORE_KEY, mode);
+					} catch (e) {}
+					apply();
+				};
+
+				mediaQuery.addEventListener('change', apply);
+				apply();
+			})();
+		</script>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="darkreader-lock">
+		<link rel="stylesheet" href="{{ media }}/cascade.css">
+		{% if (node?.css): %}
+		<link rel="stylesheet" href="{{ resource }}/{{ node.css }}">
+		{% endif %}
+		{% if (css): %}
+		<style title="text/css">{{ css }}</style>
+		{% endif %}
+		<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}"></script>
+		<script src="{{ resource }}/cbi.js"></script>
+	</head>
+
+	<body class="lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+		{% if (!blank_page): %}
+		<div id="fn-shell">
+			<header id="fn-topbar">
+				<a class="fn-brand" href="/" title="{{ striptags(brand) }}">
+					<span class="fn-brand-name">FREENETIC</span>
+					<span class="fn-brand-model">{{ striptags(model) }}</span>
+				</a>
+				<div class="fn-topbar-right">
+					<div id="indicators"></div>
+					<div id="fn-settings"></div>
+				</div>
+			</header>
+
+			<div id="fn-scroll">
+			<div id="fn-body">
+				<nav id="fn-sidebar">
+					<ul id="sidebar-menu"></ul>
+					<button id="fn-sidebar-toggle" type="button" aria-label="{{ _('Expand menu') }}">
+						<svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+					</button>
+				</nav>
+
+				<div id="fn-main">
+					<div id="tabmenu"></div>
+
+					<div id="maincontent" class="container">
+						{% if (getuid() == 0 && getspnam('root')?.pwdp === ''): %}
+							<div class="alert-message warning fn-toast" id="fn-password-toast">
+								<button type="button" class="fn-toast-close" aria-label="{{ _('Close') }}" onclick="var t=this.closest('.fn-toast');t.classList.add('fn-toast-closing');setTimeout(function(){ t.remove(); }, 180)">
+									<svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+								</button>
+								<h4>{{ _('No password set!') }}</h4>
+								<p>{{ _('There is no password set on this router. Please configure a root password to protect the web interface.') }}</p>
+								{% if (dispatcher.lookup("admin/system/admin")): %}
+								  <div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/admin") }}">{{ _('Go to password configuration...') }}</a></div>
+								{% endif %}
+							</div>
+						{% endif %}
+
+						{% if (boardinfo.rootfs_type == "initramfs"): %}
+							<div class="alert-message warning">
+								<h4>{{ _('System running in recovery (initramfs) mode.') }}</h4>
+								<p>{{ _('No changes to settings will be stored and are lost after rebooting. This mode should only be used to install a firmware upgrade') }}</p>
+								{% if (dispatcher.lookup("admin/system/flash")): %}
+								  <div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/flash") }}">{{ _('Go to firmware upgrade...') }}</a></div>
+								{% endif %}
+							</div>
+						{% endif %}
+
+						<noscript>
+							<div class="alert-message warning">
+								<h4>{{ _('JavaScript required!') }}</h4>
+								<p>{{ _('You must enable JavaScript in your browser or LuCI will not work properly.') }}</p>
+							</div>
+						</noscript>
+		{% endif %}
