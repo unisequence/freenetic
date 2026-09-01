@@ -1,0 +1,12 @@
+{% if (!blank_page): %}
+					</div>
+				</div>
+				<aside id="fn-settings-panel"></aside>
+			</div>
+			</div>
+		</div>
+		<script>L.require('menu-freenetic')</script>
+		<script>L.require('settings-freenetic')</script>
+		{% endif %}
+	</body>
+</html>

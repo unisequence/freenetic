@@ -1,0 +1,8 @@
+#!/bin/sh
+# LuCI's ucode dispatcher caches the whole resolved menu tree (including
+# "satisfied" flags from depends.uci checks) to disk, keyed only by a hash
+# of the menu.d/*.json FILES — not by any uci runtime value. So switching
+# luci.main.mediaurlbase (which our menu.d entries' depends.uci conditions
+# on) has no visible effect until this cache is cleared.
+rm -f /tmp/luci-indexcache*
+rm -rf /tmp/luci-modulecache
