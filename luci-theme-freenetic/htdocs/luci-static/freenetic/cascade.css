@@ -1373,22 +1373,22 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-login-glyph {
 	position: absolute;
 	color: var(--fn-text-on-accent);
-	animation: fn-glyph-out .4s steps(3, end) 1000ms forwards;
+	animation: fn-glyph-out .25s steps(3, end) 350ms forwards;
 }
 
 .fn-login-model {
 	font-family: var(--fn-font-display);
 	color: var(--fn-text-on-accent);
-	font-size: 1.625rem;
+	font-size: 2.25rem;
 	font-weight: 700;
 	letter-spacing: .08em;
 	text-transform: uppercase;
 	text-align: center;
 	padding: 0 24px;
 	opacity: 0;
-	animation: fn-model-in .4s steps(3, end) 1000ms forwards,
-		fn-model-glitch 2.6s ease-in-out 1400ms infinite,
-		fn-model-glitch-b 3.9s ease-in-out 2200ms infinite;
+	animation: fn-model-in .25s steps(3, end) 350ms forwards,
+		fn-model-glitch 2.6s ease-in-out 700ms infinite,
+		fn-model-glitch-b 3.9s ease-in-out 1400ms infinite;
 }
 
 @keyframes fn-glyph-out {
