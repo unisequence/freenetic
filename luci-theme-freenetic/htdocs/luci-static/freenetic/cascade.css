@@ -5,39 +5,32 @@
  * independently — no code or assets copied from Keenetic.
  */
 
-/* ---------- pixel fonts ---------- */
+/* ---------- pixel font ---------- */
 /* Press Start 2P (Google Fonts, SIL OFL 1.1 — see fonts/PressStart2P-OFL.txt)
-   — display-only. Scoped to the brand wordmark and headings. */
+   — display-only, scoped to the brand wordmark and login screen
+   (.fn-brand-name, .fn-brand-model, .fn-login-model). Not used for headings
+   or body text — an earlier all-pixel pass drew consistent community
+   feedback that it read as unreadable/off-brand. */
 @font-face {
 	font-family: "PressStart2P";
-	src: url("fonts/PressStart2P-Regular.ttf") format("truetype");
-	font-weight: normal;
-	font-style: normal;
-	font-display: swap;
-}
-/* Jersey 10 (Google Fonts, SIL OFL 1.1 — see fonts/Jersey10-OFL.txt) —
-   TEST: lighter pixel font tried on body text, see --fn-font below. */
-@font-face {
-	font-family: "Jersey10";
-	src: url("fonts/Jersey10-Regular.ttf") format("truetype");
+	src: url("fonts/PressStart2P-Regular.woff2") format("woff2");
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
 }
 /* Noto Sans (Google Fonts, SIL OFL 1.1 — see fonts/NotoSans-OFL.txt) —
    plain readable text, not a pixel font. Used for description/body copy
-   (--fn-font-text below) where Jersey10's pixel look hurts long-form
-   readability — headings/labels keep the pixel fonts. */
+   (--fn-font-text below).
 @font-face {
 	font-family: "NotoSans";
-	src: url("fonts/NotoSans-Regular.ttf") format("truetype");
+	src: url("fonts/NotoSans-Regular.woff2") format("woff2");
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
 	font-family: "NotoSans";
-	src: url("fonts/NotoSans-Medium.ttf") format("truetype");
+	src: url("fonts/NotoSans-Medium.woff2") format("woff2");
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
@@ -89,7 +82,11 @@
 	--fn-sidebar-active-bg: #2e3d57;
 
 	--fn-font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-	--fn-font: "Jersey10", var(--fn-font-system); /* TEST — lighter pixel font on body text, revert to var(--fn-font-system) after */
+	--fn-font: var(--fn-font-system);
+	/* Pixel display font — scoped to the brand wordmark and login screen only
+	   (.fn-brand-name, .fn-brand-model, .fn-login-model), never to headings
+	   or body text: community feedback flagged the earlier all-pixel UI as
+	   unreadable ("глаза режет") and off-brand ("напоминает ReactOS"). */
 	--fn-font-display: "PressStart2P", var(--fn-font-system);
 	--fn-font-text: "NotoSans", var(--fn-font-system); /* long-form description/body copy, not pixel */
 
@@ -125,11 +122,11 @@
 
 * { box-sizing: border-box; }
 
-/* Single scale point: every font-size in this file is now rem, so bumping
-   this one value (TEST: +25% for the Jersey 10 body-text experiment) scales
-   the whole UI's text at once instead of hunting down individual px rules. */
+/* Single scale point: every font-size in this file is rem, so bumping this
+   one value scales the whole UI's text at once instead of hunting down
+   individual px rules. */
 html {
-	font-size: 17px;
+	font-size: 14px;
 }
 
 html, body {
@@ -157,7 +154,7 @@ body {
 a { color: var(--fn-accent); text-decoration: none; }
 a:hover { color: var(--fn-accent-hover); text-decoration: underline; }
 
-h1, h2, h3, h4, h5 { font-family: var(--fn-font-display); font-weight: 700; margin: 0 0 .5em; color: var(--fn-text); letter-spacing: .02em; }
+h1, h2, h3, h4, h5 { font-family: var(--fn-font-system); font-weight: 700; margin: 0 0 .5em; color: var(--fn-text); letter-spacing: .02em; }
 h2 { font-size: 1.25rem; }
 h3 { font-size: 0.75rem; }
 
