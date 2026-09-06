@@ -344,23 +344,27 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 .fn-icon-btn:hover { background: var(--fn-surface-alt); color: var(--fn-text); }
 .fn-icon-btn-active { background: var(--fn-accent-soft); color: var(--fn-accent); }
 
-/* Settings is a persistent third column (like the sidebar), not a floating
-   dropdown — collapsed to 0 width until #fn-shell.fn-settings-open. */
+/* Settings is a compact third column (like the sidebar), collapsed to 0 width
+   until #fn-shell.fn-settings-open. Keep the panel sized to its controls so
+   the language/theme menu does not occupy the full viewport height. */
 #fn-settings-panel {
 	flex: 0 0 auto;
 	width: 0;
-	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: auto;
 	position: sticky;
 	top: 0;
-	height: calc(100vh - var(--fn-topbar-h));
+	align-self: flex-start;
+	height: auto;
+	max-height: calc(100vh - var(--fn-topbar-h));
 	background: var(--fn-surface);
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
+	justify-content: flex-start;
 	transition: width .15s ease;
 }
 #fn-shell.fn-settings-open #fn-settings-panel {
-	width: 280px;
+	width: 248px;
 	border-left: 1px solid var(--fn-border);
 }
 
@@ -430,6 +434,39 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 }
 .fn-settings-btn-primary:hover { background: var(--fn-accent-hover); }
 
+/* The settings drawer is intentionally denser than form controls elsewhere
+   in the application. Scope these overrides to avoid shrinking page actions
+   which reuse the shared fn-settings-* helpers. */
+#fn-settings-panel .fn-settings-top,
+#fn-settings-panel .fn-settings-bottom {
+	gap: 2px;
+	padding: 10px 12px;
+}
+#fn-settings-panel .fn-settings-field {
+	gap: 2px;
+	margin-bottom: 8px;
+}
+#fn-settings-panel .fn-settings-field label {
+	font-size: .95rem;
+}
+#fn-settings-panel .fn-settings-field select,
+#fn-settings-panel .fn-settings-field input {
+	padding: 5px 7px;
+}
+#fn-settings-panel #fn-settings-theme,
+#fn-settings-panel #fn-settings-lang,
+#fn-settings-panel #fn-settings-interface {
+	font-size: 1rem;
+}
+#fn-settings-panel .fn-settings-link {
+	padding: 4px 0;
+	font-size: 1rem;
+}
+#fn-settings-panel .fn-settings-btn {
+	padding: 7px 10px;
+	font-size: 1rem;
+}
+
 @media (max-width: 960px) {
 	#fn-shell.fn-settings-open #fn-settings-panel {
 		position: fixed;
@@ -437,7 +474,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 		right: 0;
 		z-index: 65;
 		box-shadow: var(--fn-shadow-2);
-		width: min(280px, calc(100vw - 16px));
+		width: min(248px, calc(100vw - 16px));
 	}
 	#fn-settings-panel { overscroll-behavior: contain; }
 }
