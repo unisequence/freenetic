@@ -363,7 +363,8 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	flex-direction: column;
 	gap: 4px;
 	padding: 16px;
-	width: 280px;
+	width: 100%;
+	min-width: 0;
 }
 
 .fn-settings-field {
@@ -429,7 +430,9 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 		right: 0;
 		z-index: 65;
 		box-shadow: var(--fn-shadow-2);
+		width: min(280px, calc(100vw - 16px));
 	}
+	#fn-settings-panel { overscroll-behavior: contain; }
 }
 
 /* No min-height:0 here on purpose: #fn-scroll is the scroll container, so
@@ -557,6 +560,10 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 }
 #fn-sidebar-toggle:hover { background: var(--fn-sidebar-hover-bg); color: var(--fn-sidebar-text); }
 
+#fn-sidebar-backdrop {
+	display: none;
+}
+
 #fn-main {
 	flex: 1 1 auto;
 	min-width: 0;
@@ -597,10 +604,30 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 
 
 @media (max-width: 860px) {
-	#fn-sidebar { position: fixed; left: 0; bottom: 0; z-index: 55; }
-	#fn-shell:not(.fn-sidebar-collapsed) #fn-sidebar { width: var(--fn-sidebar-w-collapsed); }
-	#fn-shell:not(.fn-sidebar-collapsed) .fn-nav-label,
-	#fn-shell:not(.fn-sidebar-collapsed) .fn-nav-sub { display: none; }
+	#fn-sidebar {
+		position: fixed;
+		top: var(--fn-topbar-h);
+		left: 0;
+		bottom: 0;
+		height: calc(100vh - var(--fn-topbar-h));
+		z-index: 55;
+		box-shadow: var(--fn-shadow-2);
+	}
+	#fn-shell:not(.fn-sidebar-collapsed) #fn-sidebar {
+		width: min(var(--fn-sidebar-w), calc(100vw - 16px));
+	}
+	#fn-sidebar-backdrop {
+		position: fixed;
+		inset: var(--fn-topbar-h) 0 0 var(--fn-sidebar-w-collapsed);
+		z-index: 54;
+		padding: 0;
+		border: none;
+		background: rgba(15, 20, 25, .45);
+		cursor: pointer;
+	}
+	#fn-shell:not(.fn-sidebar-collapsed) #fn-sidebar-backdrop {
+		display: block;
+	}
 	#fn-main { margin-left: var(--fn-sidebar-w-collapsed); }
 }
 
@@ -1299,6 +1326,13 @@ body.modal-overlay-active { overflow: hidden; }
 :root[data-darkmode="true"] .fn-theme-toggle .fn-icon-moon { display: block; }
 
 .fn-field { margin-bottom: 14px; position: relative; }
+.fn-login-label {
+	display: block;
+	margin-bottom: 5px;
+	color: var(--fn-text-secondary);
+	font-size: 0.875rem;
+	font-weight: 500;
+}
 .fn-field input {
 	padding: 10px 12px;
 	border-radius: var(--fn-radius);
@@ -1477,16 +1511,47 @@ body.modal-overlay-active { overflow: hidden; }
 	border: 1px solid var(--fn-border-strong);
 	border-radius: var(--fn-radius-sm);
 	background: var(--fn-surface);
-	color: #ffffff;
+	color: var(--fn-text);
 	font-family: var(--fn-font-system);
 	font-size: 1.0625rem;
 	cursor: pointer;
 }
 
 @media (max-width: 760px) {
-	.fn-login-page { flex-direction: column; }
-	.fn-login-banner { order: -1; min-height: 200px; }
-	.fn-login-more { position: static; margin-top: 16px; display: block; }
+	.fn-login-page {
+		flex-direction: column;
+		height: 100vh;
+		min-height: 0;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+	.fn-login-card {
+		flex: 0 0 auto;
+		padding: 24px 16px 32px;
+	}
+	.fn-login-banner {
+		order: -1;
+		flex: 0 0 200px;
+		min-height: 200px;
+		flex-direction: column;
+	}
+	.fn-login-banner-inner {
+		max-width: 100%;
+		min-width: 0;
+	}
+	.fn-login-model {
+		max-width: 100%;
+		padding: 0 16px;
+		font-size: clamp(1.1rem, 7vw, 2.25rem);
+		letter-spacing: .05em;
+	}
+	.fn-login-more {
+		left: 16px;
+		right: 16px;
+		bottom: 18px;
+		margin: 0;
+		font-size: 1.1rem;
+	}
 }
 
 /* ---------- badges (network status widgets) ---------- */
@@ -2292,4 +2357,44 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 	.fn-diag-controls { align-items: stretch; flex-direction: column; }
 	.fn-diag-controls .fn-kn-field { width: 100%; }
 	.fn-diag-actions .fn-settings-btn { flex: 1 1 0; }
+}
+
+/* ---------- responsive shell/content overrides ---------- */
+
+@media (max-width: 900px) {
+	#maincontent.container {
+		padding: 16px 16px 24px;
+	}
+	.fn-dash {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px;
+	}
+	.fn-dash-col { gap: 16px; }
+	.fn-card-head { padding: 14px 16px; }
+	.fn-card-body { padding: 16px; }
+	.fn-table-row {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+	.fn-table-row > * {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+	.fn-table-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+	.fn-spark-legend { flex-wrap: wrap; gap: 8px 16px; }
+	.fn-info-row {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+	}
+	.fn-info-row .fn-info-label { flex: 0 0 auto; }
+	.fn-pf-row,
+	.fn-mn-dhcp-range {
+		flex-direction: column;
+		gap: 10px;
+	}
+	.fn-apps-row { flex-wrap: wrap; }
+	.fn-apps-row .fn-settings-btn { margin-left: auto; }
 }

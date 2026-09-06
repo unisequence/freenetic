@@ -35,6 +35,7 @@ return baseclass.extend({
 	},
 
 	render(toggleMount, panelMount) {
+		panelMount.setAttribute('aria-label', _('Settings'));
 		const curlang = uci.get('luci', 'main', 'lang') || 'auto';
 		const langSelect = E('select', { id: 'fn-settings-lang' },
 			Object.keys(this.langs).sort().map(code =>
@@ -67,13 +68,13 @@ return baseclass.extend({
 
 		panelMount.appendChild(E('div', { class: 'fn-settings-top' }, [
 			E('div', { class: 'fn-settings-field' }, [
-				E('label', {}, _('Language')), langSelect
+				E('label', { for: 'fn-settings-lang' }, _('Language')), langSelect
 			]),
 			E('div', { class: 'fn-settings-field' }, [
-				E('label', {}, _('Appearance')), themeSelect
+				E('label', { for: 'fn-settings-theme' }, _('Appearance')), themeSelect
 			]),
 			E('div', { class: 'fn-settings-field' }, [
-				E('label', {}, _('Interface')), interfaceSelect
+				E('label', { for: 'fn-settings-interface' }, _('Interface')), interfaceSelect
 			]),
 			E('a', { class: 'fn-settings-link', href: L.url('admin/status/logs') }, _('System Log')),
 			cliLink
@@ -86,7 +87,8 @@ return baseclass.extend({
 		]));
 
 		const toggle = E('button', {
-			type: 'button', id: 'fn-settings-toggle', class: 'fn-icon-btn', 'aria-label': _('Settings')
+			type: 'button', id: 'fn-settings-toggle', class: 'fn-icon-btn',
+			'aria-label': _('Settings'), 'aria-controls': 'fn-settings-panel', 'aria-expanded': 'false'
 		}, svgIcon(GEAR_PATH, 20));
 
 		toggleMount.appendChild(toggle);
@@ -100,12 +102,51 @@ return baseclass.extend({
 			try { localStorage.setItem(STORE_KEY, open ? '1' : '0'); } catch (e) {}
 		});
 
+		let lastFocus = null;
+		const syncSettingsA11y = () => {
+			const open = shell.classList.contains('fn-settings-open');
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			panelMount.setAttribute('aria-hidden', open ? 'false' : 'true');
+		};
+		const closeSettings = () => {
+			if (!shell.classList.contains('fn-settings-open'))
+				return;
+			shell.classList.remove('fn-settings-open');
+			toggle.classList.remove('fn-icon-btn-active');
+			try { localStorage.setItem(STORE_KEY, '0'); } catch (e) {}
+			syncSettingsA11y();
+			if (lastFocus && lastFocus.focus) {
+				lastFocus.focus();
+				lastFocus = null;
+			}
+		};
+		syncSettingsA11y();
+		toggle.addEventListener('click', () => {
+			const open = shell.classList.contains('fn-settings-open');
+			if (open) {
+				lastFocus = toggle;
+				const first = panelMount.querySelector('select, a, button');
+				if (first) setTimeout(() => first.focus(), 0);
+			}
+			syncSettingsA11y();
+		});
+		document.addEventListener('keydown', (ev) => {
+			if (ev.key === 'Escape')
+				closeSettings();
+		});
+		document.addEventListener('click', (ev) => {
+			if (window.innerWidth <= 960 && shell.classList.contains('fn-settings-open') &&
+				!panelMount.contains(ev.target) && !toggle.contains(ev.target))
+				closeSettings();
+		});
+
 		let openByDefault = false;
 		try { openByDefault = localStorage.getItem(STORE_KEY) === '1'; } catch (e) {}
 		if (openByDefault) {
 			shell.classList.add('fn-settings-open');
 			toggle.classList.add('fn-icon-btn-active');
 		}
+		syncSettingsA11y();
 
 		langSelect.addEventListener('change', () => {
 			uci.set('luci', 'main', 'lang', langSelect.value);

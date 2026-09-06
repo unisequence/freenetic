@@ -86,6 +86,7 @@ return baseclass.extend({
 
 		var toggle = document.querySelector('#fn-sidebar-toggle');
 		var shell = document.querySelector('#fn-shell');
+		var backdrop = document.querySelector('#fn-sidebar-backdrop');
 		var STORE_KEY = 'freenetic-sidebar-expanded';
 
 		var expanded = false;
@@ -93,9 +94,36 @@ return baseclass.extend({
 		shell.classList.toggle('fn-sidebar-collapsed', !expanded);
 
 		toggle.addEventListener('click', function() {
-			var nowExpanded = shell.classList.contains('fn-sidebar-collapsed');
 			shell.classList.toggle('fn-sidebar-collapsed');
 			try { localStorage.setItem(STORE_KEY, nowExpanded ? '1' : '0'); } catch (e) {}
+		});
+
+		function syncSidebarA11y() {
+			const isExpanded = !shell.classList.contains('fn-sidebar-collapsed');
+			toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+			toggle.setAttribute('aria-label', _(isExpanded ? 'Collapse menu' : 'Expand menu'));
+			if (backdrop)
+				backdrop.setAttribute('aria-hidden', isExpanded ? 'false' : 'true');
+		}
+
+		syncSidebarA11y();
+		shell.freeneticSyncSidebar = syncSidebarA11y;
+		toggle.addEventListener('click', syncSidebarA11y);
+		if (backdrop)
+			backdrop.addEventListener('click', function() {
+				shell.classList.add('fn-sidebar-collapsed');
+				try { localStorage.setItem(STORE_KEY, '0'); } catch (e) {}
+				syncSidebarA11y();
+				toggle.focus();
+			});
+
+		document.addEventListener('keydown', function(ev) {
+			if (ev.key === 'Escape' && !shell.classList.contains('fn-sidebar-collapsed')) {
+				shell.classList.add('fn-sidebar-collapsed');
+				try { localStorage.setItem(STORE_KEY, '0'); } catch (e) {}
+				syncSidebarA11y();
+				toggle.focus();
+			}
 		});
 	},
 
@@ -196,10 +224,14 @@ return baseclass.extend({
 				|| (!anyActive && index === 0);
 
 			const li = E('li', { 'class': 'fn-nav-item' + (isGroupActive ? ' fn-active' : '') });
+			const subId = 'fn-nav-sub-' + index;
 
 			const head = E('a', {
 				'class': 'fn-nav-head',
 				'href': '#',
+				'role': 'button',
+				'aria-controls': subId,
+				'aria-expanded': isGroupActive ? 'true' : 'false',
 				'title': _(group.title),
 				'click': (ev) => {
 					ev.preventDefault();
@@ -208,8 +240,12 @@ return baseclass.extend({
 						shell.classList.remove('fn-sidebar-collapsed');
 						try { localStorage.setItem('freenetic-sidebar-expanded', '1'); } catch (e) {}
 						li.classList.add('fn-open');
+						head.setAttribute('aria-expanded', 'true');
+						if (shell.freeneticSyncSidebar)
+							shell.freeneticSyncSidebar();
 					} else {
 						li.classList.toggle('fn-open');
+						head.setAttribute('aria-expanded', li.classList.contains('fn-open') ? 'true' : 'false');
 					}
 				}
 			}, [
@@ -220,7 +256,7 @@ return baseclass.extend({
 			li.classList.toggle('fn-open', isGroupActive);
 			li.appendChild(head);
 
-			const sub = E('ul', { 'class': 'fn-nav-sub' });
+			const sub = E('ul', { 'class': 'fn-nav-sub', 'id': subId });
 			group.entries.forEach(e => {
 				const isChildActive = e.section.name === L.env.requestpath[1] && e.child.name === L.env.requestpath[2];
 				sub.appendChild(E('li', { 'class': isChildActive ? 'fn-active' : '' }, [

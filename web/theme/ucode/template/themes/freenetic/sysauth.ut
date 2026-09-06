@@ -35,13 +35,14 @@
 
 			<form method="post" id="fn-login-form">
 				<div class="fn-field">
+					<label class="fn-login-label" for="luci_username">{{ _('Username') }}</label>
 					<input name="luci_username" id="luci_username" type="text" autocomplete="username"
-						placeholder="{{ _('Username') }}" value="{{ entityencode(duser, true) }}">
+						value="{{ entityencode(duser, true) }}">
 				</div>
 				<div class="fn-field fn-field-password">
-					<input name="luci_password" id="luci_password" type="password" autocomplete="current-password"
-						placeholder="{{ _('Password') }}">
-					<button type="button" class="fn-eye-toggle" aria-label="{{ _('Show password') }}">
+					<label class="fn-login-label" for="luci_password">{{ _('Password') }}</label>
+					<input name="luci_password" id="luci_password" type="password" autocomplete="current-password">
+					<button type="button" class="fn-eye-toggle" aria-label="{{ _('Show password') }}" aria-pressed="false">
 						<svg viewBox="0 0 24 24" width="18" height="18"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
 					</button>
 				</div>
@@ -95,18 +96,18 @@
 	</div>
 </div>
 
-<div id="fn-cant-signin-dialog" class="fn-dialog" hidden>
+<div id="fn-cant-signin-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-cant-signin-title" hidden>
 	<div class="fn-dialog-box">
-		<h3>{{ _("Can't sign in?") }}</h3>
+		<h3 id="fn-cant-signin-title">{{ _("Can't sign in?") }}</h3>
 		<p>{{ sprintf(_('The default username is %s.'), '<code>root</code>') }}</p>
 		<p>{{ _('If you forgot the password, press and hold the Reset button on the device for 10 seconds to restore factory defaults. This will erase your configuration.') }}</p>
 		<button type="button" class="fn-dialog-close">{{ _('Close') }}</button>
 	</div>
 </div>
 
-<div id="fn-support-dialog" class="fn-dialog" hidden>
+<div id="fn-support-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-support-title" hidden>
 	<div class="fn-dialog-box">
-		<h3>{{ _('Support Center') }}</h3>
+		<h3 id="fn-support-title">{{ _('Support Center') }}</h3>
 		<p><a href="https://forum.openwrt.org/" target="_blank" rel="noreferrer">forum.openwrt.org</a></p>
 		<p><a href="https://github.com/openwrt/openwrt" target="_blank" rel="noreferrer">github.com/openwrt/openwrt</a></p>
 		<button type="button" class="fn-dialog-close">{{ _('Close') }}</button>
@@ -118,7 +119,10 @@
 		var toggle = document.querySelector('.fn-eye-toggle');
 		var pw = document.querySelector('#luci_password');
 		toggle.addEventListener('click', function() {
-			pw.type = (pw.type === 'password') ? 'text' : 'password';
+			var visible = pw.type === 'password';
+			pw.type = visible ? 'text' : 'password';
+			toggle.setAttribute('aria-pressed', visible ? 'true' : 'false');
+			toggle.setAttribute('aria-label', visible ? _('Hide password') : _('Show password'));
 		});
 		document.querySelector('#luci_username').focus();
 
@@ -131,22 +135,39 @@
 			window.freeneticSetTheme(isDark ? 'light' : 'dark');
 		});
 
-		function wire(openId, dlgId) {
+		function wire(openIds, dlgId) {
 			var dlg = document.querySelector(dlgId);
-			document.querySelector(openId).addEventListener('click', function(ev) {
-				ev.preventDefault();
-				dlg.hidden = false;
+			var opener = null;
+			var close = dlg.querySelector('.fn-dialog-close');
+			var ids = Array.isArray(openIds) ? openIds : [openIds];
+
+			ids.forEach(function(openId) {
+				document.querySelector(openId).addEventListener('click', function(ev) {
+					ev.preventDefault();
+					opener = ev.currentTarget;
+					dlg.hidden = false;
+					close.focus();
+				});
 			});
-			dlg.querySelector('.fn-dialog-close').addEventListener('click', function() {
+
+			function hide() {
 				dlg.hidden = true;
-			});
+				if (opener) opener.focus();
+			}
+
+			close.addEventListener('click', hide);
 			dlg.addEventListener('click', function(ev) {
-				if (ev.target === dlg) dlg.hidden = true;
+				if (ev.target === dlg) hide();
+			});
+			dlg.addEventListener('keydown', function(ev) {
+				if (ev.key === 'Escape') {
+					ev.preventDefault();
+					hide();
+				}
 			});
 		}
 		wire('#fn-cant-signin', '#fn-cant-signin-dialog');
-		wire('#fn-support-center', '#fn-support-dialog');
-		wire('#fn-more-options', '#fn-support-dialog');
+		wire(['#fn-support-center', '#fn-more-options'], '#fn-support-dialog');
 	})();
 </script>
 
