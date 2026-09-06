@@ -1,0 +1,11 @@
+{
+	"luci-theme-freenetic": {
+		"description": "Grant access to Freenetic theme settings",
+		"read": {
+			"uci": [ "luci" ]
+		},
+		"write": {
+			"uci": [ "luci" ]
+		}
+	}
+}

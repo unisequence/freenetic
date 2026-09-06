@@ -111,10 +111,9 @@ static int read_line(const char *prompt, char *buf, int bufsz,
 			case 'A': /* up */
 				if (hist_idx > 0) {
 					if (hist_idx == hist_count)
-						strncpy(saved, buf, sizeof(saved) - 1);
+						snprintf(saved, sizeof(saved), "%s", buf);
 					hist_idx--;
-					strncpy(buf, history[hist_idx], bufsz - 1);
-					buf[bufsz - 1] = '\0';
+					snprintf(buf, bufsz, "%s", history[hist_idx]);
 					len = pos = (int)strlen(buf);
 					refresh_line(prompt, buf, len, pos);
 				}
@@ -123,11 +122,10 @@ static int read_line(const char *prompt, char *buf, int bufsz,
 				if (hist_idx < hist_count) {
 					hist_idx++;
 					if (hist_idx == hist_count) {
-						strncpy(buf, saved, bufsz - 1);
+						snprintf(buf, bufsz, "%s", saved);
 					} else {
-						strncpy(buf, history[hist_idx], bufsz - 1);
+						snprintf(buf, bufsz, "%s", history[hist_idx]);
 					}
-					buf[bufsz - 1] = '\0';
 					len = pos = (int)strlen(buf);
 					refresh_line(prompt, buf, len, pos);
 				}
@@ -230,7 +228,7 @@ int fnc_repl(struct ubus_context *ctx)
 
 		if (!cur_if[0] && strcmp(argv[0], "interface") == 0 && argc == 2) {
 			if (fnc_interface_exists(argv[1])) {
-				strncpy(cur_if, argv[1], sizeof(cur_if) - 1);
+				snprintf(cur_if, sizeof(cur_if), "%s", argv[1]);
 			} else {
 				fprintf(stderr, "fnc: network.%s: нет такого интерфейса\n", argv[1]);
 			}

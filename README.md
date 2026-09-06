@@ -12,14 +12,13 @@ UCI/ubus/rpcd underneath.
 > Keenetic and doesn't use their code. The name is a pun (free +
 > Keenetic + frenetic), not an attempt to pass as the original product.
 
-Development hardware is a Tenbay WR3000K (MediaTek MT7981), flashed
-with plain upstream OpenWrt — mainline U-Boot, no proprietary
-components.
+Current development hardware is a BT RB300, flashed with plain upstream
+OpenWrt — mainline U-Boot, no proprietary components.
 
 | | |
 |---|---|
-| ![Login](docs/screenshots/login.webp) | ![Dashboard](docs/screenshots/dashboard.webp) |
-| ![System files](docs/screenshots/system.webp) | ![Applications](docs/screenshots/applications.webp) |
+| ![Login](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |
+| ![System files](web/docs/screenshots/system.webp) | ![Applications](web/docs/screenshots/applications.webp) |
 
 ## What's working
 
@@ -32,25 +31,28 @@ device). It has its own REPL with a custom line editor, sectioned
 `up`/`down`), `ping`/`traceroute`, `system reboot`, and static routing
 (`show ip route`, `ip route`, `no ip route`).
 
-**`luci-theme-freenetic`** (`luci-theme-freenetic/`) is a from-scratch
-LuCI theme — not a fork of the stock ones — that reproduces the
-Keenetic Web look, and it's switchable like any other LuCI theme: pick
-Bootstrap and it's gone, pick Freenetic back and everything returns.
-Running on real hardware right now:
+**The web interface** (`web/`) is a from-scratch LuCI interface — not a fork
+of a stock theme — reproducing the Keenetic Web look. **The OpenWrt
+integration** (`app/`) assembles it into a visual `luci-theme-freenetic`
+package and a functional `luci-app-freenetic` package with menus, ACLs and
+server-side helpers. The shell is switchable like any other LuCI theme: pick
+Bootstrap and it is gone, pick Freenetic back and it returns. Running on real
+hardware right now:
 
 - Dashboard, Traffic Monitor, Wi-Fi Monitor
 - Internet (multi-WAN)
 - My Networks & Wi-Fi — Home/Guest network with a real backend behind
   it (separate subnet, DHCP, firewall isolation), plus Client List
 - Network Rules: Port Forwarding, Firewall
+- Diagnostics: WAN addressing, gateway/DNS state, bounded ping and traceroute
 - Management: System (firmware download/flash, config+package backup,
   bootloader partition dumps), Applications (an install catalog built
   on top of `apk`; needs `luci-app-package-manager` installed, which
-  `deploy.sh` takes care of)
+  `app/deploy.sh` takes care of)
 
 Not built yet: DDNS, Wi-Fi ACL, IntelliQoS, Mobile/DSL/Wireless ISP
-connection types, the application traffic analyzer, a diagnostics
-page, and cross-links between cards.
+connection types, the application traffic analyzer, and cross-links
+between cards.
 
 ## Roadmap
 
@@ -62,9 +64,44 @@ donor binary code. Hasn't started yet.
 
 ## Layout
 
-- `cli/` — `fnc` source.
-- `luci-theme-freenetic/` — the LuCI theme.
+- `app/luci-theme-freenetic/` — OpenWrt package for the visual theme shell.
+- `app/luci-app-freenetic/` — OpenWrt package for router management views,
+  rpcd ACLs, LuCI menus and backend helpers.
+- `web/theme/` and `web/application/` — browser sources for those two packages;
+  `web/docs/` holds screenshots.
+- `cli/` — the standalone C implementation of the `fnc` console client.
 
-## Credits
+Dependencies point one way: each `app/` package links to its matching `web/`
+source directory, while `web/` does not know the OpenWrt package layout.
+`luci-app-freenetic` depends on `luci-theme-freenetic`; neither web component
+is a standalone SPA.
 
-A good chunk of `luci-theme-freenetic` and `fnc` was written together
+## Development checks
+
+Syntax, policy and unit checks need no OpenWrt buildroot and are also run by
+CI:
+
+```sh
+make check-static
+```
+
+Run the complete local suite, including CLI cross-compilation, with an OpenWrt
+buildroot available next to this repository (or pass its path explicitly):
+
+```sh
+make check OPENWRT_DIR=/path/to/openwrt
+```
+
+To build both installable LuCI packages as well:
+
+```sh
+make check-package OPENWRT_DIR=/path/to/openwrt DL_DIR=/path/to/openwrt/dl
+```
+
+The package directories in the buildroot must point to the matching package
+components:
+
+```sh
+ln -s /path/to/freenetic/app/luci-theme-freenetic /path/to/openwrt/package/luci-theme-freenetic
+ln -s /path/to/freenetic/app/luci-app-freenetic /path/to/openwrt/package/luci-app-freenetic
+```

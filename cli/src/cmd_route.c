@@ -87,8 +87,8 @@ static void find_if_cb(struct ubus_request *req, int type, struct blob_attr *msg
 			if (addr_covers(blobmsg_get_string(atb[ADDR_ADDRESS]),
 					 atb[ADDR_MASK] ? blobmsg_get_u32(atb[ADDR_MASK]) : 32,
 					 fctx->gw)) {
-				strncpy(fctx->found, blobmsg_get_string(itb[IF_NAME]),
-					sizeof(fctx->found) - 1);
+				snprintf(fctx->found, sizeof(fctx->found), "%s",
+					 blobmsg_get_string(itb[IF_NAME]));
 				return;
 			}
 		}
@@ -112,8 +112,7 @@ static const char *find_interface_for_gateway(struct ubus_context *ctx,
 	ubus_invoke(ctx, id, "dump", NULL, find_if_cb, &fctx, 3000);
 	if (!fctx.found[0])
 		return NULL;
-	strncpy(buf, fctx.found, bufsz - 1);
-	buf[bufsz - 1] = '\0';
+	snprintf(buf, bufsz, "%s", fctx.found);
 	return buf;
 }
 
@@ -182,8 +181,7 @@ int fnc_ip_route_add(struct ubus_context *ctx, const char *target_cidr,
 
 	printf("маршрут %s via %s сохранён, применяю (network reload)...\n",
 	       target_cidr, gateway);
-	fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
-	return 0;
+	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
 }
 
 int fnc_ip_route_del(struct ubus_context *ctx, const char *target_cidr,
@@ -200,6 +198,5 @@ int fnc_ip_route_del(struct ubus_context *ctx, const char *target_cidr,
 
 	printf("маршрут %s via %s удалён, применяю (network reload)...\n",
 	       target_cidr, gateway);
-	fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
-	return 0;
+	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
 }

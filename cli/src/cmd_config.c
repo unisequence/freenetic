@@ -53,8 +53,7 @@ int fnc_set_ip_address(struct ubus_context *ctx, const char *ifname,
 		return -1;
 
 	printf("ipaddr %s сохранён, применяю (network reload)...\n", cidr);
-	fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
-	return 0;
+	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
 }
 
 int fnc_set_dhcp_client(struct ubus_context *ctx, const char *ifname)
@@ -63,8 +62,7 @@ int fnc_set_dhcp_client(struct ubus_context *ctx, const char *ifname)
 		return -1;
 
 	printf("proto dhcp сохранён, применяю (network reload)...\n");
-	fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
-	return 0;
+	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
 }
 
 static int interface_updown(struct ubus_context *ctx, const char *ifname,

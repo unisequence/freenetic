@@ -6,11 +6,19 @@
 ifndef OPENWRT_DIR
 $(error OPENWRT_DIR is not set — point it at your OpenWrt buildroot, e.g. make OPENWRT_DIR=/path/to/openwrt)
 endif
-TOOLCHAIN   ?= $(OPENWRT_DIR)/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.4.0_musl
+TOOLCHAIN   ?= $(shell find "$(OPENWRT_DIR)/staging_dir" -maxdepth 1 -type d \
+	-name 'toolchain-aarch64_cortex-a53_gcc-*_musl' -print 2>/dev/null | \
+	sort -V | tail -n 1)
 SYSROOT     ?= $(OPENWRT_DIR)/staging_dir/target-aarch64_cortex-a53_musl
 
+ifeq ($(TOOLCHAIN),)
+$(error no aarch64_cortex-a53 musl toolchain found under $(OPENWRT_DIR)/staging_dir)
+endif
+
+export STAGING_DIR := $(SYSROOT)
+
 CC      = $(TOOLCHAIN)/bin/aarch64-openwrt-linux-gcc
-CFLAGS  = -Wall -Wextra -O2 -std=gnu11 --sysroot=$(SYSROOT) -I$(SYSROOT)/usr/include
+CFLAGS  = -Wall -Wextra -O2 -std=gnu11 --sysroot=$(SYSROOT)
 LDFLAGS = --sysroot=$(SYSROOT) -L$(SYSROOT)/usr/lib
 LIBS    = -lubus -lubox -lblobmsg_json -ljson-c -luci
 

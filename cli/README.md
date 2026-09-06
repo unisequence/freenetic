@@ -21,21 +21,39 @@ make OPENWRT_DIR=/path/to/openwrt-upstream
 
 ## Синтаксис
 
-Постепенно переносим сюда команды в духе KeeneticOS CLI, транслируя их
-в UCI/ubus/`ip`/`tc`.
-
-Пока реализовано (read-only):
+Команды в духе KeeneticOS CLI транслируются в UCI/ubus и штатные утилиты
+OpenWrt (`ip`, `bridge`, `ping`, `traceroute`). Реализовано:
 
 ```
 fnc show version
 fnc show system
 fnc show interface [имя]
 fnc show ip [имя]
+fnc show ip route
+fnc show ip arp
+fnc show running-config
+fnc show mac-table
+fnc interface <имя> ip address A.B.C.D/N
+fnc interface <имя> ip dhcp client
+fnc interface <имя> up|down
+fnc ip route <сеть>/<маска> <шлюз> [metric <N>]
+fnc no ip route <сеть>/<маска> <шлюз>
+fnc ping <узел>
+fnc traceroute <узел>
+fnc system reboot
+fnc system configuration save
 ```
+
+Запуск без аргументов открывает интерактивный REPL с историей и контекстом
+`interface <имя>`.
 
 ## Структура
 
 - `src/main.c` — разбор argv, диспетчеризация команд.
 - `src/ubus_util.[ch]` — тонкая обёртка над `libubus` (connect/invoke).
+- `src/dispatch.[ch]` — маршрутизация команд и контекстов.
+- `src/repl.[ch]` — интерактивная строка, история и interface-контекст.
 - `src/cmd_show.[ch]` — реализация `show`-команд (парсинг blobmsg-ответов
   `system board`/`system info`/`network.interface dump`).
+- `src/cmd_config.[ch]`, `src/cmd_route.[ch]` — изменение интерфейсов и
+  статических маршрутов через UCI с последующим `network reload`.

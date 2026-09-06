@@ -14,4 +14,6 @@ __pycache__/
 *.zip
 graphify-out/
 cli/graphify-out/
+app/graphify-out/
+web/graphify-out/
 uboot/

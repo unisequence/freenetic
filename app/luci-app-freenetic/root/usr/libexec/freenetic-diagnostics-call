@@ -1,0 +1,43 @@
+#!/bin/sh
+# Narrow command boundary for the LuCI diagnostics page. Never pass user input
+# through a shell: validate one host/address and then execute a fixed argv.
+set -eu
+
+if [ "$#" -ne 2 ]; then
+	echo "usage: freenetic-diagnostics-call <ping|traceroute> <host>" >&2
+	exit 2
+fi
+
+operation=$1
+target=$2
+
+case "$operation" in
+	ping|traceroute) ;;
+	*)
+		echo "unsupported diagnostic operation" >&2
+		exit 2
+		;;
+esac
+
+# ASCII hostnames plus IPv4/IPv6 literals. A leading dash would be interpreted
+# as another utility option, even though exec itself does not invoke a shell.
+case "$target" in
+	''|-*|*[!A-Za-z0-9._:-]*)
+		echo "invalid host or address" >&2
+		exit 2
+		;;
+esac
+
+if [ "${#target}" -gt 253 ]; then
+	echo "host or address is too long" >&2
+	exit 2
+fi
+
+case "$operation" in
+	ping)
+		exec /bin/ping -c 4 -W 2 "$target"
+		;;
+	traceroute)
+		exec /bin/traceroute -n -m 15 -q 1 -w 1 "$target"
+		;;
+esac
