@@ -433,25 +433,36 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 
 @media (max-width: 960px) {
 	#fn-settings-panel {
-		/* Keep the drawer out of #fn-body's flex flow. Otherwise a width
-		   transition briefly shrinks #fn-main and makes cards jump/repaint. */
+		/* Keep the drawer out of #fn-body's flex flow. It stays fixed-width
+		   while hidden and slides with transform, so cards never reflow. */
 		position: fixed;
 		top: var(--fn-topbar-h);
 		right: 0;
 		bottom: auto;
 		align-self: auto;
-		width: 0;
+		width: min(248px, calc(100vw - 16px));
 		height: auto;
 		max-height: calc(100vh - var(--fn-topbar-h));
 		overflow-x: hidden;
 		overflow-y: auto;
 		justify-content: flex-start;
-		transition: none;
+		transform: translate3d(100%, 0, 0);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition: transform .2s cubic-bezier(.2, .8, .2, 1), opacity .16s ease,
+			visibility 0s linear .2s;
+		will-change: transform, opacity;
 		z-index: 65;
 	}
 	#fn-shell.fn-settings-open #fn-settings-panel {
 		box-shadow: var(--fn-shadow-2);
 		width: min(248px, calc(100vw - 16px));
+		transform: translate3d(0, 0, 0);
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transition: transform .2s cubic-bezier(.2, .8, .2, 1), opacity .16s ease;
 	}
 
 	/* The mobile settings drawer is intentionally denser than form controls
@@ -1529,6 +1540,7 @@ body.modal-overlay-active { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
 	.fn-login-glyph { display: none; }
 	.fn-login-model { opacity: 1; animation: none; }
+	#fn-settings-panel { transition: none !important; }
 }
 
 .fn-login-more {
