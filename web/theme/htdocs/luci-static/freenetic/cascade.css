@@ -692,6 +692,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 .alert-message.fade-in { animation: fn-alert-in .4s ease; }
 
 /* corner toast variant, used for the "no password set" nag */
+.fn-password-toast-dismissed #fn-password-toast { display: none; }
 @keyframes fn-toast-in {
 	from { opacity: 0; transform: translateY(16px); }
 	to { opacity: 1; transform: translateY(0); }
@@ -712,7 +713,13 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	animation: fn-toast-in .25s ease;
 }
 .fn-toast.fn-toast-closing { animation: fn-toast-out .18s ease forwards; }
-.fn-toast .right { margin-top: 8px; }
+.fn-toast-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 8px;
+}
 .fn-toast p { font-size: 1.2rem; }
 .fn-toast .btn { font-size: 1rem; }
 .fn-toast-close {
@@ -732,6 +739,17 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	justify-content: center;
 }
 .fn-toast-close:hover { background: rgba(0, 0, 0, .08); color: var(--fn-text); }
+
+@media (max-width: 480px) {
+	.fn-toast {
+		right: 12px;
+		bottom: 12px;
+		left: 12px;
+		max-width: none;
+	}
+	.fn-toast-actions { justify-content: stretch; }
+	.fn-toast-actions .btn { flex: 1 1 100%; justify-content: center; }
+}
 
 /* ---------- buttons ---------- */
 
