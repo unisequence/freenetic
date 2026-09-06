@@ -344,27 +344,24 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 .fn-icon-btn:hover { background: var(--fn-surface-alt); color: var(--fn-text); }
 .fn-icon-btn-active { background: var(--fn-accent-soft); color: var(--fn-accent); }
 
-/* Settings is a compact third column (like the sidebar), collapsed to 0 width
-   until #fn-shell.fn-settings-open. Keep the panel sized to its controls so
-   the language/theme menu does not occupy the full viewport height. */
+/* Settings is a persistent third column on desktop, collapsed to 0 width
+   until #fn-shell.fn-settings-open. The mobile override below turns it into
+   an independent compact drawer so opening it never reflows the cards. */
 #fn-settings-panel {
 	flex: 0 0 auto;
 	width: 0;
-	overflow-x: hidden;
-	overflow-y: auto;
+	overflow: hidden;
 	position: sticky;
 	top: 0;
-	align-self: flex-start;
-	height: auto;
-	max-height: calc(100vh - var(--fn-topbar-h));
+	height: calc(100vh - var(--fn-topbar-h));
 	background: var(--fn-surface);
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-start;
+	justify-content: space-between;
 	transition: width .15s ease;
 }
 #fn-shell.fn-settings-open #fn-settings-panel {
-	width: 248px;
+	width: 280px;
 	border-left: 1px solid var(--fn-border);
 }
 
@@ -434,47 +431,59 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 }
 .fn-settings-btn-primary:hover { background: var(--fn-accent-hover); }
 
-/* The settings drawer is intentionally denser than form controls elsewhere
-   in the application. Scope these overrides to avoid shrinking page actions
-   which reuse the shared fn-settings-* helpers. */
-#fn-settings-panel .fn-settings-top,
-#fn-settings-panel .fn-settings-bottom {
-	gap: 2px;
-	padding: 10px 12px;
-}
-#fn-settings-panel .fn-settings-field {
-	gap: 2px;
-	margin-bottom: 8px;
-}
-#fn-settings-panel .fn-settings-field label {
-	font-size: .95rem;
-}
-#fn-settings-panel .fn-settings-field select,
-#fn-settings-panel .fn-settings-field input {
-	padding: 5px 7px;
-}
-#fn-settings-panel #fn-settings-theme,
-#fn-settings-panel #fn-settings-lang,
-#fn-settings-panel #fn-settings-interface {
-	font-size: 1rem;
-}
-#fn-settings-panel .fn-settings-link {
-	padding: 4px 0;
-	font-size: 1rem;
-}
-#fn-settings-panel .fn-settings-btn {
-	padding: 7px 10px;
-	font-size: 1rem;
-}
-
 @media (max-width: 960px) {
-	#fn-shell.fn-settings-open #fn-settings-panel {
+	#fn-settings-panel {
+		/* Keep the drawer out of #fn-body's flex flow. Otherwise a width
+		   transition briefly shrinks #fn-main and makes cards jump/repaint. */
 		position: fixed;
 		top: var(--fn-topbar-h);
 		right: 0;
+		bottom: auto;
+		align-self: auto;
+		width: 0;
+		height: auto;
+		max-height: calc(100vh - var(--fn-topbar-h));
+		overflow-x: hidden;
+		overflow-y: auto;
+		justify-content: flex-start;
+		transition: none;
 		z-index: 65;
+	}
+	#fn-shell.fn-settings-open #fn-settings-panel {
 		box-shadow: var(--fn-shadow-2);
 		width: min(248px, calc(100vw - 16px));
+	}
+
+	/* The mobile settings drawer is intentionally denser than form controls
+	   elsewhere in the application. */
+	#fn-settings-panel .fn-settings-top,
+	#fn-settings-panel .fn-settings-bottom {
+		gap: 2px;
+		padding: 10px 12px;
+	}
+	#fn-settings-panel .fn-settings-field {
+		gap: 2px;
+		margin-bottom: 8px;
+	}
+	#fn-settings-panel .fn-settings-field label {
+		font-size: .95rem;
+	}
+	#fn-settings-panel .fn-settings-field select,
+	#fn-settings-panel .fn-settings-field input {
+		padding: 5px 7px;
+	}
+	#fn-settings-panel #fn-settings-theme,
+	#fn-settings-panel #fn-settings-lang,
+	#fn-settings-panel #fn-settings-interface {
+		font-size: 1rem;
+	}
+	#fn-settings-panel .fn-settings-link {
+		padding: 4px 0;
+		font-size: 1rem;
+	}
+	#fn-settings-panel .fn-settings-btn {
+		padding: 7px 10px;
+		font-size: 1rem;
 	}
 	#fn-settings-panel { overscroll-behavior: contain; }
 }
@@ -2049,9 +2058,12 @@ body.modal-overlay-active { overflow: hidden; }
 	gap: 4px;
 	height: 120px;
 	min-height: 120px;
+	min-width: 0;
+	max-width: 100%;
 }
 .fn-survey-bar {
 	flex: 1 1 0;
+	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -2442,10 +2454,37 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 		overflow-wrap: anywhere;
 	}
 	.fn-table-actions { flex-wrap: wrap; }
+	/* Hover elevation is not meaningful on touch screens and can leave a
+	   tapped card visually shifted while an overlay drawer is opening. */
+	.fn-card:hover { transform: none; box-shadow: var(--fn-shadow-1); }
 }
 
 @media (max-width: 640px) {
 	.fn-spark-legend { flex-wrap: wrap; gap: 8px 16px; }
+	.fn-survey-chart {
+		gap: 2px;
+		overflow: hidden;
+	}
+	.fn-survey-bar { gap: 2px; }
+	.fn-survey-bar-label {
+		max-width: 100%;
+		overflow: hidden;
+		white-space: nowrap;
+		font-size: .7rem;
+		letter-spacing: -.03em;
+	}
+	/* 5 GHz exposes many more channels than 2.4 GHz. Turn the channel
+	   labels upright on narrow screens so every column remains inside the
+	   card instead of forcing horizontal page overflow. */
+	.fn-survey-chart-5g .fn-survey-bar-label {
+		width: auto;
+		height: 2.25rem;
+		overflow: visible;
+		font-size: .625rem;
+		line-height: 1;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+	}
 	.fn-info-row {
 		flex-direction: column;
 		align-items: flex-start;

@@ -174,6 +174,7 @@ return view.extend({
 	pollSurvey() {
 		const radio = this.activeRadio;
 		const chart = this.surveyChart;
+		chart.classList.toggle('fn-survey-chart-5g', !!radio && radio.band === '5g');
 
 		if (!radio || !radio.device) {
 			dom_empty(chart);
