@@ -322,7 +322,10 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	font-size: 0.8125rem;
 }
 #indicators > * { display: inline-flex; align-items: center; }
-[data-indicator="poll-status"] { font-size: 1.5rem; }
+/* LuCI's core adds a live-update status chip whenever polling runs.
+ * Freenetic keeps live updates unobtrusive; the stream/poll fallback remains
+ * active, but its implementation detail should not take space in the UI. */
+[data-indicator="poll-status"] { display: none !important; }
 
 #fn-settings { flex: 0 0 auto; }
 

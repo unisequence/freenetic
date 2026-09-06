@@ -38,6 +38,8 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 устройстве:
 
 - Dashboard, Traffic Monitor, Wi-Fi Monitor
+- Живые метрики Dashboard и Traffic Monitor идут одним авторизованным SSE-потоком
+  (с автоматическим возвратом к polling на старых браузерах/образах)
 - Internet (мульти-WAN)
 - My Networks & Wi-Fi — Домашняя/Гостевая сеть с реальным бэкендом
   (отдельная подсеть, DHCP, firewall-изоляция), плюс Client List

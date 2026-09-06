@@ -30,5 +30,39 @@ return baseclass.extend({
 
 			return data || {};
 		});
+	},
+
+	/* Open the authenticated server-to-client state stream.  The endpoint is
+	 * intentionally a plain CGI rather than a LuCI dispatcher action because
+	 * dispatcher actions buffer their output and cannot stream SSE frames.
+	 * Callers keep their existing polling fallback until the first snapshot is
+	 * received, so an older image without the endpoint remains usable. */
+	stream: function(onSnapshot, onError) {
+		if (typeof window.EventSource !== 'function')
+			return null;
+
+		/* LuCI's auth cookie is scoped to /cgi-bin/luci.  The stream is a direct
+		 * sibling CGI (dispatcher actions buffer output), so include the current
+		 * SID explicitly; the CGI validates it against ubus before streaming. */
+		const sid = L.env.sessionid;
+		const url = '/cgi-bin/freenetic-events' + (sid ? '?sid=' + encodeURIComponent(sid) : '');
+		const source = new window.EventSource(url, {
+			withCredentials: true
+		});
+
+		source.addEventListener('snapshot', ev => {
+			try {
+				onSnapshot(JSON.parse(ev.data));
+			}
+			catch (err) {
+				if (onError)
+					onError(err);
+			}
+		});
+
+		if (onError)
+			source.addEventListener('error', onError);
+
+		return source;
 	}
 });

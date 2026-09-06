@@ -1,0 +1,201 @@
+#!/usr/bin/ucode
+/*
+ * Small, authenticated Server-Sent Events endpoint for the Freenetic live
+ * views.  It deliberately lives outside the LuCI dispatcher: dispatcher
+ * actions buffer their output, while SSE must flush each event immediately.
+ *
+ * uhttpd's default script timeout is 60 seconds, so a connection is bounded
+ * to a little under that and EventSource reconnects it automatically.  This
+ * keeps the endpoint compatible with stock router settings and avoids making
+ * every uhttpd request wait forever on a client tab.
+ */
+'use strict';
+
+import * as fs from 'fs';
+import { connect } from 'ubus';
+
+const EVENT_INTERVAL = 3000;
+const MAX_EVENTS = 17; /* 48 seconds, below uhttpd's default 60s timeout */
+
+function response(status, body) {
+	print('Status: ' + status + '\r\n' +
+		'Content-Type: application/json; charset=utf-8\r\n' +
+		'Cache-Control: no-store\r\n' +
+		'X-Content-Type-Options: nosniff\r\n\r\n' + body);
+}
+
+function validSessionId(value) {
+	return value && match(value, /^[0-9a-fA-F]{32}$/) ? value : null;
+}
+
+function sessionId() {
+	/* LuCI sets sysauth_http with a /cgi-bin/luci path.  This endpoint is a
+	 * sibling CGI, so the frontend supplies the same SID in the query string;
+	 * accepting it here also makes the reason explicit instead of relying on a
+	 * cookie that the browser will not send. */
+	for (let item in split(getenv('QUERY_STRING') || '', '&')) {
+		const pair = split(item, '=', 2);
+		if (length(pair) == 2 && pair[0] == 'sid') {
+			const sid = validSessionId(pair[1]);
+			if (sid)
+				return sid;
+		}
+	}
+
+	const cookie = getenv('HTTP_COOKIE') || '';
+
+	for (let item in split(cookie, ';')) {
+		const pair = split(trim(item), '=', 2);
+		if (length(pair) == 2 &&
+			(pair[0] == 'sysauth_http' || pair[0] == 'sysauth_https') &&
+			match(pair[1], /^[0-9a-fA-F]{32}$/))
+			return validSessionId(pair[1]);
+	}
+
+	return null;
+}
+
+function authorized(bus, sid) {
+	if (!sid)
+		return false;
+
+	try {
+		const session = bus.call('session', 'get', { ubus_rpc_session: sid });
+		if (type(session?.values?.username) != 'string')
+			return false;
+
+		/* Match the read permission used by Freenetic's live views.  Checking
+		 * through session.access keeps this endpoint from becoming an implicit
+		 * unauthenticated root-level ubus proxy. */
+		const access = bus.call('session', 'access', {
+			ubus_rpc_session: sid,
+			scope: 'ubus',
+			object: 'network.interface',
+			function: 'dump'
+		});
+		const appAccess = bus.call('session', 'access', {
+			ubus_rpc_session: sid,
+			scope: 'file',
+			object: '/tmp/freenetic-startup-config.tar.gz',
+			function: 'read'
+		});
+
+		return access?.access === true && appAccess?.access === true;
+	}
+	catch (e) {
+		return false;
+	}
+}
+
+function call(bus, object, method, args, fallback) {
+	try {
+		const result = bus.call(object, method, args || {});
+		return result == null ? fallback : result;
+	}
+	catch (e) {
+		return fallback;
+	}
+}
+
+function arpTable() {
+	const map = {};
+	const data = fs.readfile('/proc/net/arp') || '';
+
+	for (let line in split(data, '\n')) {
+		if (!line || line == 0)
+			continue;
+
+		const cols = split(trim(line), /\s+/);
+		if (length(cols) >= 4 && cols[0] != 'IP' && cols[3] != '00:00:00:00:00:00')
+			map[cols[0]] = cols[3];
+	}
+
+	return map;
+}
+
+function cpuSample() {
+	const line = (split(fs.readfile('/proc/stat') || '', '\n')[0] || '');
+	const fields = split(trim(line), /\s+/);
+	const values = [];
+	let total = 0;
+
+	for (let i = 1; i < length(fields); i++) {
+		const value = +fields[i];
+		push(values, value);
+		total += value;
+	}
+
+	return {
+		idle: (values[3] || 0) + (values[4] || 0),
+		total
+	};
+}
+
+function numberFile(path) {
+	const value = +(trim(fs.readfile(path) || ''));
+	return value != value ? null : value;
+}
+
+function snapshot(bus) {
+	const interfaces = call(bus, 'network.interface', 'dump', {}, {});
+	const system = call(bus, 'system', 'info', {}, {});
+	const conntrack = call(bus, 'luci', 'getConntrackList', {}, {});
+	const leases = call(bus, 'luci-rpc', 'getDHCPLeases', {}, {});
+
+	return {
+		timestamp: time(),
+		interfaces: interfaces.interface || [],
+		devices: call(bus, 'network.device', 'status', {}, {}),
+		leases: leases.dhcp_leases || [],
+		arp: arpTable(),
+		conntrack: conntrack.result || [],
+		system: system,
+		cpu: cpuSample(),
+		connections: {
+			count: numberFile('/proc/sys/net/netfilter/nf_conntrack_count'),
+			max: numberFile('/proc/sys/net/netfilter/nf_conntrack_max')
+		}
+	};
+}
+
+function sendEvent(name, data, id) {
+	fs.stdout.write('id: ' + id + '\n' +
+		'event: ' + name + '\n' +
+		'data: ' + sprintf('%J', data) + '\n\n');
+	fs.stdout.flush();
+}
+
+function main() {
+	const sid = sessionId();
+	let bus;
+
+	try {
+		bus = connect();
+	}
+	catch (e) {
+		response('503 Service Unavailable', '{"error":"ubus unavailable"}');
+		return;
+	}
+
+	if (!bus || !authorized(bus, sid)) {
+		response('403 Forbidden', '{"error":"authentication required"}');
+		return;
+	}
+
+	print('Status: 200 OK\r\n' +
+		'Content-Type: text/event-stream\r\n' +
+		'Cache-Control: no-cache, no-store\r\n' +
+		'Connection: keep-alive\r\n' +
+		'X-Accel-Buffering: no\r\n\r\n');
+	fs.stdout.flush();
+
+	for (let id = 1; id <= MAX_EVENTS; id++) {
+		sendEvent('snapshot', snapshot(bus), id);
+		if (id < MAX_EVENTS)
+			sleep(EVENT_INTERVAL);
+	}
+
+	bus.disconnect();
+}
+
+main();

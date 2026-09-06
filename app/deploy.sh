@@ -44,6 +44,9 @@ ssh "$ROUTER" '
     cp /tmp/freenetic-pkg/root/usr/share/rpcd/acl.d/*.json /usr/share/rpcd/acl.d/
     cp /tmp/freenetic-pkg/root/usr/libexec/freenetic-* /usr/libexec/
     chmod +x /usr/libexec/freenetic-*
+    mkdir -p /www/cgi-bin
+    cp /tmp/freenetic-pkg/root/www/cgi-bin/freenetic-events /www/cgi-bin/freenetic-events
+    chmod +x /www/cgi-bin/freenetic-events
     /etc/init.d/rpcd reload
     rm -f /tmp/luci-indexcache*
     rm -rf /tmp/luci-modulecache
@@ -71,6 +74,7 @@ ssh "$ROUTER" '
              /www/luci-static/resources/view/system/freenetic-apps.js \
              /www/luci-static/resources/view/system/freenetic-diagnostics.js \
              /www/luci-static/resources/view/system/freenetic-system.js \
+             /www/cgi-bin/freenetic-events \
              /usr/share/luci/menu.d/zz-luci-freenetic.json \
              /usr/share/rpcd/acl.d/luci-theme-freenetic.json \
              /usr/share/rpcd/acl.d/luci-app-freenetic.json \

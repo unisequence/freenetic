@@ -59,6 +59,21 @@ function icon(name) {
 
 return baseclass.extend({
 	__init__() {
+		/* The stock LuCI poll-status indicator is not useful in this shell: live
+		 * cards update continuously and the header has no room for a toggle chip.
+		 * Suppress it at the UI API as well as in CSS so its label is not left in
+		 * the document for screen readers or text search. */
+		if (!ui.__freeneticPollIndicatorSuppressed) {
+			const showIndicator = ui.showIndicator.bind(ui);
+			ui.showIndicator = function(id) {
+				if (id === 'poll-status')
+					return false;
+				return showIndicator.apply(null, arguments);
+			};
+			ui.hideIndicator('poll-status');
+			ui.__freeneticPollIndicatorSuppressed = true;
+		}
+
 		ui.menu.load().then((tree) => this.render(tree));
 	},
 

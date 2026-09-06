@@ -218,13 +218,55 @@ return view.extend({
 			this.renderTrafficCard(lan)
 		]);
 
-		poll.add(L.bind(this.pollWan, this), POLL_INTERVAL);
-		if (lan) {
+		this.streamReady = false;
+		this.pollingFallbackStarted = false;
+		this.fallbackPollers = [];
+		const startPollingFallback = () => {
+			if (this.streamReady || this.pollingFallbackStarted)
+				return;
+			this.pollingFallbackStarted = true;
+			const addFallback = (fn, interval) => {
+				const bound = L.bind(fn, this);
+				this.fallbackPollers.push(bound);
+				poll.add(bound, interval);
+			};
+			addFallback(this.pollWan, POLL_INTERVAL);
+			if (lan)
+				addFallback(this.pollTraffic, POLL_INTERVAL);
+		};
+		this.startPollingFallback = startPollingFallback;
+
+		this.liveStream = rpc.stream(L.bind(this.applyLiveSnapshot, this), () => {
+			if (this.streamReady) {
+				this.streamReady = false;
+				this.startPollingFallback();
+			}
+		});
+		if (this.liveStream)
+			this.streamFallbackTimer = setTimeout(startPollingFallback, 6000);
+		else
+			startPollingFallback();
+
+		if (lan)
 			this.pollTraffic();
-			poll.add(L.bind(this.pollTraffic, this), POLL_INTERVAL);
-		}
 
 		return container;
+	},
+
+	applyLiveSnapshot(snapshot) {
+		this.streamReady = true;
+		if (this.streamFallbackTimer) {
+			clearTimeout(this.streamFallbackTimer);
+			this.streamFallbackTimer = null;
+		}
+		if (this.fallbackPollers.length) {
+			this.fallbackPollers.forEach(fn => poll.remove(fn));
+			this.fallbackPollers = [];
+		}
+
+		const devices = snapshot.devices || {};
+		this.applyWanSnapshot(snapshot.interfaces || [], devices);
+		this.applyTrafficSnapshot(snapshot.conntrack || [], snapshot.arp || {});
 	},
 
 	renderConnectionBlock(group, index) {
@@ -237,6 +279,8 @@ return view.extend({
 
 		const conn = {
 			device: group.device, spark, rxLabel, txLabel, infoGrid, statusPill,
+			name: group.name,
+			ifaceNames: group.ifaces.map(e => e.interface),
 			rxHistory: [], txHistory: [], lastSample: null,
 			macEl: null, rxTotalEl: null, txTotalEl: null
 		};
@@ -274,6 +318,53 @@ return view.extend({
 			])));
 	},
 
+	applyWanSnapshot(interfaces, devices) {
+		const byName = {};
+		interfaces.forEach(iface => { byName[iface.interface] = iface; });
+		const now = Date.now();
+
+		this.connections.forEach(conn => {
+			const ifaces = conn.ifaceNames.map(name => byName[name]).filter(Boolean);
+			if (!ifaces.length)
+				return;
+
+			this.fillConnectionInfo(conn, mergeWanGroup({
+				name: conn.name,
+				device: conn.device,
+				ifaces
+			}));
+			this.updateConnectionStats(conn, devices[conn.device] || {}, now);
+		});
+	},
+
+	updateConnectionStats(conn, dev, now) {
+		const stats = dev.statistics || {};
+		const rxBytes = stats.rx_bytes || 0;
+		const txBytes = stats.tx_bytes || 0;
+		let rxRate = 0, txRate = 0;
+
+		if (conn.lastSample) {
+			const dt = (now - conn.lastSample.time) / 1000;
+			if (dt > 0) {
+				rxRate = Math.max(0, (rxBytes - conn.lastSample.rx) / dt);
+				txRate = Math.max(0, (txBytes - conn.lastSample.tx) / dt);
+			}
+		}
+
+		conn.lastSample = { time: now, rx: rxBytes, tx: txBytes };
+		conn.rxHistory.push(rxRate);
+		conn.txHistory.push(txRate);
+		if (conn.rxHistory.length > HISTORY_LEN) conn.rxHistory.shift();
+		if (conn.txHistory.length > HISTORY_LEN) conn.txHistory.shift();
+
+		updateSparkline(conn.spark, conn.rxHistory, conn.txHistory);
+		dom_content(conn.rxLabel, fmtBps(rxRate));
+		dom_content(conn.txLabel, fmtBps(txRate));
+		if (conn.macEl) dom_content(conn.macEl, dev.macaddr ? dev.macaddr.toUpperCase() : '–');
+		if (conn.rxTotalEl) dom_content(conn.rxTotalEl, fmtBytes(rxBytes));
+		if (conn.txTotalEl) dom_content(conn.txTotalEl, fmtBytes(txBytes));
+	},
+
 	pollWan() {
 		const now = Date.now();
 
@@ -286,31 +377,7 @@ return view.extend({
 				this.fillConnectionInfo(conn, mergeWanGroup(group));
 
 				return ubusCall('network.device', 'status', { name: group.device }).then(L.bind(function(dev) {
-					const stats = dev.statistics || {};
-					let rxRate = 0, txRate = 0;
-
-					if (conn.lastSample) {
-						const dt = (now - conn.lastSample.time) / 1000;
-						if (dt > 0) {
-							rxRate = Math.max(0, (stats.rx_bytes - conn.lastSample.rx) / dt);
-							txRate = Math.max(0, (stats.tx_bytes - conn.lastSample.tx) / dt);
-						}
-					}
-
-					conn.lastSample = { time: now, rx: stats.rx_bytes, tx: stats.tx_bytes };
-
-					conn.rxHistory.push(rxRate);
-					conn.txHistory.push(txRate);
-					if (conn.rxHistory.length > HISTORY_LEN) conn.rxHistory.shift();
-					if (conn.txHistory.length > HISTORY_LEN) conn.txHistory.shift();
-
-					updateSparkline(conn.spark, conn.rxHistory, conn.txHistory);
-					dom_content(conn.rxLabel, fmtBps(rxRate));
-					dom_content(conn.txLabel, fmtBps(txRate));
-
-					if (conn.macEl) dom_content(conn.macEl, dev.macaddr ? dev.macaddr.toUpperCase() : '–');
-					if (conn.rxTotalEl) dom_content(conn.rxTotalEl, fmtBytes(stats.rx_bytes));
-					if (conn.txTotalEl) dom_content(conn.txTotalEl, fmtBytes(stats.tx_bytes));
+					this.updateConnectionStats(conn, dev, now);
 				}, this)).catch(() => {});
 			}, this)));
 		}, this)).catch(() => {});
@@ -343,38 +410,44 @@ return view.extend({
 			return Promise.resolve();
 
 		return Promise.all([ getConntrack(), getArpTable() ]).then(L.bind(function(res) {
-			const conns = res[0], arp = res[1];
-			const now = Date.now();
-			const totals = {};
-
-			conns.forEach(c => {
-				[ c.src, c.dst ].forEach(ip => {
-					if (ip && ip !== lan.address && ipInLan(ip, lan))
-						totals[ip] = (totals[ip] || 0) + (c.bytes || 0);
-				});
-			});
-
-			const rates = {};
-			let anyRate = false;
-			Object.keys(totals).forEach(ip => {
-				const prev = this.trafficHistory[ip];
-				let rate = 0;
-				if (prev && now > prev.ts) {
-					const db = totals[ip] - prev.bytes;
-					rate = db > 0 ? db / ((now - prev.ts) / 1000) : 0;
-				}
-				if (rate > 0)
-					anyRate = true;
-				rates[ip] = rate;
-			});
-
-			this.trafficHistory = {};
-			Object.keys(totals).forEach(ip => { this.trafficHistory[ip] = { bytes: totals[ip], ts: now }; });
-
-			this.renderTrafficChart(anyRate ? rates : totals, arp, anyRate);
+			this.applyTrafficSnapshot(res[0], res[1]);
 		}, this)).catch(L.bind(function() {
 			this.renderTrafficChart({}, {}, false);
 		}, this));
+	},
+
+	applyTrafficSnapshot(conns, arp) {
+		const lan = this.lanInfo;
+		if (!lan)
+			return;
+
+		const now = Date.now();
+		const totals = {};
+		(conns || []).forEach(c => {
+			[ c.src, c.dst ].forEach(ip => {
+				if (ip && ip !== lan.address && ipInLan(ip, lan))
+					totals[ip] = (totals[ip] || 0) + (c.bytes || 0);
+			});
+		});
+
+		const rates = {};
+		let anyRate = false;
+		Object.keys(totals).forEach(ip => {
+			const prev = this.trafficHistory[ip];
+			let rate = 0;
+			if (prev && now > prev.ts) {
+				const db = totals[ip] - prev.bytes;
+				rate = db > 0 ? db / ((now - prev.ts) / 1000) : 0;
+			}
+			if (rate > 0)
+				anyRate = true;
+			rates[ip] = rate;
+		});
+
+		this.trafficHistory = {};
+		Object.keys(totals).forEach(ip => { this.trafficHistory[ip] = { bytes: totals[ip], ts: now }; });
+
+		this.renderTrafficChart(anyRate ? rates : totals, arp || {}, anyRate);
 	},
 
 	renderTrafficChart(values, arp, isRate) {
