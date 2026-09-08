@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Freenetic</title>
+  <desc id="desc">Freenetic F mark</desc>
+  <defs>
+    <linearGradient id="accent" x1="12" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00d7ff"/>
+      <stop offset="1" stop-color="#0097dc"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#161c27"/>
+  <path d="M17 13h31v9H27v8h18v9H27v12H17z" fill="url(#accent)"/>
+  <circle cx="49" cy="17" r="3" fill="#fff" opacity=".9"/>
+</svg>

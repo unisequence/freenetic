@@ -97,6 +97,7 @@ const uiHelper = new Function('baseclass', 'ui', 'uci', 'document', 'E', 'setTim
 		'view/network/freenetic-firewall.js',
 		'view/network/freenetic-mynetworks.js',
 		'view/network/freenetic-portforward.js',
+		'view/network/freenetic-routing.js',
 		'view/network/freenetic-wan.js',
 		'view/status/freenetic-clients.js',
 		'view/status/freenetic-dashboard.js',

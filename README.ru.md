@@ -43,7 +43,7 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 - Internet (мульти-WAN)
 - My Networks & Wi-Fi — Домашняя/Гостевая сеть с реальным бэкендом
   (отдельная подсеть, DHCP, firewall-изоляция), плюс Client List
-- Network Rules: Port Forwarding, Firewall
+- Network Rules: Port Forwarding, Firewall, Routing (IPv4/IPv6 и DNS-маршруты, включая импорт Windows route-файлов)
 - Диагностика: адреса WAN, шлюз/DNS, ограниченные ping и traceroute
 - Management: System (скачивание/прошивка образа, бэкап конфигов и
   списка пакетов, дампы разделов загрузчика), Applications (каталог

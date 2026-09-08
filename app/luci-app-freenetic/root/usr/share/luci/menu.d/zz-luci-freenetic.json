@@ -140,6 +140,19 @@
 			]
 		}
 	},
+	"admin/network/routes": {
+		"title": "Routing",
+		"order": 7.6,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-routing"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-freenetic"
+			]
+		}
+	},
 	"admin/system/system": {
 		"title": "System",
 		"order": 7.8,

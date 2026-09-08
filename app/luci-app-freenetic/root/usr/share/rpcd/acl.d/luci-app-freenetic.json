@@ -23,7 +23,7 @@
 				"/tmp/freenetic-startup-config.tar.gz": [ "read" ],
 				"/usr/libexec/package-manager-call list-installed": [ "exec" ]
 			},
-			"uci": [ "network", "wireless", "dhcp", "firewall", "attendedsysupgrade", "luci" ]
+			"uci": [ "network", "wireless", "dhcp", "firewall", "attendedsysupgrade", "luci", "freenetic" ]
 		},
 		"write": {
 			"cgi-io": [ "upload" ],
@@ -44,7 +44,7 @@
 				"/usr/libexec/package-manager-call install *": [ "exec" ],
 				"/usr/libexec/package-manager-call remove *": [ "exec" ]
 			},
-			"uci": [ "network", "wireless", "dhcp", "firewall", "luci" ]
+			"uci": [ "network", "wireless", "dhcp", "firewall", "luci", "freenetic" ]
 		}
 	}
 }

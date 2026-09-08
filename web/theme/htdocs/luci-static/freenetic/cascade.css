@@ -102,14 +102,15 @@
 	--fn-sidebar-w-collapsed: 72px;
 	--fn-topbar-h: 52px;
 
-	/* Sidebar is its own fixed dark surface, independent of light/dark
-	   theme mode — same values in both, unlike --fn-surface which flips. */
-	--fn-sidebar-bg: #161c27;
-	--fn-sidebar-border: rgba(255, 255, 255, .08);
-	--fn-sidebar-text: #c9d1d9;
-	--fn-sidebar-text-secondary: #8b95a5;
-	--fn-sidebar-hover-bg: rgba(255, 255, 255, .06);
-	--fn-sidebar-active-bg: #2e3d57;
+	/* Navigation follows the active color scheme.  The dark values are kept
+	   in the dark-mode token block below instead of leaking into light mode. */
+	--fn-sidebar-bg: #ffffff;
+	--fn-sidebar-border: #ebebeb;
+	--fn-sidebar-text: #303b44;
+	--fn-sidebar-text-secondary: #6e7a83;
+	--fn-sidebar-hover-bg: rgba(0, 151, 220, .08);
+	--fn-sidebar-active-bg: #ecf5fa;
+	--fn-sidebar-scroll-thumb: rgba(20, 24, 26, .2);
 
 	--fn-font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	--fn-font: "Roboto", var(--fn-font-system);
@@ -150,6 +151,14 @@
 
 	--fn-shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
 	--fn-shadow-2: 0 8px 24px rgba(0, 0, 0, .45);
+
+	--fn-sidebar-bg: #161c27;
+	--fn-sidebar-border: rgba(255, 255, 255, .08);
+	--fn-sidebar-text: #c9d1d9;
+	--fn-sidebar-text-secondary: #8b95a5;
+	--fn-sidebar-hover-bg: rgba(255, 255, 255, .06);
+	--fn-sidebar-active-bg: #2e3d57;
+	--fn-sidebar-scroll-thumb: rgba(255, 255, 255, .2);
 }
 
 * { box-sizing: border-box; }
@@ -424,6 +433,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	cursor: pointer;
 }
 .fn-settings-btn:hover { background: var(--fn-surface-alt); text-decoration: none; }
+.fn-settings-btn:disabled { opacity: .45; cursor: not-allowed; }
 .fn-settings-btn-primary {
 	background: var(--fn-accent);
 	border-color: var(--fn-accent);
@@ -517,13 +527,14 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	width: var(--fn-sidebar-w);
 	flex: 0 0 auto;
 	background: var(--fn-sidebar-bg);
+	border-right: 1px solid var(--fn-sidebar-border);
 	display: flex;
 	flex-direction: column;
 	transition: width .15s ease;
 	z-index: 50;
 	overflow-y: auto;
 	overflow-x: hidden;
-	scrollbar-color: rgba(255, 255, 255, .2) transparent;
+	scrollbar-color: var(--fn-sidebar-scroll-thumb) transparent;
 	scrollbar-width: thin;
 }
 #fn-sidebar::-webkit-scrollbar { width: 6px; }
@@ -532,7 +543,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 #fn-sidebar::-webkit-scrollbar-corner { background: transparent; border: none; }
 #fn-sidebar::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 #fn-sidebar::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, .2);
+	background: var(--fn-sidebar-scroll-thumb);
 	border-radius: 3px;
 	border: none;
 }
@@ -705,8 +716,8 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	color: var(--fn-text);
 	margin-bottom: 16px;
 }
-.alert-message h4 { margin: 0 0 4px; font-size: 0.875rem; }
-.alert-message p { margin: 0; }
+.alert-message h4 { margin: 0 0 4px; font-size: 1rem; }
+.alert-message p { margin: 0; font-size: 1.125rem; line-height: 1.4; }
 .alert-message.warning { background: var(--fn-warning-soft); border-color: var(--fn-warning); color: var(--fn-text); }
 .alert-message.error, .alert-message.danger { background: var(--fn-danger-soft); border-color: var(--fn-danger); }
 .alert-message.success { background: var(--fn-success-soft); border-color: var(--fn-success); }
@@ -1614,13 +1625,19 @@ body.modal-overlay-active { overflow: hidden; }
 	}
 	.fn-login-banner {
 		order: -1;
-		flex: 0 0 200px;
+		/* Let the banner grow with a wrapped model name.  A fixed 200px
+		   height made the action link overlap the branding on narrow screens. */
+		flex: 0 0 auto;
 		min-height: 200px;
 		flex-direction: column;
+		box-sizing: border-box;
+		padding: 28px 16px 22px;
 	}
 	.fn-login-banner-inner {
 		max-width: 100%;
 		min-width: 0;
+		width: 100%;
+		flex: 0 0 auto;
 	}
 	.fn-login-model {
 		max-width: 100%;
@@ -1629,10 +1646,9 @@ body.modal-overlay-active { overflow: hidden; }
 		letter-spacing: .05em;
 	}
 	.fn-login-more {
-		left: 16px;
-		right: 16px;
-		bottom: 18px;
-		margin: 0;
+		position: static;
+		display: block;
+		margin: 16px auto 0;
 		font-size: 1.1rem;
 	}
 }
@@ -1744,6 +1760,20 @@ body.modal-overlay-active { overflow: hidden; }
 	letter-spacing: .03em;
 }
 .fn-card-head .fn-icon { color: var(--fn-accent); }
+.fn-collapse-head { cursor: pointer; user-select: none; }
+.fn-collapse-head:hover { background: var(--fn-surface-alt); }
+.fn-collapse-head:focus-visible {
+	outline: 3px solid var(--fn-accent-soft);
+	outline-offset: -3px;
+}
+.fn-collapse-icon {
+	flex: 0 0 auto;
+	color: var(--fn-text-secondary);
+	font-size: 1.2rem;
+	line-height: 1;
+	transition: transform .15s ease;
+}
+.fn-collapse-head[aria-expanded="false"] .fn-collapse-icon { transform: rotate(-90deg); }
 
 .fn-status-pill {
 	padding: 2px 8px;
@@ -1794,6 +1824,37 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-info-label { font-size: 1.125rem; color: var(--fn-text-secondary); margin-bottom: 2px; }
 .fn-info-value { font-size: 1.375rem; color: var(--fn-text); word-break: break-word; }
 .fn-info-empty { color: var(--fn-text-secondary); font-size: 1.125rem; }
+.fn-conn-ipv6 {
+	margin-top: 14px;
+	padding-top: 10px;
+	border-top: 1px solid var(--fn-border);
+}
+.fn-conn-ipv6[hidden] { display: none; }
+.fn-conn-ipv6 > summary {
+	color: var(--fn-accent);
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 500;
+}
+.fn-conn-ipv6 > summary:hover { text-decoration: underline; }
+.fn-conn-ipv6-body {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 12px 20px;
+	padding-top: 12px;
+}
+.fn-conn-ipv6-label {
+	margin-bottom: 2px;
+	color: var(--fn-text-secondary);
+	font-size: .9375rem;
+}
+.fn-conn-ipv6-value {
+	color: var(--fn-text);
+	font-size: 1.05rem;
+	line-height: 1.45;
+	white-space: pre-line;
+	word-break: break-word;
+}
 
 /* Simple div-based table (Client List) */
 .fn-table { display: flex; flex-direction: column; }
@@ -1835,16 +1896,283 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-settings-btn-danger { border-color: var(--fn-danger); color: var(--fn-danger); }
 .fn-settings-btn-danger:hover { background: var(--fn-danger-soft); }
 
-/* Port Forwarding: add/edit rule panel, shown above the rule table */
+/* Port Forwarding: Keenetic-style page, tabs, empty states and rule modal */
+.fn-pf-page { width: 100%; }
+.fn-pf-title {
+	margin: 0 0 8px;
+	font-size: 1.75rem;
+	line-height: 1.2;
+	font-weight: 700;
+}
+.fn-pf-description {
+	max-width: 1200px;
+	margin: 0 0 24px;
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-text);
+	font-size: 1rem;
+	line-height: 1.5;
+}
+.fn-pf-tabs { margin: 0 0 20px; }
+.fn-pf-section { margin: 0 0 38px; }
+.fn-pf-section-title {
+	margin: 0 0 20px;
+	font-size: 1.2rem;
+	line-height: 1.25;
+	font-weight: 700;
+}
+.fn-pf-upnp-section { margin-top: 4px; }
+.fn-pf-empty {
+	min-height: 116px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	padding: 18px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-text);
+	font-size: 1rem;
+	text-align: center;
+}
+:root[data-darkmode="true"] .fn-pf-empty {
+	background: #151d29;
+	border-color: #34445b;
+}
+.fn-pf-inline-link {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--fn-accent);
+	font: inherit;
+	cursor: pointer;
+	text-decoration: underline;
+}
+.fn-pf-inline-link:hover { color: var(--fn-accent-hover); }
 .fn-pf-form { padding: 16px; margin-bottom: 16px; border-radius: var(--fn-radius); }
 .fn-pf-row { display: flex; gap: 16px; }
 .fn-pf-row[hidden] { display: none; }
 .fn-pf-row .fn-settings-field { flex: 1; }
 .fn-pf-actions { display: flex; gap: 10px; margin-top: 4px; }
+.fn-portforward-modal {
+	position: relative;
+	width: min(calc(100% - 32px), 500px);
+	max-width: 500px;
+	max-height: calc(100vh - 32px);
+	margin: 16px auto;
+	overflow-y: auto;
+	padding: 28px 32px 24px;
+}
+.fn-portforward-modal > h4 {
+	margin: 0 36px 14px 0;
+	font-size: 1.7rem;
+	line-height: 1.2;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.fn-pf-modal-description {
+	margin: 0 0 20px;
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-text);
+	font-size: 1rem;
+	line-height: 1.45;
+}
+.fn-pf-enable {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 18px;
+	color: var(--fn-text);
+	cursor: pointer;
+}
+.fn-pf-enable input { width: 16px; height: 16px; margin: 0; accent-color: var(--fn-accent); }
+.fn-pf-description-field { margin: 0 0 16px; }
+.fn-pf-description-field input { width: 100%; min-height: 40px; }
+.fn-pf-legend-field {
+	position: relative;
+	width: 100%;
+	margin: 16px 0;
+	padding: 13px 12px 9px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface);
+}
+.fn-pf-legend-field > label {
+	position: absolute;
+	top: -8px;
+	left: 9px;
+	padding: 0 4px;
+	background: var(--fn-surface);
+	color: var(--fn-text-secondary);
+	font-size: .9375rem;
+	line-height: 1;
+	white-space: nowrap;
+}
+.fn-pf-legend-field > select,
+.fn-pf-legend-field > input,
+.fn-pf-output-control > select,
+.fn-pf-custom-output > input {
+	display: block;
+	width: 100%;
+	min-height: 27px;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	background-color: transparent;
+	color: var(--fn-text);
+	font: inherit;
+	font-size: 1rem;
+}
+.fn-pf-legend-field > select,
+.fn-pf-output-control > select {
+	background-repeat: no-repeat;
+	background-position: right 4px center;
+	background-size: 10px 6px;
+}
+.fn-pf-legend-field:focus-within { border-color: var(--fn-accent); box-shadow: 0 0 0 3px var(--fn-accent-soft); }
+.fn-pf-output-control { display: flex; flex-direction: column; gap: 8px; }
+.fn-pf-custom-output { margin-top: 3px; padding-top: 8px; border-top: 1px solid var(--fn-border); }
+.fn-pf-custom-output[hidden],
+.fn-pf-single-port[hidden],
+.fn-pf-range-port[hidden] { display: none; }
+.fn-pf-rule-type {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin: 20px 0 12px;
+	padding-left: 16px;
+	border-left: 2px solid var(--fn-border-strong);
+	color: var(--fn-text-secondary);
+}
+.fn-pf-rule-type-label { margin-right: 4px; }
+.fn-pf-rule-type label { display: inline-flex; align-items: center; gap: 7px; color: var(--fn-text); cursor: pointer; }
+.fn-pf-rule-type input { margin: 0; accent-color: var(--fn-accent); }
+.fn-pf-single-port { display: flex; flex-direction: column; }
+.fn-pf-range-port { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 10px; }
+.fn-pf-range-dash { padding-top: 30px; color: var(--fn-text-secondary); }
+.fn-pf-error { margin-top: 5px; color: var(--fn-danger); font-family: var(--fn-font-text); font-size: .875rem; line-height: 1.25; }
+.fn-pf-error[hidden] { display: none; }
+.fn-pf-invalid { border-color: var(--fn-danger) !important; box-shadow: none !important; }
+.fn-pf-invalid:focus-within { box-shadow: 0 0 0 3px var(--fn-danger-soft) !important; }
+.fn-pf-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.fn-pf-modal-actions .fn-settings-btn { width: auto; }
 
 /* Firewall: rule table needs its own column layout (toggle/name/action/
    protocol/traffic/buttons) — more columns than Port Forwarding's grid. */
 .fn-fw-row { grid-template-columns: 44px 1.2fr 0.8fr 0.8fr 1.6fr auto; align-items: center; }
+.fn-route-head-actions { display: flex; align-items: center; gap: 8px; }
+.fn-route-user-head { display: block; margin: 20px 0 12px; }
+.fn-route-user-head h3 { margin: 0 0 16px; font-size: 1.35rem; }
+.fn-route-user-head .fn-route-head-actions { justify-content: flex-start; }
+.fn-route-intro { max-width: 1120px; line-height: 1.45; }
+.fn-route-file-input { display: none; }
+.fn-route-empty {
+	min-height: 116px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: #e4edf2;
+	color: var(--fn-text-secondary);
+}
+:root[data-darkmode="true"] .fn-route-empty {
+	background: #151d29;
+	border-color: #34445b;
+}
+.fn-route-row { grid-template-columns: 32px 1.35fr 1.2fr 1fr .6fr auto; align-items: center; }
+.fn-route-dns-row { grid-template-columns: 32px 1.35fr 1.35fr auto; align-items: center; }
+.fn-route-select-cell { display: flex; align-items: center; justify-content: flex-start; }
+.fn-route-select-cell input[type="checkbox"] { margin: 0; }
+.fn-route-active-row { grid-template-columns: 1.45fr 1.2fr 1fr; align-items: center; }
+.fn-route-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+.fn-route-form-grid .fn-settings-field { margin-bottom: 0; }
+.fn-route-preserved { margin: 14px 0 0; }
+.fn-route-import-preview { padding: 16px; margin-bottom: 16px; border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius); background: var(--fn-surface-alt); }
+.fn-route-import-interface { max-width: 560px; margin: 14px 0; }
+.fn-route-import-row { grid-template-columns: 32px .6fr 1.45fr 1.2fr .6fr; align-items: center; }
+.fn-route-import-row input[type="checkbox"] { margin: 0; }
+.fn-route-import-errors-title { margin: 12px 0 4px; color: var(--fn-danger); }
+.fn-route-import-errors { color: var(--fn-danger); font-size: 1rem; }
+.fn-route-modal {
+	position: relative;
+	width: min(90%, 500px);
+	max-width: 500px;
+	margin: 6vh auto;
+	padding: 30px 32px 24px;
+}
+.fn-route-modal > h4:first-child {
+	margin: 0 36px 12px 0;
+	font-size: 1.7rem;
+	line-height: 1.2;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.fn-route-modal-close {
+	position: absolute;
+	top: 20px;
+	right: 22px;
+	border: 0;
+	background: transparent;
+	color: var(--fn-text-secondary);
+	font-size: 1.8rem;
+	line-height: 1;
+	cursor: pointer;
+}
+.fn-route-modal-close:hover { color: var(--fn-text); }
+.fn-route-modal-description { margin: 0 0 18px; color: var(--fn-text-secondary); line-height: 1.45; }
+.fn-route-modal-field { margin-bottom: 12px; }
+.fn-route-modal-field label { font-size: 1rem; }
+.fn-route-modal-field input,
+.fn-route-modal-field select { min-height: 40px; }
+.fn-route-modal-error { color: var(--fn-danger); font-size: .9rem; line-height: 1.25; }
+.fn-route-modal-error[hidden] { display: none; }
+.fn-route-modal-hint { color: var(--fn-text-secondary); font-size: .9rem; line-height: 1.35; }
+.fn-route-modal-checkbox {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 14px 0 16px;
+	cursor: pointer;
+}
+.fn-route-modal-checkbox input { margin-top: 4px; flex: 0 0 auto; }
+.fn-route-modal-checkbox > span { display: flex; flex-direction: column; gap: 3px; }
+.fn-route-modal-checkbox-title { color: var(--fn-text); }
+.fn-route-modal-advanced { margin: 10px 0 12px; }
+.fn-route-modal-advanced label { display: block; margin-bottom: 4px; color: var(--fn-text-secondary); font-size: 1rem; }
+.fn-route-modal-actions { justify-content: flex-end; margin-top: 12px; }
+.fn-route-upload-modal {
+	position: relative;
+	width: min(90%, 560px);
+	max-width: 560px;
+	margin: 8vh auto;
+	padding: 30px 32px 24px;
+}
+.fn-route-upload-modal > h4:first-child {
+	margin: 0 36px 14px 0;
+	font-size: 1.55rem;
+	line-height: 1.2;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.fn-route-upload-description { margin: 0 0 16px; line-height: 1.5; color: var(--fn-text-secondary); }
+.fn-route-upload-example { display: flex; flex-direction: column; gap: 6px; margin: 0; color: var(--fn-text-secondary); line-height: 1.4; }
+.fn-route-upload-example code {
+	display: block;
+	padding: 10px 12px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text);
+	font: .95rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+	word-break: break-word;
+}
+.fn-route-upload-interface { margin: 20px 0 0; }
+.fn-route-upload-interface label { color: var(--fn-text); }
+.fn-route-upload-interface select { min-height: 40px; }
+.fn-route-upload-hint { color: var(--fn-text-secondary); font-size: .9rem; line-height: 1.35; }
+.fn-route-upload-actions { margin-top: 22px; justify-content: flex-end; }
 .fn-fw-allow { color: var(--fn-success); font-weight: 600; }
 .fn-fw-block { color: var(--fn-danger); font-weight: 600; }
 .fn-client-dot {
@@ -1871,25 +2199,108 @@ body.modal-overlay-active { overflow: hidden; }
 	.fn-table-head { display: none; }
 }
 
+/* The system card intentionally uses larger values on desktop so device
+   information is easy to scan. Keep that information compact on tablets and
+   phones without shrinking the rest of the dashboard. */
+@media (max-width: 760px) {
+	.fn-system-card .fn-info-list { gap: 10px; }
+	.fn-system-card .fn-info-row { gap: 10px; }
+	.fn-system-card .fn-info-row .fn-info-label {
+		flex-basis: 132px;
+		font-size: .9375rem;
+	}
+	.fn-system-card .fn-info-row .fn-info-value {
+		font-size: 1.05rem;
+		line-height: 1.35;
+	}
+	.fn-system-card .fn-info-group-title {
+		font-size: 1.1rem;
+		margin-top: 4px;
+	}
+	.fn-system-card .fn-meter-value { font-size: 1rem; }
+	.fn-system-card .fn-update-actions .fn-settings-btn {
+		font-size: .9rem;
+		padding: 5px 10px;
+	}
+	.fn-system-card .fn-update-status { font-size: .9rem; }
+}
+
 /* Stacked label/value rows (used by "My Networks & Wi-Fi"), as opposed to
    .fn-info-grid's side-by-side columns (used by the Internet card). */
 .fn-info-list { display: flex; flex-direction: column; gap: 12px; }
 .fn-info-row { display: flex; gap: 16px; font-size: 0.8125rem; align-items: center; }
 .fn-info-row .fn-info-label { flex: 0 0 150px; color: var(--fn-text-secondary); }
 .fn-info-row .fn-info-value { flex: 1 1 auto; color: var(--fn-text); word-break: break-word; }
+.fn-update-channel-value { display: flex; align-items: center; gap: 8px; }
+.fn-update-channel { min-width: 120px; }
+.fn-update-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.fn-update-actions .fn-settings-btn { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 1rem; }
+.fn-update-status { color: var(--fn-text-secondary); font-size: 1rem; }
+.fn-update-status a { color: var(--fn-accent); }
+.fn-update-status-success { color: var(--fn-status-ok); }
+.fn-update-status-error { color: var(--fn-danger); }
+.fn-update-status-pending { color: var(--fn-text-secondary); }
+
+/* Update controls stay readable even while the surrounding system values are
+   scaled down on narrow screens. */
+.fn-system-card .fn-info-row > a {
+	font-size: 1.125rem;
+	line-height: 1.35;
+}
+.fn-system-card .fn-update-channel { font-size: 1.125rem; min-height: 40px; }
+.fn-system-card .fn-update-channel:disabled {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background-color: var(--fn-surface-alt);
+	background-image: none;
+	color: var(--fn-text) !important;
+	opacity: .75;
+	cursor: wait;
+}
+.fn-system-card .fn-update-actions .fn-settings-btn {
+	padding: 7px 14px;
+	font-size: 1.125rem;
+}
+.fn-system-card .fn-update-status {
+	font-size: 1.125rem;
+	line-height: 1.4;
+}
 
 /* "About System" card: label/meter/value rows (CPU, RAM) plus grouped
    sub-sections (System / System updates / Device), each headed by a
    .fn-info-group-title — same fn-info-row grid as everything else here. */
 .fn-info-group-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
 	font-size: 1.25rem;
 	font-weight: 700;
 	color: var(--fn-text-secondary);
 	text-transform: uppercase;
 	letter-spacing: .03em;
-	margin-top: 6px;
+	padding: 14px 0 5px;
+	margin-top: 8px;
+	border-top: 1px solid var(--fn-border);
 }
-.fn-info-group-title:first-child { margin-top: 0; }
+.fn-info-group-title::before {
+	content: '';
+	width: 4px;
+	height: 1.05em;
+	flex: 0 0 4px;
+	border-radius: 999px;
+	background: var(--fn-text-disabled);
+}
+.fn-info-group-title:first-child {
+	padding-top: 0;
+	margin-top: 0;
+	border-top: 0;
+}
+.fn-info-group-system::before { background: var(--fn-accent); }
+.fn-info-group-updates::before { background: var(--fn-warning); }
+.fn-info-group-freenetic { color: var(--fn-accent); }
+.fn-info-group-freenetic::before { background: var(--fn-accent); }
+.fn-info-group-device::before { background: var(--fn-text-secondary); }
 
 .fn-meter-wrap { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; }
 .fn-meter {
@@ -2503,11 +2914,189 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 		gap: 4px;
 	}
 	.fn-info-row .fn-info-label { flex: 0 0 auto; }
+	/* In a stacked row the desktop flex:1 values must not consume the
+	   row's available height; otherwise every label/value pair is pushed
+	   far apart on a phone. */
+	.fn-system-card .fn-info-row {
+		flex: 0 0 auto;
+		flex-direction: row;
+		align-items: center;
+		height: auto;
+		min-height: 0;
+	}
+	.fn-system-card .fn-info-row .fn-info-label {
+		flex: 0 0 clamp(96px, 30%, 132px);
+	}
+	.fn-system-card .fn-info-row > :not(.fn-info-label) {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.fn-system-card .fn-info-row > .fn-meter-wrap { width: auto; }
+	.fn-system-card .fn-meter {
+		width: auto;
+		max-width: 220px;
+		min-width: 0;
+	}
 	.fn-pf-row,
-	.fn-mn-dhcp-range {
+	.fn-mn-dhcp-range,
+	.fn-route-form-grid {
 		flex-direction: column;
 		gap: 10px;
 	}
+	.fn-route-form-grid { display: flex; }
 	.fn-apps-row { flex-wrap: wrap; }
 	.fn-apps-row .fn-settings-btn { margin-left: auto; }
+	.fn-route-head-actions { flex-wrap: wrap; justify-content: flex-end; }
+	.fn-route-import-row { grid-template-columns: 28px 1fr 1.5fr; }
+	.fn-route-import-row > :nth-child(4),
+	.fn-route-import-row > :nth-child(5) { display: none; }
+}
+
+@media (max-width: 420px) {
+	/* On very narrow phones there is not enough room for a useful two-column
+	   row. Fall back to the stacked layout only at that point. */
+	.fn-system-card .fn-info-row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.fn-system-card .fn-info-row .fn-info-label { flex: 0 0 auto; }
+	.fn-system-card .fn-info-row > :not(.fn-info-label) {
+		flex: 0 0 auto;
+		width: 100%;
+	}
+	.fn-system-card .fn-info-row > .fn-meter-wrap { width: 100%; }
+}
+
+/* Routing remains usable on phones even when a route has several values. The
+   desktop grid becomes a stack of labelled cards instead of a compressed
+   six-column table. */
+@media (max-width: 900px) {
+	.fn-route-row,
+	.fn-route-dns-row,
+	.fn-route-active-row {
+		min-width: 0;
+	}
+	.fn-route-row:not(.fn-table-head) > [data-label]::before,
+	.fn-route-dns-row:not(.fn-table-head) > [data-label]::before,
+	.fn-route-active-row:not(.fn-table-head) > [data-label]::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 2px;
+		font-size: .75rem;
+		font-weight: 600;
+		letter-spacing: .03em;
+		text-transform: uppercase;
+		color: var(--fn-text-secondary);
+	}
+}
+
+@media (max-width: 640px) {
+	:root { --fn-sidebar-w-collapsed: 56px; }
+	#fn-topbar { padding: 0 10px; }
+	.fn-brand-model { display: none; }
+	#maincontent.container { padding: 12px 10px 20px; }
+	.fn-card-head { padding: 12px; }
+	.fn-card-body { padding: 12px; }
+
+	.fn-route-user-head { margin: 16px 0 10px; }
+	.fn-route-user-head h3 { margin-bottom: 12px; font-size: 1.2rem; }
+	.fn-route-head-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+		justify-content: stretch;
+	}
+	.fn-route-head-actions .fn-settings-btn {
+		width: 100% !important;
+		min-width: 0;
+		padding: 8px 6px !important;
+		font-size: 1rem;
+	}
+
+	.fn-route-row:not(.fn-table-head),
+	.fn-route-dns-row:not(.fn-table-head),
+	.fn-route-active-row:not(.fn-table-head) {
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) !important;
+		gap: 8px;
+		margin-bottom: 8px;
+		padding: 12px 10px;
+		border: 1px solid var(--fn-border);
+		border-radius: var(--fn-radius-sm);
+		background: var(--fn-surface-alt);
+	}
+	.fn-route-row:not(.fn-table-head) > .fn-route-select-cell,
+	.fn-route-dns-row:not(.fn-table-head) > .fn-route-select-cell {
+		position: absolute;
+		top: 13px;
+		left: 10px;
+	}
+	.fn-route-row:not(.fn-table-head) { padding-left: 42px; }
+	.fn-route-row.fn-table-head,
+	.fn-route-dns-row.fn-table-head,
+	.fn-route-active-row.fn-table-head { display: none; }
+	.fn-table-actions { justify-content: flex-start; }
+	.fn-table-actions .fn-settings-btn { flex: 0 1 auto; }
+	.fn-route-empty { min-height: 96px; }
+
+	.fn-route-import-row:not(.fn-table-head) {
+		display: grid;
+		grid-template-columns: 28px minmax(0, 1fr);
+		gap: 8px;
+		padding: 10px 4px;
+	}
+	.fn-route-import-row:not(.fn-table-head) > :nth-child(n+2) { grid-column: 2; }
+	.fn-route-import-row:not(.fn-table-head) > :nth-child(n+2)::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 2px;
+		font-size: .75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: var(--fn-text-secondary);
+	}
+	.fn-route-import-row:not(.fn-table-head) > :nth-child(4),
+	.fn-route-import-row:not(.fn-table-head) > :nth-child(5) { display: block; }
+
+	.fn-route-modal {
+		width: calc(100% - 24px);
+		max-height: calc(100vh - 24px);
+		margin: 12px auto;
+		overflow-y: auto;
+		padding: 24px 20px 18px;
+	}
+	.fn-route-modal > h4:first-child { font-size: 1.4rem; }
+	.fn-route-modal-actions { flex-direction: column-reverse; }
+	.fn-route-modal-actions .fn-settings-btn { width: 100% !important; }
+	.fn-route-upload-modal {
+		width: calc(100% - 24px);
+		max-height: calc(100vh - 24px);
+		margin: 12px auto;
+		overflow-y: auto;
+		padding: 24px 20px 18px;
+	}
+	.fn-route-upload-modal > h4:first-child { font-size: 1.4rem; }
+	.fn-route-upload-actions { flex-direction: column-reverse; }
+	.fn-route-upload-actions .fn-settings-btn { width: 100% !important; }
+}
+
+@media (max-width: 640px) {
+	.fn-pf-title { font-size: 1.45rem; }
+	.fn-pf-description { font-size: .95rem; }
+	.fn-pf-section-title { font-size: 1.1rem; }
+	.fn-pf-empty { min-height: 96px; }
+	.fn-portforward-modal {
+		width: calc(100% - 24px);
+		max-height: calc(100vh - 24px);
+		margin: 12px auto;
+		padding: 24px 20px 18px;
+	}
+	.fn-portforward-modal > h4:first-child { font-size: 1.4rem; }
+	.fn-pf-rule-type { flex-wrap: wrap; gap: 10px 14px; }
+	.fn-pf-rule-type-label { flex-basis: 100%; }
+	.fn-pf-range-port { grid-template-columns: minmax(0, 1fr); gap: 0; }
+	.fn-pf-range-dash { display: none; }
+	.fn-pf-modal-actions { flex-direction: column-reverse; }
+	.fn-pf-modal-actions .fn-settings-btn { width: 100%; }
 }

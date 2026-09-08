@@ -3,6 +3,7 @@
 set -e
 
 ROUTER="root@192.168.1.1"
+SSH_CMD="${FREENETIC_SSH_CMD:-ssh}"
 APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$APP_DIR")"
 THEME_PACKAGE_DIR="$APP_DIR/luci-theme-freenetic"
@@ -18,15 +19,15 @@ APPLICATION_WEB_DIR="$PROJECT_DIR/web/application"
 # in luci-app-package-manager (declared as a real package dependency in
 # app/luci-app-freenetic/Makefile). deploy.sh bypasses the package install
 # path, so it has to ensure the dependency itself; skip if already installed.
-ssh "$ROUTER" 'apk info -e luci-app-package-manager >/dev/null 2>&1 || apk add luci-app-package-manager'
+$SSH_CMD "$ROUTER" 'apk info -e luci-app-package-manager >/dev/null 2>&1 || apk add luci-app-package-manager'
 
-ssh "$ROUTER" 'rm -rf /tmp/freenetic-pkg && mkdir -p /tmp/freenetic-pkg'
+$SSH_CMD "$ROUTER" 'rm -rf /tmp/freenetic-pkg && mkdir -p /tmp/freenetic-pkg'
 tar czf - -C "$THEME_WEB_DIR" htdocs ucode \
 	-C "$APPLICATION_WEB_DIR" htdocs \
 	-C "$THEME_PACKAGE_DIR" root \
 	-C "$APPLICATION_PACKAGE_DIR" root | \
-	ssh "$ROUTER" 'tar xzf - -C /tmp/freenetic-pkg'
-ssh "$ROUTER" '
+	$SSH_CMD "$ROUTER" 'tar xzf - -C /tmp/freenetic-pkg'
+$SSH_CMD "$ROUTER" '
     rm -rf /www/luci-static/freenetic
     mkdir -p /www/luci-static/freenetic /www/luci-static/resources
     cp -r /tmp/freenetic-pkg/htdocs/luci-static/freenetic/. /www/luci-static/freenetic/
@@ -37,6 +38,12 @@ ssh "$ROUTER" '
     cp -r /tmp/freenetic-pkg/htdocs/luci-static/resources/. /www/luci-static/resources/
     mkdir -p /usr/share/ucode/luci/template/themes/freenetic
     cp /tmp/freenetic-pkg/ucode/template/themes/freenetic/*.ut /usr/share/ucode/luci/template/themes/freenetic/
+    # Seed the Freenetic UCI settings once; never overwrite the selected
+    # release channel on subsequent development deployments.
+    if [ ! -f /etc/config/freenetic ] && [ -f /tmp/freenetic-pkg/root/etc/config/freenetic ]; then
+        mkdir -p /etc/config
+        cp /tmp/freenetic-pkg/root/etc/config/freenetic /etc/config/freenetic
+    fi
     mkdir -p /usr/share/luci/menu.d /usr/share/rpcd/acl.d /usr/libexec
     # Remove the menu filename used by the former monolithic theme package.
     rm -f /usr/share/luci/menu.d/luci-theme-freenetic.json
@@ -66,6 +73,7 @@ ssh "$ROUTER" '
              /www/luci-static/resources/view/network/freenetic-firewall.js \
              /www/luci-static/resources/view/network/freenetic-mynetworks.js \
              /www/luci-static/resources/view/network/freenetic-portforward.js \
+             /www/luci-static/resources/view/network/freenetic-routing.js \
              /www/luci-static/resources/view/network/freenetic-wan.js \
              /www/luci-static/resources/view/status/freenetic-clients.js \
              /www/luci-static/resources/view/status/freenetic-dashboard.js \

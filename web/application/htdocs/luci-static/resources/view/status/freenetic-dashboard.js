@@ -29,6 +29,9 @@ const ubusCall = rpc.call;
 
 const HISTORY_LEN = 40;
 const POLL_INTERVAL = 3; /* seconds */
+const FREENETIC_REPOSITORY = 'https://github.com/unisequence/freenetic';
+const FREENETIC_RELEASES_API = 'https://api.github.com/repos/unisequence/freenetic/releases?per_page=30';
+const FREENETIC_PACKAGE_NAMES = [ 'luci-theme-freenetic', 'luci-app-freenetic' ];
 
 function svgIcon(d, size) {
 	size = size || 18;
@@ -215,6 +218,16 @@ function connectionLabel(wan) {
 	}
 }
 
+function connectionInterfaceLabel(wan) {
+	const name = wan.name || '';
+
+	switch (name) {
+	case 'wan': return _('Internet (WAN)');
+	case 'wan6': return _('Internet (IPv6)');
+	default: return name || wan.l3_device || wan.device || '–';
+	}
+}
+
 function getWirelessConfig() {
 	return ubusCall('uci', 'get', { config: 'wireless' }).then(r => r.values || {});
 }
@@ -315,6 +328,31 @@ function getConntrackCounts() {
    attendedsysupgrade); auto_search is its "check for updates" toggle. */
 function getSysupgradeConfig() {
 	return ubusCall('uci', 'get', { config: 'attendedsysupgrade' }).then(r => (r.values || {}).client || null).catch(() => null);
+}
+
+function getFreeneticInstalledPackages() {
+	return fs.exec_direct('/usr/libexec/package-manager-call', [ 'list-installed' ], 'json')
+		.then(list => (Array.isArray(list) ? list : []).filter(pkg =>
+			pkg && FREENETIC_PACKAGE_NAMES.indexOf(pkg.name) !== -1))
+		.catch(() => []);
+}
+
+function getFreeneticUpdateState() {
+	return Promise.all([
+		uci.load('freenetic').catch(() => []),
+		getFreeneticInstalledPackages()
+	]).then(([, packages]) => ({
+		channel: uci.get('freenetic', 'updates', 'channel') || 'stable',
+		packages
+	}));
+}
+
+function formatFreeneticVersion(packages) {
+	const versions = packages
+		.filter(pkg => pkg.version)
+		.map(pkg => pkg.name.replace(/^luci-/, '') + ' ' + pkg.version);
+
+	return versions.length ? versions.join(' · ') : _('Development build');
 }
 
 function fmtMB(bytes) {
@@ -422,7 +460,8 @@ return view.extend({
 					getDhcpLeases(),
 					getInterfaceInfo('guest'),
 					getSystemBoard(),
-					getSysupgradeConfig()
+					getSysupgradeConfig(),
+					getFreeneticUpdateState()
 				])));
 	},
 
@@ -440,6 +479,7 @@ return view.extend({
 		const guestInfo = data[10];
 		const board = data[11];
 		const sysupgradeCfg = data[12];
+		const freeneticUpdateState = data[13];
 
 		this.lanInfo = lan;
 		this.trafficHistory = {};
@@ -451,7 +491,7 @@ return view.extend({
 			E('div', { class: 'fn-dash-col' }, [
 				this.renderInternetCard(connections),
 				this.renderTrafficCard(lan),
-				this.renderSystemCard(board, sysupgradeCfg)
+				this.renderSystemCard(board, sysupgradeCfg, freeneticUpdateState)
 			]),
 			E('div', { class: 'fn-dash-col' }, [
 				this.renderNetworksCard(wireless, ports, netConfig, dhcpConfig, leases, guestInfo),
@@ -549,10 +589,26 @@ return view.extend({
 		const rxLabel = E('span', {}, '–');
 		const txLabel = E('span', {}, '–');
 		const infoGrid = E('div', { class: 'fn-info-grid' });
+		const ipv6AddressesEl = E('div', { class: 'fn-conn-ipv6-value' }, '–');
+		const ipv6DnsEl = E('div', { class: 'fn-conn-ipv6-value' }, '–');
+		const ipv6Details = E('details', { class: 'fn-conn-ipv6' });
+		ipv6Details.hidden = true;
+		ipv6Details.appendChild(E('summary', {}, _('IPv6 details')));
+		ipv6Details.appendChild(E('div', { class: 'fn-conn-ipv6-body' }, [
+			E('div', { class: 'fn-conn-ipv6-field' }, [
+				E('div', { class: 'fn-conn-ipv6-label' }, _('Addresses')),
+				ipv6AddressesEl
+			]),
+			E('div', { class: 'fn-conn-ipv6-field' }, [
+				E('div', { class: 'fn-conn-ipv6-label' }, _('DNS')),
+				ipv6DnsEl
+			])
+		]));
 		const statusPill = E('span', { class: 'fn-status-pill' });
 
 		const conn = {
 			device: group.device, spark, rxLabel, txLabel, infoGrid, statusPill,
+			ipv6Details, ipv6AddressesEl, ipv6DnsEl,
 			name: group.name,
 			ifaceNames: group.ifaces.map(e => e.interface),
 			rxHistory: [], txHistory: [], lastSample: null,
@@ -571,7 +627,8 @@ return view.extend({
 				E('span', { class: 'fn-legend-dot fn-legend-rx' }), _('Download: '), rxLabel,
 				E('span', { class: 'fn-legend-dot fn-legend-tx' }), _('Upload: '), txLabel
 			]),
-			infoGrid
+			infoGrid,
+			ipv6Details
 		]);
 	},
 
@@ -579,18 +636,24 @@ return view.extend({
 		conn.statusPill.className = 'fn-status-pill ' + (wan.up ? 'fn-status-ok' : 'fn-status-off');
 		dom_content(conn.statusPill, wan.up ? _('Connected') : _('Not connected'));
 
-		const addrs = (wan['ipv4-address'] || []).map(a => a.address + '/' + a.mask)
-			.concat((wan['ipv6-address'] || []).map(a => a.address + '/' + a.mask));
+		const v4addrs = (wan['ipv4-address'] || []).map(a => a.address + '/' + a.mask);
+		const v6addrs = (wan['ipv6-address'] || []).map(a => a.address + '/' + a.mask);
 		const dns = wan['dns-server'] || [];
+		const v4dns = dns.filter(address => address.indexOf(':') === -1);
+		const v6dns = dns.filter(address => address.indexOf(':') !== -1);
 		const gw = (wan.route || []).find(r => r.target == '0.0.0.0' && r.mask == 0);
+		const hasIpv6 = v6addrs.length > 0 || v6dns.length > 0;
 
 		const values = {
-			proto: wan.proto || '–',
-			addr: addrs.length ? addrs.join(', ') : '–',
+			proto: wan.proto ? String(wan.proto).toUpperCase() : '–',
+			/* Keep the high-level card focused on the primary IPv4 connection.
+			   IPv6 can contain several long addresses and is available from the
+			   compact disclosure immediately below the grid. */
+			addr: v4addrs.length ? v4addrs.join(', ') : (hasIpv6 ? _('IPv6 active') : '–'),
 			gw: gw ? gw.nexthop : '–',
-			dns: dns.length ? dns.join(', ') : '–',
+			dns: v4dns.length ? v4dns.join(', ') : (v6dns.length ? _('IPv6 DNS') : '–'),
 			connected: wan.uptime > 0 ? fmtUptime(wan.uptime) : '–',
-			device: wan.l3_device || wan.device || '–'
+			interface: connectionInterfaceLabel(wan)
 		};
 
 		/* Build the grid once, then just update each value cell's text on
@@ -613,7 +676,7 @@ return view.extend({
 			conn.gwEl = makeItem(_('Gateway'));
 			conn.dnsEl = makeItem(_('DNS'));
 			conn.connectedEl = makeItem(_('Connected'));
-			conn.deviceEl = makeItem(_('Device'));
+			conn.interfaceEl = makeItem(_('Interface'));
 			/* filled in once network.device status resolves, in pollWan() below */
 			conn.macEl = makeItem(_('MAC address'));
 			conn.rxTotalEl = makeItem(_('Received'));
@@ -626,7 +689,13 @@ return view.extend({
 		dom_content(conn.gwEl, values.gw);
 		dom_content(conn.dnsEl, values.dns);
 		dom_content(conn.connectedEl, values.connected);
-		dom_content(conn.deviceEl, values.device);
+		dom_content(conn.interfaceEl, values.interface);
+
+		if (conn.ipv6Details) {
+			conn.ipv6Details.hidden = !hasIpv6;
+			dom_content(conn.ipv6AddressesEl, v6addrs.length ? v6addrs.join('\n') : '–');
+			dom_content(conn.ipv6DnsEl, v6dns.length ? v6dns.join(', ') : '–');
+		}
 	},
 
 	applyWanSnapshot(interfaces, devices) {
@@ -1311,7 +1380,109 @@ return view.extend({
 		});
 	},
 
-	renderSystemCard(board, sysupgradeCfg) {
+	renderFreeneticUpdates(state, row, groupTitle) {
+		state = state || {};
+		const channel = state.channel === 'beta' ? 'beta' : 'stable';
+		const channelSelect = E('select', { class: 'fn-update-channel' }, [
+			E('option', { value: 'stable' }, _('Stable')),
+			E('option', { value: 'beta' }, _('Beta'))
+		]);
+		channelSelect.value = channel;
+
+		const status = E('span', { class: 'fn-update-status' }, _('Not checked yet.'));
+		const checkButton = E('button', {
+			type: 'button',
+			class: 'fn-settings-btn'
+		}, _('Check for updates'));
+
+		const setStatus = (message, kind) => {
+			status.className = 'fn-update-status' + (kind ? ' fn-update-status-' + kind : '');
+			dom_content(status, message);
+		};
+
+		channelSelect.addEventListener('change', () => {
+			const previous = state.channel === 'beta' ? 'beta' : 'stable';
+			const next = channelSelect.value;
+			channelSelect.disabled = true;
+			setStatus(_('Saving channel…'), 'pending');
+
+			if (!uci.get('freenetic', 'updates'))
+				uci.add('freenetic', 'freenetic', 'updates');
+			uci.set('freenetic', 'updates', 'channel', next);
+
+			uci.save().then(() => applyChanges()).then(() => {
+				state.channel = next;
+				setStatus(_('Channel saved.'), 'success');
+			}).catch(error => {
+				channelSelect.value = previous;
+				setStatus(_('Failed to save channel: %s').format(error.message || error), 'error');
+			}).finally(() => {
+				channelSelect.disabled = false;
+			});
+		});
+
+		checkButton.addEventListener('click', () => {
+			checkButton.disabled = true;
+			dom_content(checkButton, _('Checking…'));
+			setStatus(_('Looking for a %s release…').format(channelSelect.value === 'beta' ? _('beta') : _('stable')), 'pending');
+
+			fetch(FREENETIC_RELEASES_API, {
+				headers: { Accept: 'application/vnd.github+json' }
+			}).then(response => {
+				if (!response.ok)
+					throw new Error('GitHub HTTP ' + response.status);
+				return response.json();
+			}).then(releases => {
+				const candidates = (Array.isArray(releases) ? releases : [])
+					.filter(release => !release.draft && (channelSelect.value === 'beta' ? release.prerelease : !release.prerelease))
+					.sort((a, b) => String(b.published_at || b.created_at || '').localeCompare(String(a.published_at || a.created_at || '')));
+				const latest = candidates[0];
+
+				if (!latest) {
+					setStatus(_('No release is available for this channel.'), 'info');
+					return;
+				}
+
+				const tag = latest.tag_name || latest.name || _('Unnamed release');
+				const link = E('a', {
+					href: latest.html_url || FREENETIC_REPOSITORY + '/releases',
+					target: '_blank',
+					rel: 'noopener'
+				}, tag);
+				dom_empty(status);
+				status.appendChild(document.createTextNode(
+					latest.assets && latest.assets.length
+						? _('Latest release: ') + ' '
+						: _('Found a release without APK assets: ')
+				));
+				status.appendChild(link);
+				status.className = 'fn-update-status fn-update-status-' + (latest.assets && latest.assets.length ? 'success' : 'info');
+			}).catch(error => {
+				setStatus(_('Update check failed: %s').format(error.message || error), 'error');
+			}).finally(() => {
+				checkButton.disabled = false;
+				dom_content(checkButton, _('Check for updates'));
+			});
+		});
+
+		const sourceLink = E('a', {
+			href: FREENETIC_REPOSITORY,
+			target: '_blank',
+			rel: 'noopener'
+		}, 'github.com/unisequence/freenetic');
+		const channelValue = E('div', { class: 'fn-update-channel-value' }, channelSelect);
+		const checkValue = E('div', { class: 'fn-update-actions' }, [ checkButton, status ]);
+
+		return [
+			groupTitle(_('Freenetic'), 'freenetic'),
+			row(_('Installed'), E('div', { class: 'fn-info-value' }, formatFreeneticVersion(state.packages || []))),
+			row(_('Channel'), channelValue),
+			row(_('Repository'), sourceLink),
+			row(_('Updates'), checkValue)
+		];
+	},
+
+	renderSystemCard(board, sysupgradeCfg, freeneticUpdateState) {
 		const release = board.release || {};
 
 		const cpuFill = E('div', { class: 'fn-meter-fill' });
@@ -1331,7 +1502,9 @@ return view.extend({
 			E('div', { class: 'fn-info-label' }, label),
 			E('div', { class: 'fn-meter-wrap' }, [ E('div', { class: 'fn-meter' }, [ fillEl ]), valueEl ])
 		]);
-		const groupTitle = text => E('div', { class: 'fn-info-group-title' }, text);
+		const groupTitle = (text, key) => E('div', {
+			class: 'fn-info-group-title' + (key ? ' fn-info-group-' + key : '')
+		}, text);
 
 		/* No exact device profile id is available client-side (board.json's
 		   comma-form id doesn't reliably match firmware-selector's dataset),
@@ -1348,24 +1521,25 @@ return view.extend({
 			: '–';
 
 		const body = E('div', { class: 'fn-card-body fn-info-list' }, [
-			groupTitle(_('System')),
+			groupTitle(_('System'), 'system'),
 			meterRow(_('CPU'), cpuFill, cpuValue),
 			meterRow(_('RAM'), ramFill, ramValue),
 			row(_('Uptime'), uptimeValue),
 			row(_('Current time'), timeValue),
 			row(_('Active connections'), connValue),
 
-			groupTitle(_('System updates')),
+			groupTitle(_('System updates'), 'updates'),
 			row(_('OS version'), E('div', { class: 'fn-info-value' }, release.description || '–')),
 			row(_('Update channel'), E('div', { class: 'fn-info-value' }, [ channelLink ])),
 			row(_('Auto-update'), E('div', { class: 'fn-info-value' }, autoUpdateText)),
+			...this.renderFreeneticUpdates(freeneticUpdateState, row, groupTitle),
 
-			groupTitle(_('Device')),
+			groupTitle(_('Device'), 'device'),
 			row(_('Model'), E('div', { class: 'fn-info-value' }, board.model || board.board_name || '–')),
 			row(_('Kernel version'), E('div', { class: 'fn-info-value' }, board.kernel || '–'))
 		]);
 
-		return E('div', { class: 'fn-card' }, [
+		return E('div', { class: 'fn-card fn-system-card' }, [
 			E('div', { class: 'fn-card-head' }, [
 				svgIcon('M9 3h6v4H9zM4 9h16v10H4zM9 21v-2h6v2', 20),
 				E('h3', {}, _('About System'))

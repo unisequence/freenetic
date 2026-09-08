@@ -45,7 +45,7 @@ hardware right now:
 - Internet (multi-WAN)
 - My Networks & Wi-Fi — Home/Guest network with a real backend behind
   it (separate subnet, DHCP, firewall isolation), plus Client List
-- Network Rules: Port Forwarding, Firewall
+- Network Rules: Port Forwarding, Firewall, Routing (IPv4/IPv6 and DNS routes, including Windows route-file import)
 - Diagnostics: WAN addressing, gateway/DNS state, bounded ping and traceroute
 - Management: System (firmware download/flash, config+package backup,
   bootloader partition dumps), Applications (an install catalog built

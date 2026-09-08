@@ -24,6 +24,17 @@
 
 {% include('header', { blank_page: true }) %}
 
+<script>
+	/* A login starts a fresh shell session.  Do not carry drawer state from
+	   the previous authenticated session into the next one. */
+	(function() {
+		try {
+			localStorage.removeItem('freenetic-sidebar-expanded');
+			localStorage.removeItem('freenetic-settings-open');
+		} catch (e) {}
+	})();
+</script>
+
 <div class="fn-login-page">
 	<div class="fn-login-card">
 		<div class="fn-login-card-inner">

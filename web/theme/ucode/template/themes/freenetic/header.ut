@@ -53,6 +53,8 @@
 		</script>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="darkreader-lock">
+		<link rel="icon" type="image/svg+xml" href="{{ media }}/favicon.svg">
+		<link rel="shortcut icon" href="{{ media }}/favicon.svg">
 		<link rel="stylesheet" href="{{ media }}/cascade.css">
 		{% if (node?.css): %}
 		<link rel="stylesheet" href="{{ resource }}/{{ node.css }}">
@@ -66,7 +68,10 @@
 
 	<body class="lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
 		{% if (!blank_page): %}
-		<div id="fn-shell">
+		<!-- Start every authenticated page with both optional navigation drawers
+		     closed.  The controls can still be opened manually after the shell
+		     has loaded, but the first paint should not be a wall of navigation. -->
+		<div id="fn-shell" class="fn-sidebar-collapsed">
 			<header id="fn-topbar">
 				<a class="fn-brand" href="/" title="{{ striptags(brand) }}">
 					<span class="fn-brand-name">FREENETIC</span>

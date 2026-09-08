@@ -1,0 +1,2 @@
+config freenetic 'updates'
+	option channel 'stable'
