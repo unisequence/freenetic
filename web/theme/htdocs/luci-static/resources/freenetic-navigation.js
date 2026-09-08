@@ -106,7 +106,11 @@ return baseclass.extend({
 
 		/* menu-freenetic builds the sidebar asynchronously.  Synchronize once
 		 * after its menu cache is ready as well as immediately for a cached menu. */
-		Promise.resolve(ui.menu.load()).then(() => this.syncSidebar(this.currentRoute && this.currentRoute.key));
+		Promise.resolve(ui.menu.load()).then(() => {
+			if (this.currentRoute)
+				this.setEnvironment(this.currentRoute);
+			this.syncSidebar(this.currentRoute && this.currentRoute.key);
+		});
 		this.syncSidebar(this.currentRoute && this.currentRoute.key);
 	},
 

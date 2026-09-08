@@ -1069,10 +1069,11 @@ return view.extend({
 				click: (ev) => { if (ev.target === this.qrOverlay) this.hideQrDialog(); }
 			});
 			document.body.appendChild(this.qrOverlay);
-			document.addEventListener('keydown', (ev) => {
+			this.qrKeydownHandler = (ev) => {
 				if (ev.key === 'Escape' && this.qrOverlay.classList.contains('fn-qr-open'))
 					this.hideQrDialog();
-			});
+			};
+			document.addEventListener('keydown', this.qrKeydownHandler);
 		}
 
 		const canvas = E('canvas');
@@ -1116,12 +1117,34 @@ return view.extend({
 
 		qrcode.renderToCanvas(canvas, wifiQrPayload(ssid, key, isOpen), 4);
 
-		requestAnimationFrame(() => this.qrOverlay.classList.add('fn-qr-open'));
+		requestAnimationFrame(() => {
+			if (this.qrOverlay)
+				this.qrOverlay.classList.add('fn-qr-open');
+		});
 	},
 
 	hideQrDialog() {
 		if (this.qrOverlay)
 			this.qrOverlay.classList.remove('fn-qr-open');
+	},
+
+	destroy() {
+		if (this.streamFallbackTimer) {
+			clearTimeout(this.streamFallbackTimer);
+			this.streamFallbackTimer = null;
+		}
+		if (this.qrKeydownHandler) {
+			document.removeEventListener('keydown', this.qrKeydownHandler);
+			this.qrKeydownHandler = null;
+		}
+		if (this.qrOverlay) {
+			this.qrOverlay.remove();
+			this.qrOverlay = null;
+		}
+		if (Array.isArray(this.fallbackPollers)) {
+			this.fallbackPollers.forEach(fn => poll.remove(fn));
+			this.fallbackPollers = [];
+		}
 	},
 
 	copyToClipboard(text) {

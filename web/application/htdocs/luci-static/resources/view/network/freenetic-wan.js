@@ -81,7 +81,9 @@ function buildDropdown(options, initialValue) {
 		ev.stopPropagation();
 	});
 	wrap.addEventListener('keydown', ev => { if (ev.key === 'Escape') close(); });
-	document.addEventListener('click', ev => { if (!wrap.contains(ev.target)) close(); });
+	const outsideClick = ev => { if (!wrap.contains(ev.target)) close(); };
+	document.addEventListener('click', outsideClick);
+	wrap.__freeneticDestroy = () => document.removeEventListener('click', outsideClick);
 
 	Object.defineProperty(wrap, 'value', {
 		get: () => value,
@@ -163,6 +165,9 @@ return view.extend({
 	},
 
 	render(data) {
+		this.dropdownNodes = [];
+		window.__freeneticActiveView = this;
+
 		this.status = data[1];
 		this.status6 = data[2];
 
@@ -272,6 +277,7 @@ return view.extend({
 		], uci.get('network', 'wan6', 'reqprefix') || 'auto');
 		const dns6Input1 = E('input', { type: 'text', class: 'fn-input', value: wan6Dns[0] || '', placeholder: _('Automatic') });
 		const dns6Input2 = E('input', { type: 'text', class: 'fn-input', value: wan6Dns[1] || '', placeholder: _('Optional') });
+		this.dropdownNodes = [ protoSelect, proto6Select, reqAddress6Select, reqPrefix6Select ];
 
 		const static6Group = E('div', { class: 'fn-kn-group' }, [
 			E('div', { class: 'fn-kn-field' }, [ E('label', {}, _('IPv6 address')), ip6AddrInput ]),
@@ -377,6 +383,14 @@ return view.extend({
 				E('div', { class: 'fn-pf-actions' }, [ save6Btn ])
 			]), 'ipv6', false)
 		]);
+	},
+
+	destroy() {
+		(this.dropdownNodes || []).forEach(dropdown => {
+			if (dropdown && typeof dropdown.__freeneticDestroy === 'function')
+				dropdown.__freeneticDestroy();
+		});
+		this.dropdownNodes = [];
 	},
 
 	fillStatus(wan) {
