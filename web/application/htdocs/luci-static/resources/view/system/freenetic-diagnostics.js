@@ -60,7 +60,6 @@ return view.extend({
 	render(interfaceDump) {
 		this.uplinks = diagnostics.summarizeInterfaces(interfaceDump);
 		const defaultTarget = (this.uplinks.find(item => item.up && item.gateway) || {}).gateway || '1.1.1.1';
-		const connected = this.uplinks.some(item => item.up);
 		const networkBody = this.uplinks.length
 			? this.uplinks.map(renderUplink)
 			: [ E('div', { class: 'fn-info-empty' }, _('No WAN interface or default route was found.')) ];
@@ -99,10 +98,7 @@ return view.extend({
 		return E('div', { class: 'fn-dash' }, [
 			E('div', { class: 'fn-card', style: 'grid-column: 1 / -1' }, [
 				E('div', { class: 'fn-card-head' }, [
-					E('h3', {}, _('Internet diagnostics')),
-					E('span', {
-						class: 'fn-status-pill ' + (connected ? 'fn-status-ok' : 'fn-status-off')
-					}, connected ? _('Connected') : _('Disconnected'))
+					E('h3', {}, _('Internet diagnostics'))
 				]),
 				E('div', { class: 'fn-card-body fn-info-list' }, networkBody)
 			]),
