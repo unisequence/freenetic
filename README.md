@@ -2,6 +2,8 @@
 
 [Русская версия](README.ru.md)
 
+[Changelog](CHANGELOG.md)
+
 Freenetic is a clean-room reimplementation of Keenetic's UX and CLI on
 top of vanilla OpenWrt — not a fork, and not binary-compatible with
 proprietary KeeneticOS/NDM. It's a separate layer that reproduces the

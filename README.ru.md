@@ -2,6 +2,8 @@
 
 [English version](README.md)
 
+[История изменений](CHANGELOG.md)
+
 Freenetic — clean-room реализация UX и CLI Keenetic поверх чистого
 OpenWrt. Не форк и не бинарная совместимость с проприетарной
 KeeneticOS/NDM — отдельный слой, который воспроизводит привычный вид
