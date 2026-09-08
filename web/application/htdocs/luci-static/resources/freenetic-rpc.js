@@ -7,6 +7,7 @@
  * the same ubus endpoint directly. Keep this workaround in one place.
  */
 let requestId = 1;
+const streams = [];
 
 return baseclass.extend({
 	call: function(object, method, params) {
@@ -49,6 +50,7 @@ return baseclass.extend({
 		const source = new window.EventSource(url, {
 			withCredentials: true
 		});
+		streams.push(source);
 
 		source.addEventListener('snapshot', ev => {
 			try {
@@ -64,5 +66,15 @@ return baseclass.extend({
 			source.addEventListener('error', onError);
 
 		return source;
+	},
+
+	/* Close all streams opened by Freenetic views.  LuCI keeps modules as
+	 * singletons, so a view replaced in-place must explicitly release its
+	 * EventSource instead of leaving it connected to the old callbacks. */
+	closeStreams: function() {
+		while (streams.length) {
+			const source = streams.pop();
+			try { source.close(); } catch (e) {}
+		}
 	}
 });

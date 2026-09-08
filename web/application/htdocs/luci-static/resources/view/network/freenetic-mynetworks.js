@@ -208,6 +208,10 @@ return view.extend({
 	},
 
 	render(data) {
+		if (this.tabPopstateHandler)
+			window.removeEventListener('popstate', this.tabPopstateHandler);
+		window.__freeneticActiveView = this;
+
 		const wireless = data[0], network = data[1], dhcp = data[2];
 		this.hasAvahi = data[3];
 		this.radioAdv = data[4];
@@ -235,7 +239,8 @@ return view.extend({
 
 		homeTab.addEventListener('click', () => showTab('home', true));
 		guestTab.addEventListener('click', () => showTab('guest', true));
-		window.addEventListener('popstate', (ev) => showTab(ev.state && ev.state.fnTab === 'guest' ? 'guest' : 'home', false));
+		this.tabPopstateHandler = (ev) => showTab(ev.state && ev.state.fnTab === 'guest' ? 'guest' : 'home', false);
+		window.addEventListener('popstate', this.tabPopstateHandler);
 		history.replaceState({ fnTab: initialTab }, '', location.href);
 
 		return E('div', { class: 'fn-dash' }, [
@@ -251,6 +256,13 @@ return view.extend({
 				])
 			])
 		]);
+	},
+
+	destroy() {
+		if (this.tabPopstateHandler) {
+			window.removeEventListener('popstate', this.tabPopstateHandler);
+			this.tabPopstateHandler = null;
+		}
 	},
 
 	renderSegmentPanel(kind, ifaceName, wireless, network, dhcp) {

@@ -69,6 +69,7 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/freenetic-ui.js \
              /www/luci-static/resources/freenetic-view-guard.js \
              /www/luci-static/resources/menu-freenetic.js \
+             /www/luci-static/resources/freenetic-navigation.js \
              /www/luci-static/resources/settings-freenetic.js \
              /www/luci-static/resources/view/network/freenetic-firewall.js \
              /www/luci-static/resources/view/network/freenetic-mynetworks.js \

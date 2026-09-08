@@ -466,6 +466,8 @@ return view.extend({
 	},
 
 	render(data) {
+		window.__freeneticActiveView = this;
+
 		const connections = data[0];
 		const wireless = data[1];
 		const ports = data[2];

@@ -94,6 +94,12 @@ return view.extend({
 	   to the actual stock view instead of rendering our fn-card markup.
 	   See freenetic-view-guard.js. */
 	__init__() {
+		/* SPA navigation loads this already-instantiated class without wanting
+		 * the normal constructor side effect (which would render immediately and
+		 * run the foreign-theme compatibility check). */
+		if (window.__freeneticSpaConstructingView)
+			return;
+
 		return guard.isForeignTheme().then(foreign => {
 			/* L.require() already instantiates the class it loads (see
 			   luci.js's requireClass — it does `new _class()` internally

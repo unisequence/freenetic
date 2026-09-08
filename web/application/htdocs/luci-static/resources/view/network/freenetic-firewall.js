@@ -61,6 +61,9 @@ return view.extend({
 	   actual stock page (a genuinely different URL, untouched by us)
 	   instead of rendering our fn-card markup. See freenetic-view-guard.js. */
 	__init__() {
+		if (window.__freeneticSpaConstructingView)
+			return;
+
 		return guard.isForeignTheme().then(foreign => {
 			if (foreign) {
 				location.href = L.url('admin/network/firewall/zones');

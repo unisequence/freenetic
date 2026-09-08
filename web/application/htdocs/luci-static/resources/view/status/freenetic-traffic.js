@@ -196,6 +196,8 @@ return view.extend({
 	},
 
 	render(data) {
+		window.__freeneticActiveView = this;
+
 		const connections = data[0];
 		const lan = data[1];
 

@@ -7,6 +7,7 @@
 		</div>
 		<script>L.require('menu-freenetic')</script>
 		<script>L.require('settings-freenetic')</script>
+		<script>L.require('freenetic-navigation')</script>
 		{% endif %}
 	</body>
 </html>

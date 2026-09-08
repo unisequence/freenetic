@@ -297,6 +297,9 @@ return view.extend({
 	__init__() {
 		/* admin/network/routes is a stock LuCI path on many images.  Keep the
 		 * original page available when Freenetic is not the active theme. */
+		if (window.__freeneticSpaConstructingView)
+			return;
+
 		return guard.isForeignTheme().then(foreign => {
 			if (foreign)
 				return L.require('view.network.routes');
