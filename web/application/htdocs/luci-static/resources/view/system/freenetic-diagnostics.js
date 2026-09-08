@@ -16,17 +16,39 @@ function infoRow(label, value) {
 	]);
 }
 
+function humanUplinkName(name) {
+	const value = String(name || '').trim();
+	const match = value.match(/^wan(\d+)$/i);
+
+	if (/^wan$/i.test(value))
+		return _('Internet connection');
+	if (match)
+		return _('Internet connection %s').format(match[1]);
+
+	return value || _('Internet connection');
+}
+
+function humanProtocol(protocol) {
+	const value = String(protocol || '').trim();
+	return value && value !== '–' ? value.toUpperCase() : '–';
+}
+
+function humanInterface(device) {
+	const value = String(device || '').trim();
+	return value && value !== '–' ? value.toUpperCase() : '–';
+}
+
 function renderUplink(uplink) {
 	return E('div', { class: 'fn-diag-uplink' }, [
-		E('div', { class: 'fn-info-group-title' }, uplink.name),
-		infoRow(_('Status'), E('span', {
+		E('div', { class: 'fn-info-group-title' }, humanUplinkName(uplink.name)),
+		infoRow(_('Connection status'), E('span', {
 			class: 'fn-status-pill ' + (uplink.up ? 'fn-status-ok' : 'fn-status-off')
 		}, uplink.up ? _('Connected') : _('Disconnected'))),
-		infoRow(_('Protocol'), uplink.protocol),
-		infoRow(_('Device'), uplink.device),
-		infoRow(_('IP addresses'), uplink.addresses.join(', ')),
-		infoRow(_('Default gateway'), uplink.gateway),
-		infoRow(_('DNS servers'), uplink.dns.join(', '))
+		infoRow(_('Connection type'), humanProtocol(uplink.protocol)),
+		infoRow(_('Interface'), humanInterface(uplink.device)),
+		infoRow(_('IP address'), uplink.addresses.join(', ')),
+		infoRow(_('Gateway'), uplink.gateway),
+		infoRow(_('DNS'), uplink.dns.join(', '))
 	]);
 }
 
