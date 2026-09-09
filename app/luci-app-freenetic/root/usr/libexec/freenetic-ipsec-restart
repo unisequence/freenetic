@@ -1,0 +1,23 @@
+#!/bin/sh
+# Restart strongSwan after Freenetic changes the native ipsec UCI config.
+# Different OpenWrt releases expose either the swanctl or legacy ipsec init
+# script, so detect the service instead of assuming one package layout.
+set -u
+
+service=""
+if [ -x /etc/init.d/swanctl ]; then
+	service=/etc/init.d/swanctl
+elif [ -x /etc/init.d/ipsec ]; then
+	service=/etc/init.d/ipsec
+fi
+
+if [ -z "$service" ]; then
+	printf '{"ok":false,"error":"The strongSwan service is not installed."}\n'
+	exit 0
+fi
+
+if "$service" restart >/tmp/freenetic-ipsec-restart.log 2>&1; then
+	printf '{"ok":true}\n'
+else
+	printf '{"ok":false,"error":"The strongSwan service could not be restarted."}\n'
+fi

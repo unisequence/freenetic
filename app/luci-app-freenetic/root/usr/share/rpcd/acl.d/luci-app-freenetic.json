@@ -35,7 +35,7 @@
 				"/usr/share/ddns/custom/*": [ "read" ],
 				"/usr/share/ddns/list": [ "read" ]
 			},
-			"uci": [ "network", "wireless", "dhcp", "firewall", "ddns", "attendedsysupgrade", "luci", "freenetic", "pbr" ]
+			"uci": [ "network", "wireless", "dhcp", "firewall", "ddns", "attendedsysupgrade", "luci", "freenetic", "pbr", "ipsec" ]
 		},
 		"write": {
 			"cgi-io": [ "upload" ],
@@ -63,10 +63,11 @@
 				"/usr/libexec/freenetic-openvpn-profile install *": [ "exec" ],
 				"/usr/libexec/freenetic-openvpn-profile remove *": [ "exec" ],
 				"/usr/libexec/freenetic-network-restart": [ "exec" ],
+				"/usr/libexec/freenetic-ipsec-restart": [ "exec" ],
 				"/usr/libexec/freenetic-pbr-restart": [ "exec" ],
 				"/usr/lib/ddns/dynamic_dns_lucihelper.sh": [ "exec" ]
 			},
-			"uci": [ "network", "wireless", "dhcp", "firewall", "ddns", "luci", "freenetic", "pbr" ]
+			"uci": [ "network", "wireless", "dhcp", "firewall", "ddns", "luci", "freenetic", "pbr", "ipsec" ]
 		}
 	}
 }

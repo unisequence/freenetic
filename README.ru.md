@@ -48,9 +48,9 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 - My Networks & Wi-Fi — Домашняя/Гостевая сеть с реальным бэкендом
   (отдельная подсеть, DHCP, firewall-изоляция), плюс Client List
 - Network Rules: Port Forwarding, Firewall, Routing (IPv4/IPv6 и DNS-маршруты, включая импорт Windows route-файлов)
-- Other Connections: нативные подключения WireGuard и OpenVPN, импорт
-  конфигураций AmneziaWG/AWG и опциональный установщик подписанного feed под
-  конкретную версию/target устройства
+- Other Connections: нативные подключения WireGuard, OpenVPN, L2TP/IPsec и
+  IKEv2/IPsec, импорт конфигураций AmneziaWG/AWG и опциональный установщик
+  подписанного feed под конкретную версию/target устройства
 - Диагностика: адреса WAN, шлюз/DNS, ограниченные ping и traceroute
 - Management: System (скачивание/прошивка образа, бэкап конфигов и
   списка пакетов, дампы разделов загрузчика), Applications (каталог
@@ -60,9 +60,10 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 - Wi-Fi ACL (allow/deny-списки для каждого SSID поверх штатных
   `macfilter`/`maclist`, с добавлением устройств из Client List)
 - Access & Routing Policy для целой сети или отдельного устройства:
-  Direct (WAN), VPN через WireGuard/AmneziaWG/OpenVPN и Block Internet
+  Direct (WAN), VPN через WireGuard/AmneziaWG/OpenVPN/L2TP/IPsec/IKEv2 и Block
+  Internet
 
-Не готово: L2TP/IPsec и другие legacy VPN-клиенты, IntelliQoS,
+Не готово: другие legacy VPN-клиенты, IntelliQoS,
 Mobile/DSL/Wireless ISP-подключения и анализатор трафика приложений.
 
 ## Дальше по плану

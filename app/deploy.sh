@@ -121,6 +121,7 @@ $SSH_CMD "$ROUTER" '
              /etc/openvpn/freenetic /usr/libexec/freenetic-openvpn-profile \
              /usr/libexec/freenetic-package-status \
              /usr/libexec/freenetic-network-restart \
+             /usr/libexec/freenetic-ipsec-restart \
              /usr/libexec/freenetic-pbr-restart; do
         grep -qxF "$p" /etc/sysupgrade.conf || echo "$p" >> /etc/sysupgrade.conf
     done

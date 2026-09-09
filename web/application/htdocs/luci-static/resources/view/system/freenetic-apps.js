@@ -62,8 +62,12 @@ const GROUPS = [
 				desc: _('Connect to a PPTP VPN server.') },
 			{ id: 'l2tp', name: _('L2TP client'), packages: [ 'ppp-mod-pppol2tp' ],
 				desc: _('Connect to an L2TP VPN server.') },
-			{ id: 'l2tp_ipsec', name: _('L2TP/IPsec client'), packages: [ 'ppp-mod-pppol2tp', 'strongswan-swanctl' ],
-				desc: _('L2TP over an IPsec-encrypted tunnel.') },
+			{ id: 'l2tp_ipsec', name: _('L2TP/IPsec client'), restartNetifdOnInstall: true,
+				packages: [ 'xl2tpd', 'ppp-mod-pppol2tp', 'kmod-l2tp', 'kmod-pppol2tp', 'strongswan-default', 'luci-proto-ppp' ],
+				desc: _('L2TP over an IPsec-encrypted tunnel using native xl2tpd and strongSwan.') },
+			{ id: 'ikev2_ipsec', name: _('IKEv2/IPsec client'), restartNetifdOnInstall: true,
+				packages: [ 'strongswan-default', 'strongswan-mod-eap-identity', 'strongswan-mod-eap-mschapv2', 'xfrm', 'kmod-xfrm-interface', 'luci-proto-xfrm' ],
+				desc: _('Modern route-based IPsec VPN with PSK or EAP-MSCHAPv2 authentication.') },
 			{ id: 'openvpn', name: _('OpenVPN client and server'), restartNetifdOnInstall: true, packages: [ 'openvpn-openssl' ],
 				desc: _('Widely supported, certificate-based VPN.') }
 		]

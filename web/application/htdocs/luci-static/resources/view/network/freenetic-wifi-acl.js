@@ -147,11 +147,16 @@ function isManagedSection(section, scope) {
 
 function isVpnInterface(section) {
 	const proto = String(section && section.proto || '').toLowerCase();
-	return proto === 'wireguard' || proto === 'amneziawg' || proto === 'openvpn';
+	return proto === 'wireguard' || proto === 'amneziawg' || proto === 'openvpn' ||
+		proto === 'l2tp' || proto === 'xfrm';
 }
 
 function vpnProtocolLabel(section) {
 	const proto = String(section && section.proto || '').toLowerCase();
+	if ((section && section.freenetic_protocol === 'l2tp_ipsec') || proto === 'l2tp')
+		return 'L2TP/IPsec';
+	if ((section && section.freenetic_protocol === 'ikev2') || proto === 'xfrm')
+		return 'IKEv2/IPsec';
 	if (proto === 'amneziawg')
 		return 'AmneziaWG';
 	if (proto === 'openvpn')

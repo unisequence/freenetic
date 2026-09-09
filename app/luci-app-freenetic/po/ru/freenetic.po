@@ -560,8 +560,14 @@ msgstr "Подключение к VPN-серверу L2TP."
 msgid "L2TP/IPsec client"
 msgstr "Клиент L2TP/IPsec"
 
-msgid "L2TP over an IPsec-encrypted tunnel."
-msgstr "L2TP поверх туннеля с шифрованием IPsec."
+msgid "L2TP over an IPsec-encrypted tunnel using native xl2tpd and strongSwan."
+msgstr "L2TP поверх туннеля с шифрованием IPsec через штатные xl2tpd и strongSwan."
+
+msgid "IKEv2/IPsec client"
+msgstr "Клиент IKEv2/IPsec"
+
+msgid "Modern route-based IPsec VPN with PSK or EAP-MSCHAPv2 authentication."
+msgstr "Современный маршрутный IPsec VPN с аутентификацией PSK или EAP-MSCHAPv2."
 
 msgid "OpenVPN client and server"
 msgstr "Клиент и сервер OpenVPN"
@@ -918,6 +924,239 @@ msgstr "Штатный протокол ядра OpenWrt готов."
 #, javascript-format
 msgid "Required package(s) are missing: %s."
 msgstr "Отсутствуют необходимые пакеты: %s."
+
+msgid "L2TP/IPsec"
+msgstr "L2TP/IPsec"
+
+msgid "IKEv2/IPsec"
+msgstr "IKEv2/IPsec"
+
+msgid "Legacy PPP tunnel protected by an IPsec transport connection."
+msgstr "Устаревший PPP-туннель, защищённый транспортным соединением IPsec."
+
+msgid "xl2tpd and strongSwan are ready."
+msgstr "xl2tpd и strongSwan готовы."
+
+msgid "Modern IPsec VPN with PSK or EAP-MSCHAPv2 authentication."
+msgstr "Современный IPsec VPN с аутентификацией PSK или EAP-MSCHAPv2."
+
+msgid "strongSwan and the XFRM interface are ready."
+msgstr "strongSwan и интерфейс XFRM готовы."
+
+msgid "Interface ready"
+msgstr "Интерфейс готов"
+
+msgid "Server"
+msgstr "Сервер"
+
+msgid "PPP username"
+msgstr "Имя пользователя PPP"
+
+msgid "IP version"
+msgstr "Версия IP"
+
+msgid "IPv4 + IPv6"
+msgstr "IPv4 + IPv6"
+
+msgid "Authentication"
+msgstr "Аутентификация"
+
+msgid "EAP-MSCHAPv2"
+msgstr "EAP-MSCHAPv2"
+
+msgid "Pre-shared key"
+msgstr "Предварительно согласованный ключ"
+
+msgid "XFRM interface ID"
+msgstr "ID интерфейса XFRM"
+
+msgid "Traffic selectors"
+msgstr "Селекторы трафика"
+
+msgid "The XFRM interface is created by netifd; strongSwan establishes the IKEv2 security association on top of it."
+msgstr "Интерфейс XFRM создаёт netifd, а strongSwan устанавливает поверх него ассоциацию безопасности IKEv2."
+
+msgid "The PPP tunnel is carried by xl2tpd after strongSwan negotiates the IPsec transport connection."
+msgstr "PPP-туннель создаётся xl2tpd после согласования strongSwan транспортного соединения IPsec."
+
+msgid "New L2TP/IPsec connection"
+msgstr "Новое подключение L2TP/IPsec"
+
+msgid "PPP password"
+msgstr "Пароль PPP"
+
+msgid "IPsec pre-shared key"
+msgstr "Предварительно согласованный ключ IPsec"
+
+msgid "Optional local ID"
+msgstr "Необязательный локальный ID"
+
+msgid "Optional server ID"
+msgstr "Необязательный ID сервера"
+
+msgid "Edit L2TP/IPsec connection"
+msgstr "Изменить подключение L2TP/IPsec"
+
+msgid "Add L2TP/IPsec connection"
+msgstr "Добавить подключение L2TP/IPsec"
+
+msgid "L2TP uses xl2tpd for PPP and strongSwan for the IPsec transport protection. The router must have the matching kernel modules installed."
+msgstr "L2TP использует xl2tpd для PPP и strongSwan для защиты транспортного соединения IPsec. На роутере должны быть установлены совместимые модули ядра."
+
+msgid "L2TP server"
+msgstr "Сервер L2TP"
+
+msgid "Use a hostname or IP address. A custom UDP port may be appended as host:port."
+msgstr "Укажите имя хоста или IP-адрес. Нестандартный UDP-порт можно добавить в формате host:port."
+
+msgid "Local identity"
+msgstr "Локальная идентичность"
+
+msgid "Server identity"
+msgstr "Идентичность сервера"
+
+msgid "LCP keepalive"
+msgstr "Поддержание LCP"
+
+msgid "Failure count and interval, for example 10,5."
+msgstr "Количество ошибок и интервал, например 10,5."
+
+msgid "Enable IPv6 on the PPP tunnel"
+msgstr "Включить IPv6 в PPP-туннеле"
+
+msgid "Install a default route through this tunnel"
+msgstr "Установить маршрут по умолчанию через этот туннель"
+
+msgid "Native OpenWrt configuration"
+msgstr "Штатная конфигурация OpenWrt"
+
+msgid "Credentials are written to network UCI. IPsec proposals use a conservative AES-256/SHA-1 baseline compatible with common L2TP providers."
+msgstr "Учётные данные записываются в UCI network. Для IPsec используются консервативные предложения AES-256/SHA-1, совместимые с распространёнными провайдерами L2TP."
+
+msgid "New IKEv2/IPsec connection"
+msgstr "Новое подключение IKEv2/IPsec"
+
+msgid "EAP-MSCHAPv2 (username/password)"
+msgstr "EAP-MSCHAPv2 (имя пользователя/пароль)"
+
+msgid "VPN username"
+msgstr "Имя пользователя VPN"
+
+msgid "VPN password"
+msgstr "Пароль VPN"
+
+msgid "EAP username"
+msgstr "Имя пользователя EAP"
+
+msgid "EAP password"
+msgstr "Пароль EAP"
+
+msgid "CA certificate filename"
+msgstr "Имя файла сертификата CA"
+
+msgid "Upload this PEM file to /etc/swanctl/x509ca on the router. Leave empty only when the provider does not require CA pinning."
+msgstr "Загрузите этот PEM-файл в /etc/swanctl/x509ca на роутере. Оставляйте поле пустым только если провайдер не требует фиксации CA."
+
+msgid "EAP-MSCHAPv2 is common for commercial IKEv2 providers and needs a trusted CA certificate when the server identity is verified."
+msgstr "EAP-MSCHAPv2 часто используется коммерческими IKEv2-провайдерами и требует доверенного сертификата CA при проверке идентичности сервера."
+
+msgid "PSK authentication stores the pre-shared key in the native strongSwan secrets section."
+msgstr "При аутентификации PSK предварительно согласованный ключ хранится в штатном разделе секретов strongSwan."
+
+msgid "Edit IKEv2/IPsec connection"
+msgstr "Изменить подключение IKEv2/IPsec"
+
+msgid "Add IKEv2/IPsec connection"
+msgstr "Добавить подключение IKEv2/IPsec"
+
+msgid "Use a native route-based XFRM interface with strongSwan. The IKEv2 security association carries the selectors below; applications can route traffic to the XFRM interface through Access & Routing Policy."
+msgstr "Используйте штатный маршрутный интерфейс XFRM с strongSwan. Ассоциация безопасности IKEv2 передаёт указанные ниже селекторы, а приложения могут направлять трафик в XFRM через Access & Routing Policy."
+
+msgid "VPN gateway"
+msgstr "Шлюз VPN"
+
+msgid "Local traffic selectors"
+msgstr "Локальные селекторы трафика"
+
+msgid "Comma-separated CIDR prefixes, for example 0.0.0.0/0."
+msgstr "Префиксы CIDR через запятую, например 0.0.0.0/0."
+
+msgid "Remote traffic selectors"
+msgstr "Удалённые селекторы трафика"
+
+msgid "Start tunnel automatically"
+msgstr "Запускать туннель автоматически"
+
+msgid "Enable MOBIKE"
+msgstr "Включить MOBIKE"
+
+msgid "Force UDP encapsulation"
+msgstr "Принудительная инкапсуляция UDP"
+
+msgid "IKEv2 uses the router’s strongSwan UCI backend. The XFRM interface ID must match the child SA and is kept stable when you edit this connection."
+msgstr "IKEv2 использует UCI-бэкенд strongSwan на роутере. ID интерфейса XFRM должен совпадать с дочерней SA и сохраняется при редактировании подключения."
+
+msgid "Enter a valid L2TP server hostname or IP address."
+msgstr "Введите корректное имя хоста или IP-адрес сервера L2TP."
+
+msgid "Enter the PPP username and password."
+msgstr "Введите имя пользователя и пароль PPP."
+
+msgid "Enter the IPsec pre-shared key."
+msgstr "Введите предварительно согласованный ключ IPsec."
+
+msgid "MTU must be between 576 and 9000."
+msgstr "MTU должно быть от 576 до 9000."
+
+msgid "LCP keepalive must use failure count,interval format, for example 10,5."
+msgstr "Поддержание LCP должно быть в формате количество ошибок,интервал, например 10,5."
+
+msgid "The IPsec identities contain invalid characters."
+msgstr "Идентификаторы IPsec содержат недопустимые символы."
+
+msgid "Enter a valid IKEv2 gateway hostname or IP address."
+msgstr "Введите корректное имя хоста или IP-адрес шлюза IKEv2."
+
+msgid "Enter the EAP username and password."
+msgstr "Введите имя пользователя и пароль EAP."
+
+msgid "CA certificate must be a filename stored in /etc/swanctl/x509ca."
+msgstr "Сертификат CA должен быть файлом из /etc/swanctl/x509ca."
+
+msgid "Enter valid CIDR traffic selectors for both sides."
+msgstr "Введите корректные CIDR-селекторы трафика для обеих сторон."
+
+msgid "XFRM interface ID must be between 1 and 4294967295."
+msgstr "ID интерфейса XFRM должен быть от 1 до 4294967295."
+
+msgid "The IKE identities contain invalid characters."
+msgstr "Идентификаторы IKE содержат недопустимые символы."
+
+msgid "Network settings were saved, but strongSwan could not be restarted: %s"
+msgstr "Сетевые настройки сохранены, но strongSwan не удалось перезапустить: %s"
+
+msgid "Install the L2TP/IPsec packages from Applications before saving a tunnel."
+msgstr "Перед сохранением туннеля установите пакеты L2TP/IPsec в разделе «Приложения»."
+
+msgid "L2TP/IPsec connection saved."
+msgstr "Подключение L2TP/IPsec сохранено."
+
+#, javascript-format
+msgid "Failed to save L2TP/IPsec connection: %s"
+msgstr "Не удалось сохранить подключение L2TP/IPsec: %s"
+
+msgid "Install the IKEv2/IPsec packages from Applications before saving a tunnel."
+msgstr "Перед сохранением туннеля установите пакеты IKEv2/IPsec в разделе «Приложения»."
+
+msgid "IKEv2/IPsec connection saved."
+msgstr "Подключение IKEv2/IPsec сохранено."
+
+#, javascript-format
+msgid "Failed to save IKEv2/IPsec connection: %s"
+msgstr "Не удалось сохранить подключение IKEv2/IPsec: %s"
+
+msgid "Delete connection \"%s\" and its IPsec configuration?"
+msgstr "Удалить подключение «%s» и его конфигурацию IPsec?"
 
 msgid "WireGuard"
 msgstr "WireGuard"

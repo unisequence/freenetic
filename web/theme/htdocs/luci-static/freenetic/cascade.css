@@ -2248,6 +2248,8 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-oc-form-grid .fn-settings-field, .fn-oc-peer-grid .fn-settings-field { margin-bottom: 0; }
 .fn-oc-form-grid .fn-input, .fn-oc-peer-grid .fn-input { width: 100%; min-height: 40px; }
 .fn-oc-enable, .fn-oc-checkbox-field { display: flex; align-items: center; gap: 8px; margin: 16px 0 4px; color: var(--fn-text); cursor: pointer; }
+.fn-oc-checkbox-row { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 2px; }
+.fn-oc-checkbox-row .fn-oc-checkbox-field { margin: 8px 0 4px; }
 .fn-oc-enable input, .fn-oc-checkbox-field input { width: 16px; height: 16px; margin: 0; accent-color: var(--fn-accent); }
 .fn-oc-field-hint, .fn-oc-key-status { display: block; margin-top: 4px; color: var(--fn-text-secondary); font-family: var(--fn-font-text); font-size: .85rem; line-height: 1.35; }
 .fn-oc-key-status { color: var(--fn-accent); }
