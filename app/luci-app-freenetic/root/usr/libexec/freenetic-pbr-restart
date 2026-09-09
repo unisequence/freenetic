@@ -1,0 +1,31 @@
+#!/bin/sh
+# Reload the optional pbr service after Freenetic changes a managed policy.
+# pbr's config trigger updates nftables on most images, but a disabled service
+# can retain marks and routing rules until an explicit restart.  Keep this
+# helper argument-free so rpcd cannot be turned into a generic init runner.
+
+set -u
+
+fail() {
+	printf '{"ok":false,"error":"%s"}\n' "$1"
+	exit 0
+}
+
+[ "$(id -u)" = 0 ] || fail "The policy routing restart requires root privileges."
+
+if [ ! -x /etc/init.d/pbr ]; then
+	printf '{"ok":true,"installed":false}\n'
+	exit 0
+fi
+
+action='stop'
+if [ "$(uci -q get pbr.config.enabled 2>/dev/null || true)" = '1' ]; then
+	action='restart'
+fi
+
+if /etc/init.d/pbr "$action" >/dev/null 2>&1; then
+	printf '{"ok":true,"installed":true}\n'
+	exit 0
+fi
+
+fail "The policy routing service failed to restart."

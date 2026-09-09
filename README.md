@@ -48,15 +48,20 @@ hardware right now:
 - My Networks & Wi-Fi — Home/Guest network with a real backend behind
   it (separate subnet, DHCP, firewall isolation), plus Client List
 - Network Rules: Port Forwarding, Firewall, Routing (IPv4/IPv6 and DNS routes, including Windows route-file import)
+- Other Connections: native WireGuard connections plus optional AmneziaWG/AWG
+  configuration import and a signed, target-specific package-feed installer
 - Diagnostics: WAN addressing, gateway/DNS state, bounded ping and traceroute
 - Management: System (firmware download/flash, config+package backup,
   bootloader partition dumps), Applications (an install catalog built
   on top of `apk`; needs `luci-app-package-manager` installed, which
-  `app/deploy.sh` takes care of)
+  `app/deploy.sh` takes care of), Dynamic DNS (native `ddns-scripts` profiles)
+- Wi-Fi ACL (per-SSID allow/deny lists backed by native OpenWrt
+  `macfilter`/`maclist`, with Client List integration)
+- Access & Routing Policy for whole network segments or individual devices:
+  Direct (WAN), WireGuard/AmneziaWG VPN and Block Internet modes
 
-Not built yet: DDNS, Wi-Fi ACL, IntelliQoS, Mobile/DSL/Wireless ISP
-connection types, the application traffic analyzer, and cross-links
-between cards.
+Not built yet: IntelliQoS, Mobile/DSL/Wireless ISP connection types, the
+application traffic analyzer, and cross-links between cards.
 
 ## Roadmap
 

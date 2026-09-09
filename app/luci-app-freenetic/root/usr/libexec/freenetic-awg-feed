@@ -1,0 +1,263 @@
+#!/bin/sh
+# Configure and install the optional AmneziaWG package feed used by
+# Freenetic.  This helper deliberately keeps the feed isolated from the
+# normal OpenWrt repositories and never performs a package-wide upgrade.
+#
+# The feed publishes target/kernel-specific packages.  Do not turn this into a
+# generic "download whatever is latest" helper: the release and target are
+# part of the repository path and apk/opkg verify the package signatures.
+
+set -u
+
+FEED_ROOT="https://2grey.github.io/awg-openwrt"
+LEGACY_FEED_PATTERN="slava-shchipunov.github.io/awg-openwrt"
+APK_REPOSITORIES_DIR="/etc/apk/repositories.d"
+APK_REPOSITORY_FILE="$APK_REPOSITORIES_DIR/freenetic-amneziawg.list"
+APK_KEY_DIR="/etc/apk/keys"
+APK_KEY_FILE="$APK_KEY_DIR/awg-openwrt-feed.pem"
+OPKG_FEED_FILE="/etc/opkg/customfeeds.conf"
+OPKG_KEY_FILE="/etc/opkg/keys/awg-openwrt-feed.pub"
+FEED_MARKER="freenetic-amneziawg"
+
+json_escape() {
+	# All values passed to this helper are validated release/target strings or
+	# fixed text, but escaping keeps the output safe if a board reports an
+	# unexpected value anyway.
+	printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+json_result() {
+	if [ "$1" = "ok" ]; then
+		printf '{"ok":true,"package_manager":"%s","version":"%s","target":"%s","subtarget":"%s","kernel":"%s","feed_url":"%s","configured":%s,"key_installed":%s,"installed":%s}\n' \
+			"$(json_escape "$PACKAGE_MANAGER")" "$(json_escape "$VERSION")" \
+			"$(json_escape "$TARGET")" "$(json_escape "$SUBTARGET")" \
+			"$(json_escape "$KERNEL")" "$(json_escape "$FEED_URL")" \
+			"$CONFIGURED" "$KEY_INSTALLED" "$INSTALLED"
+	else
+		printf '{"ok":false,"error":"%s","package_manager":"%s","version":"%s","target":"%s","subtarget":"%s","kernel":"%s","feed_url":"%s"}\n' \
+			"$(json_escape "$2")" "$(json_escape "${PACKAGE_MANAGER:-unknown}")" \
+			"$(json_escape "${VERSION:-}")" "$(json_escape "${TARGET:-}")" \
+			"$(json_escape "${SUBTARGET:-}")" "$(json_escape "${KERNEL:-}")" \
+			"$(json_escape "${FEED_URL:-}")"
+	fi
+}
+
+fail() {
+	json_result error "$1"
+	exit 0
+}
+
+valid_component() {
+	case "$1" in
+		''|*[!0-9A-Za-z._-]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+detect_release() {
+	VERSION=""
+	RELEASE_TARGET=""
+	KERNEL="$(uname -r 2>/dev/null || true)"
+
+	if command -v ubus >/dev/null 2>&1 && command -v jsonfilter >/dev/null 2>&1; then
+		BOARD_INFO="$(ubus call system board 2>/dev/null || true)"
+		if [ -n "$BOARD_INFO" ]; then
+			VERSION="$(printf '%s\n' "$BOARD_INFO" | jsonfilter -e '@.release.version' 2>/dev/null || true)"
+			RELEASE_TARGET="$(printf '%s\n' "$BOARD_INFO" | jsonfilter -e '@.release.target' 2>/dev/null || true)"
+		fi
+	fi
+
+	if [ -f /etc/openwrt_release ]; then
+		if [ -z "$VERSION" ]; then
+			VERSION="$(sed -n "s/^DISTRIB_RELEASE=['\"]\{0,1\}\([^'\"]*\)['\"]\{0,1\}$/\1/p" /etc/openwrt_release | head -n 1)"
+		fi
+		if [ -z "$RELEASE_TARGET" ]; then
+			RELEASE_TARGET="$(sed -n "s/^DISTRIB_TARGET=['\"]\{0,1\}\([^'\"]*\)['\"]\{0,1\}$/\1/p" /etc/openwrt_release | head -n 1)"
+		fi
+	fi
+
+	[ -n "$VERSION" ] || fail "Unable to detect the OpenWrt release."
+	[ -n "$RELEASE_TARGET" ] || fail "Unable to detect the OpenWrt target."
+	valid_component "$VERSION" || fail "The OpenWrt release value is unsafe."
+	case "$RELEASE_TARGET" in
+		*/*) ;;
+		*) fail "The OpenWrt target value is invalid." ;;
+	esac
+
+	TARGET=${RELEASE_TARGET%%/*}
+	SUBTARGET=${RELEASE_TARGET#*/}
+	valid_component "$TARGET" || fail "The OpenWrt target value is unsafe."
+	valid_component "$SUBTARGET" || fail "The OpenWrt subtarget value is unsafe."
+	FEED_URL="$FEED_ROOT/$VERSION/$TARGET/$SUBTARGET"
+}
+
+detect_manager() {
+	if command -v apk >/dev/null 2>&1; then
+		PACKAGE_MANAGER="apk"
+	elif command -v opkg >/dev/null 2>&1; then
+		PACKAGE_MANAGER="opkg"
+	else
+		fail "No supported package manager (apk or opkg) was found."
+	fi
+}
+
+feed_index_available() {
+	case "$PACKAGE_MANAGER" in
+		apk) wget -q -O /dev/null "$FEED_URL/packages.adb" >/dev/null 2>&1 ;;
+		opkg) wget -q -O /dev/null "$FEED_URL/Packages.gz" >/dev/null 2>&1 ;;
+		*) return 1 ;;
+	esac
+}
+
+package_installed() {
+	case "$PACKAGE_MANAGER" in
+		apk) apk info -e "$1" >/dev/null 2>&1 ;;
+		opkg) opkg status "$1" 2>/dev/null | grep -q '^Status: .* installed$' ;;
+		*) return 1 ;;
+	esac
+}
+
+feed_configured() {
+	case "$PACKAGE_MANAGER" in
+		apk)
+			for repository_file in "$APK_REPOSITORY_FILE" "$APK_REPOSITORIES_DIR"/*.list /etc/apk/repositories; do
+				[ -f "$repository_file" ] || continue
+				grep -F -q "$FEED_URL/packages.adb" "$repository_file" && return 0
+			done
+			return 1
+			;;
+		opkg)
+			[ -f "$OPKG_FEED_FILE" ] && grep -F -q "$FEED_URL" "$OPKG_FEED_FILE"
+			;;
+		*) return 1 ;;
+	esac
+}
+
+remove_legacy_feed_file() {
+	legacy_file="$1"
+	[ -f "$legacy_file" ] || return 0
+	grep -F -q "$LEGACY_FEED_PATTERN" "$legacy_file" 2>/dev/null || return 0
+	legacy_temp="$legacy_file.freenetic-awg.$$"
+	sed "\|$LEGACY_FEED_PATTERN|d" "$legacy_file" > "$legacy_temp" || {
+		rm -f "$legacy_temp"
+		fail "Unable to remove the legacy AmneziaWG feed from $legacy_file."
+	}
+	mv "$legacy_temp" "$legacy_file" || {
+		rm -f "$legacy_temp"
+		fail "Unable to update the package feed configuration."
+	}
+}
+
+remove_legacy_feeds() {
+	remove_legacy_feed_file "$OPKG_FEED_FILE"
+	remove_legacy_feed_file /etc/apk/repositories
+	for repository_file in "$APK_REPOSITORIES_DIR"/*.list; do
+		[ -f "$repository_file" ] || continue
+		remove_legacy_feed_file "$repository_file"
+	done
+}
+
+remove_conflicting_luci_package() {
+	if ! package_installed luci-app-amneziawg; then
+		return 0
+	fi
+	case "$PACKAGE_MANAGER" in
+		apk) apk del luci-app-amneziawg >/dev/null 2>&1 || fail "Unable to remove the conflicting luci-app-amneziawg package." ;;
+		opkg) opkg remove luci-app-amneziawg >/dev/null 2>&1 || fail "Unable to remove the conflicting luci-app-amneziawg package." ;;
+	esac
+}
+
+key_installed() {
+	case "$PACKAGE_MANAGER" in
+		apk) [ -s "$APK_KEY_FILE" ] ;;
+		opkg) [ -s "$OPKG_KEY_FILE" ] ;;
+		*) return 1 ;;
+	esac
+}
+
+detect_state() {
+	if feed_configured; then CONFIGURED=true; else CONFIGURED=false; fi
+	if key_installed; then KEY_INSTALLED=true; else KEY_INSTALLED=false; fi
+	if package_installed amneziawg-tools && package_installed kmod-amneziawg && package_installed luci-proto-amneziawg; then
+		INSTALLED=true
+	else
+		INSTALLED=false
+	fi
+}
+
+install_apk() {
+	command -v wget >/dev/null 2>&1 || fail "wget is required to add the signed AWG feed."
+	mkdir -p "$APK_KEY_DIR" "$APK_REPOSITORIES_DIR" || fail "Unable to create APK feed directories."
+	TEMP_KEY="/tmp/freenetic-awg-feed.$$.pem"
+	wget -q -O "$TEMP_KEY" "$FEED_ROOT/keys/awg-openwrt-feed.pem" >/dev/null 2>&1 || {
+		rm -f "$TEMP_KEY"
+		fail "Unable to download the AWG feed signing key."
+	}
+	[ -s "$TEMP_KEY" ] || { rm -f "$TEMP_KEY"; fail "The AWG feed signing key is empty."; }
+	mv "$TEMP_KEY" "$APK_KEY_FILE" || { rm -f "$TEMP_KEY"; fail "Unable to install the AWG feed signing key."; }
+
+	touch "$APK_REPOSITORY_FILE" || fail "Unable to create the APK feed file."
+	# Replace the feed's previous line while leaving all other repositories
+	# untouched.
+	for repository_file in "$APK_REPOSITORIES_DIR"/*.list /etc/apk/repositories; do
+		[ -f "$repository_file" ] || continue
+		sed -i "\\|^[[:space:]]*https://2grey\\.github\\.io/awg-openwrt/.*packages\\.adb[[:space:]]*$|d" "$repository_file" 2>/dev/null || true
+	done
+	printf '%s/packages.adb\n' "$FEED_URL" >> "$APK_REPOSITORY_FILE" || fail "Unable to write the APK feed file."
+	apk update >/dev/null 2>&1 || fail "The AWG feed has no index for this exact OpenWrt release/target."
+	remove_conflicting_luci_package
+	apk add --upgrade --latest amneziawg-tools kmod-amneziawg luci-proto-amneziawg >/dev/null 2>&1 || fail "No compatible AmneziaWG packages were found for this kernel."
+}
+
+install_opkg() {
+	command -v wget >/dev/null 2>&1 || fail "wget is required to add the signed AWG feed."
+	command -v opkg-key >/dev/null 2>&1 || fail "opkg-key is required to add the signed AWG feed."
+	mkdir -p /etc/opkg/keys "${OPKG_FEED_FILE%/*}" || fail "Unable to create the opkg feed directories."
+	TEMP_KEY="/tmp/freenetic-awg-feed.$$.pub"
+	wget -q -O "$TEMP_KEY" "$FEED_ROOT/keys/awg-openwrt-feed.pub" >/dev/null 2>&1 || {
+		rm -f "$TEMP_KEY"
+		fail "Unable to download the AWG feed signing key."
+	}
+	[ -s "$TEMP_KEY" ] || { rm -f "$TEMP_KEY"; fail "The AWG feed signing key is empty."; }
+	cp "$TEMP_KEY" "$OPKG_KEY_FILE" || { rm -f "$TEMP_KEY"; fail "Unable to store the AWG feed signing key."; }
+	opkg-key add "$TEMP_KEY" >/dev/null 2>&1 || { rm -f "$TEMP_KEY"; fail "Unable to install the AWG feed signing key."; }
+
+	touch "$OPKG_FEED_FILE" || fail "Unable to create the opkg feed file."
+	sed -i "\\|^[[:space:]]*src/gz[[:space:]].*$FEED_ROOT/|d" "$OPKG_FEED_FILE" 2>/dev/null || true
+	printf 'src/gz %s %s\n' "$FEED_MARKER" "$FEED_URL" >> "$OPKG_FEED_FILE" || fail "Unable to write the opkg feed file."
+	opkg update >/dev/null 2>&1 || fail "The AWG feed has no index for this exact OpenWrt release/target."
+	remove_conflicting_luci_package
+	opkg install amneziawg-tools kmod-amneziawg luci-proto-amneziawg >/dev/null 2>&1 || fail "No compatible AmneziaWG packages were found for this kernel."
+}
+
+main() {
+	ACTION=${1:-status}
+	detect_release
+	detect_manager
+	if [ "$ACTION" = install ]; then
+		command -v wget >/dev/null 2>&1 || fail "wget is required to add the signed AWG feed."
+		feed_index_available || fail "The AWG feed has no index for this exact OpenWrt release/target."
+		remove_legacy_feeds
+	fi
+
+	case "$ACTION" in
+		status)
+			detect_state
+			json_result ok
+			;;
+		install)
+			[ "$(id -u)" = 0 ] || fail "The AWG installer must run as root."
+			case "$PACKAGE_MANAGER" in
+				apk) install_apk ;;
+				opkg) install_opkg ;;
+			esac
+			detect_state
+			json_result ok
+			;;
+		*) fail "Unknown action. Use status or install." ;;
+	esac
+}
+
+TEMP_KEY=""
+trap 'rm -f "$TEMP_KEY" 2>/dev/null || true' EXIT
+main "$@"

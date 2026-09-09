@@ -406,7 +406,7 @@ return view.extend({
 		const gw = wan ? (wan.route || []).find(r => r.target == '0.0.0.0' && r.mask == 0) : null;
 
 		const entries = [
-			[ _('Protocol'), (wan && wan.proto) || '–' ],
+			[ _('Protocol'), wan && wan.proto ? String(wan.proto).toUpperCase() : '–' ],
 			[ _('IP address'), addrs.length ? addrs.join(', ') : '–' ],
 			[ _('Gateway'), gw ? gw.nexthop : '–' ],
 			[ _('DNS'), dns.length ? dns.join(', ') : '–' ],
@@ -436,7 +436,7 @@ return view.extend({
 			(r.target === '::' && r.mask == 0) || r.source === '::/0') : null;
 
 		const entries = [
-			[ _('Protocol'), (wan && wan.proto) || '–' ],
+			[ _('Protocol'), wan && wan.proto ? String(wan.proto).toUpperCase() : '–' ],
 			[ _('IPv6 address'), addrs.length ? addrs.join(', ') : '–' ],
 			[ _('Gateway'), gw ? gw.nexthop : '–' ],
 			[ _('Delegated prefix'), prefixes.length ? prefixes.join(', ') : '–' ],

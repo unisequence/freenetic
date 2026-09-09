@@ -11,6 +11,10 @@
 				"system": [ "board", "info" ],
 				"luci": [ "getBuiltinEthernetPorts", "getConntrackList" ],
 				"luci-rpc": [ "getDHCPLeases" ],
+				"luci.wireguard": [ "getWgInstances" ],
+				"wireguard": [ "status" ],
+				"luci.amneziawg": [ "getWgInstances" ],
+				"luci.ddns": [ "get_ddns_state", "get_services_status" ],
 				"file": [ "read", "exec", "stat" ]
 			},
 			"file": {
@@ -21,14 +25,24 @@
 				"/proc/mtd": [ "read" ],
 				"/dev/mtdblock[0-9]*": [ "read" ],
 				"/tmp/freenetic-startup-config.tar.gz": [ "read" ],
-				"/usr/libexec/package-manager-call list-installed": [ "exec" ]
+				"/usr/libexec/package-manager-call list-installed": [ "exec" ],
+				"/usr/libexec/freenetic-package-status *": [ "exec" ],
+				"/usr/libexec/freenetic-awg-feed status": [ "exec" ],
+				"/usr/share/ddns/default": [ "list" ],
+				"/usr/share/ddns/default/*": [ "read" ],
+				"/usr/share/ddns/custom": [ "list" ],
+				"/usr/share/ddns/custom/*": [ "read" ],
+				"/usr/share/ddns/list": [ "read" ]
 			},
-			"uci": [ "network", "wireless", "dhcp", "firewall", "attendedsysupgrade", "luci", "freenetic" ]
+			"uci": [ "network", "wireless", "dhcp", "firewall", "ddns", "attendedsysupgrade", "luci", "freenetic", "pbr" ]
 		},
 		"write": {
 			"cgi-io": [ "upload" ],
 			"ubus": {
 				"network": [ "reload" ],
+				"luci.wireguard": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],
+				"luci.amneziawg": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],
+				"wireguard": [ "genkey", "genpsk", "pubkey" ],
 				"file": [ "exec", "write", "remove" ],
 				"system": [ "validate_firmware_image" ]
 			},
@@ -42,9 +56,13 @@
 				"/usr/libexec/freenetic-diagnostics-call ping *": [ "exec" ],
 				"/usr/libexec/freenetic-diagnostics-call traceroute *": [ "exec" ],
 				"/usr/libexec/package-manager-call install *": [ "exec" ],
-				"/usr/libexec/package-manager-call remove *": [ "exec" ]
+				"/usr/libexec/package-manager-call remove *": [ "exec" ],
+				"/usr/libexec/freenetic-awg-feed install": [ "exec" ],
+				"/usr/libexec/freenetic-network-restart": [ "exec" ],
+				"/usr/libexec/freenetic-pbr-restart": [ "exec" ],
+				"/usr/lib/ddns/dynamic_dns_lucihelper.sh": [ "exec" ]
 			},
-			"uci": [ "network", "wireless", "dhcp", "firewall", "luci", "freenetic" ]
+			"uci": [ "network", "wireless", "dhcp", "firewall", "ddns", "luci", "freenetic", "pbr" ]
 		}
 	}
 }

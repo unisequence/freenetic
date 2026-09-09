@@ -46,15 +46,22 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 - My Networks & Wi-Fi — Домашняя/Гостевая сеть с реальным бэкендом
   (отдельная подсеть, DHCP, firewall-изоляция), плюс Client List
 - Network Rules: Port Forwarding, Firewall, Routing (IPv4/IPv6 и DNS-маршруты, включая импорт Windows route-файлов)
+- Other Connections: нативные подключения WireGuard, импорт конфигураций
+  AmneziaWG/AWG и опциональный установщик подписанного feed под конкретную
+  версию/target устройства
 - Диагностика: адреса WAN, шлюз/DNS, ограниченные ping и traceroute
 - Management: System (скачивание/прошивка образа, бэкап конфигов и
   списка пакетов, дампы разделов загрузчика), Applications (каталог
   устанавливаемых компонентов поверх `apk`; нужен установленный
-  `luci-app-package-manager` — `app/deploy.sh` ставит его сам)
+  `luci-app-package-manager` — `app/deploy.sh` ставит его сам), Dynamic DNS
+  (нативные профили поверх `ddns-scripts`)
+- Wi-Fi ACL (allow/deny-списки для каждого SSID поверх штатных
+  `macfilter`/`maclist`, с добавлением устройств из Client List)
+- Access & Routing Policy для целой сети или отдельного устройства:
+  Direct (WAN), VPN через WireGuard/AmneziaWG и Block Internet
 
-Не готово: DDNS, Wi-Fi ACL, IntelliQoS, Mobile/DSL/Wireless ISP
-подключения, анализатор трафика приложений, перекрёстные ссылки между
-карточками.
+Не готово: IntelliQoS, Mobile/DSL/Wireless ISP-подключения, анализатор
+трафика приложений и перекрёстные ссылки между карточками.
 
 ## Дальше по плану
 

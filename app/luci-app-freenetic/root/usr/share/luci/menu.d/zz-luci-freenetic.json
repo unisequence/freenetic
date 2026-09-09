@@ -79,6 +79,38 @@
 			}
 		}
 	},
+	"admin/network/other_connections": {
+		"title": "Other Connections",
+		"order": 4.1,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-other-connections"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/ddns": {
+		"title": "Dynamic DNS",
+		"order": 4.2,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-ddns"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
 	"admin/network/home_network": {
 		"title": "Home Network",
 		"order": 5,
@@ -101,6 +133,22 @@
 		"action": {
 			"type": "view",
 			"path": "network/freenetic-mynetworks"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-freenetic"
+			],
+			"uci": {
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
+			}
+		}
+	},
+	"admin/network/wifi_acl": {
+		"title": "Access & Routing Policy",
+		"order": 6.2,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-wifi-acl"
 		},
 		"depends": {
 			"acl": [

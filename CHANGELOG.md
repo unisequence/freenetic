@@ -2,6 +2,72 @@
 
 All notable Freenetic changes are documented here.
 
+## [Unreleased]
+
+## [0.2.0-alpha.3] — 2026-09-09
+
+### Added
+
+- Other Connections view with native WireGuard and AmneziaWG interface/peer
+  editing, configuration import/export and live tunnel status where the
+  corresponding LuCI protocol is installed.
+- Optional signed AmneziaWG feed integration for both `apk` and `opkg`,
+  constrained to the router's exact OpenWrt release and target/kernel.
+- Explicit compatibility choice when an AWG configuration is imported or
+  saved without AWG support: install the feed or remove AWG-only parameters
+  before continuing as standard WireGuard.
+- Applications now preflight the small set of required package names and mark
+  features unavailable when this firmware has no compatible kernel module,
+  instead of sending an avoidable failing install request.
+- Installing a network protocol package now restarts netifd so its new
+  protocol handler is available immediately; WireGuard and AmneziaWG report
+  a reboot fallback if the service cannot be restarted.
+- Applications now have Recommended, Advanced networking, Installed and All
+  views; advanced traffic tools are separated from the default catalog and
+  are marked with an explanatory warning.
+- Applications now include USB storage, modem (QMI/MBIM/PPP), tethering and
+  peripheral bundles; firmware-specific USB kernel modules are preflighted
+  before installation.
+- Native Dynamic DNS page for ddns-scripts profiles, including provider/domain,
+  IPv4/IPv6 source, credentials, per-profile update and service-state display.
+- Native Wi-Fi ACL page for per-SSID allow/deny lists, using OpenWrt's
+  standard `macfilter`/`maclist` options with Client List integration.
+- Access & Routing Policy for Home/Guest segments, with Direct (WAN), VPN
+  tunnel and Block Internet modes; individual device overrides match MAC
+  addresses and can supersede a Freenetic segment policy.
+
+### Improved
+
+- Other Connections now presents WireGuard and AmneziaWG as separate protocol
+  cards, with an independent readiness state and action for each one.
+- Native Freenetic views now have a complete Russian translation, and the
+  language selector persists changes without leaving an `Unsaved Changes`
+  rollback state.
+- Applications, Internet, Dashboard, Traffic Monitor, Routing, Port
+  Forwarding and System views received additional desktop/mobile polish and
+  clearer labels.
+
+### Fixed
+
+- Network package installation now refreshes the active netifd protocol state
+  immediately, with an explicit reboot fallback when a restart is unavailable.
+- Initial dashboard metrics no longer show a stale high CPU sample while the
+  first live measurement is loading.
+
+### Compatibility notes
+
+- This is an alpha release. Existing OpenWrt UCI, ubus, rpcd, netifd,
+  firewall4 and apk configuration remains unchanged.
+- AWG support remains optional and is only offered when matching firmware
+  packages are available for the device's exact release and target.
+
+### Verification
+
+- `make check-static` passes, including JavaScript, shell, JSON, policy and
+  unit checks.
+- The release was deployed and smoke-tested on the BT RB300 test router
+  (`192.168.1.1`) with the Russian interface enabled.
+
 ## [0.2.0-alpha.2] — 2026-09-08
 
 This release turns Freenetic from a collection of custom LuCI pages into a

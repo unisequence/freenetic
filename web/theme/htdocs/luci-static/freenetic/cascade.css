@@ -580,6 +580,21 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 .fn-icon svg { display: block; }
 .fn-nav-label { text-overflow: ellipsis; overflow: hidden; }
 
+/* "My Networks & Wi-Fi" is the only long top-level label.  Give it two
+   balanced lines in the expanded sidebar instead of truncating the name;
+   the icon remains vertically centred and the collapsed rail still hides the
+   label altogether. */
+.fn-nav-group-wireless .fn-nav-label {
+	/* A small size adjustment keeps the complete label on one line in the
+	 * 270px expanded rail, including the icon/gutter space. */
+	font-size: 1.3rem;
+	letter-spacing: 0;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
 /* square tile behind each sidebar icon */
 .fn-nav-head .fn-icon {
 	width: 38px;
@@ -1783,6 +1798,7 @@ body.modal-overlay-active { overflow: hidden; }
 	letter-spacing: .05em;
 }
 .fn-status-ok { background: var(--fn-status-ok-soft); color: var(--fn-status-ok); }
+.fn-status-warn { background: var(--fn-warning-soft); color: var(--fn-warning); }
 .fn-status-off { background: var(--fn-surface-alt); color: var(--fn-text-disabled); }
 
 /* Internet card: one block per distinct uplink (multi-WAN), stacked with dividers */
@@ -2057,6 +2073,214 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-pf-invalid:focus-within { box-shadow: 0 0 0 3px var(--fn-danger-soft) !important; }
 .fn-pf-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .fn-pf-modal-actions .fn-settings-btn { width: auto; }
+
+/* Other Connections: native WireGuard/AmneziaWG manager.  The layout keeps
+   the status cards scannable on desktop and turns every peer into a compact
+   labelled block on phones. */
+.fn-oc-title-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 20px;
+}
+.fn-oc-head-actions { display: flex; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; }
+.fn-oc-head-actions .fn-settings-btn { width: auto; white-space: nowrap; }
+.fn-oc-page .fn-pf-description { max-width: 980px; }
+.fn-oc-support-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+	margin: 0 0 20px;
+}
+.fn-oc-support-card {
+	min-width: 0;
+	padding: 16px 18px 14px;
+	border: 1px solid var(--fn-border-strong);
+	border-top: 3px solid var(--fn-accent);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+}
+.fn-oc-support-card-awg { border-top-color: var(--fn-warning); }
+.fn-oc-support-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.fn-oc-support-title { min-width: 0; }
+.fn-oc-support-title h3 { margin: 0; color: var(--fn-text); font-size: 1.1rem; letter-spacing: .01em; text-transform: none; }
+.fn-oc-support-title p { margin: 4px 0 0; color: var(--fn-text-secondary); font: .9rem/1.35 var(--fn-font-text); }
+.fn-oc-support-body {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px 14px;
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid var(--fn-border);
+	font-family: var(--fn-font-text);
+}
+.fn-oc-support-body > span { flex: 1 1 240px; color: var(--fn-text-secondary); line-height: 1.4; }
+.fn-oc-support-link { color: var(--fn-accent); white-space: nowrap; }
+.fn-oc-support-action { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 1rem; }
+.fn-oc-notice {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+	margin: 0 0 16px;
+	padding: 13px 16px;
+	border: 1px solid var(--fn-border-strong);
+	border-left: 3px solid var(--fn-accent);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+	font-family: var(--fn-font-text);
+}
+.fn-oc-notice strong { color: var(--fn-text); }
+.fn-oc-notice > span { color: var(--fn-text-secondary); flex: 1 1 260px; }
+.fn-oc-notice-warning { border-left-color: var(--fn-warning); }
+.fn-oc-notice-warning strong { color: var(--fn-warning); }
+.fn-oc-notice-link { color: var(--fn-accent); white-space: nowrap; }
+.fn-oc-notice-action { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 1rem; }
+.fn-oc-connections { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 20px; }
+.fn-oc-card { min-width: 0; }
+.fn-oc-card-head { align-items: flex-start; }
+.fn-oc-card-head > .fn-icon { margin-top: 2px; }
+.fn-oc-card-title { min-width: 0; flex: 1 1 auto; }
+.fn-oc-card-title h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; letter-spacing: .01em; font-size: 1.1rem; }
+.fn-oc-protocol { display: block; margin-top: 2px; color: var(--fn-text-secondary); font-size: .9rem; font-family: var(--fn-font-text); }
+.fn-oc-switch { flex: 0 0 auto; margin-top: 2px; }
+.fn-oc-card-head .fn-status-pill { flex: 0 0 auto; margin-top: 4px; }
+.fn-oc-info-grid { margin-bottom: 20px; }
+.fn-oc-info-grid .fn-info-label { font-size: .95rem; }
+.fn-oc-info-grid .fn-info-value { font-size: 1.05rem; }
+.fn-oc-awg-badge {
+	display: inline-flex;
+	margin: -8px 0 16px;
+	padding: 4px 8px;
+	border: 1px solid var(--fn-accent);
+	border-radius: 999px;
+	color: var(--fn-accent);
+	font-size: .85rem;
+}
+.fn-oc-subtitle { margin: 0 0 8px; color: var(--fn-text-secondary); font-size: .9rem; text-transform: uppercase; letter-spacing: .03em; }
+.fn-oc-peer-list { display: flex; flex-direction: column; gap: 8px; }
+.fn-oc-peer-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.2fr);
+	gap: 10px;
+	padding: 10px 12px;
+	border: 1px solid var(--fn-border);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface-alt);
+	font-size: .9rem;
+}
+.fn-oc-peer-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fn-oc-peer-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fn-oc-peer-main code, .fn-oc-peer-endpoint, .fn-oc-peer-ips, .fn-oc-peer-stats { color: var(--fn-text-secondary); overflow-wrap: anywhere; }
+.fn-oc-peer-main code { font-size: .78rem; }
+.fn-oc-peer-ips { align-self: center; }
+.fn-oc-peer-stats { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+.fn-oc-actions { justify-content: flex-end; margin-top: 16px; }
+.fn-oc-actions .fn-settings-btn { width: auto; }
+.fn-oc-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 156px;
+	padding: 24px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-text);
+	text-align: center;
+}
+.fn-oc-empty strong { color: var(--fn-text); font-family: var(--fn-font); }
+.fn-oc-empty .fn-settings-btn { width: auto; margin-top: 6px; }
+.fn-oc-empty-small { min-height: 76px; padding: 14px; }
+.fn-oc-modal {
+	position: relative;
+	width: min(94%, 760px);
+	max-width: 760px;
+	max-height: calc(100vh - 32px);
+	margin: 16px auto;
+	padding: 28px 32px 24px;
+	overflow-y: auto;
+}
+.fn-oc-modal > h4:first-child, .fn-oc-import-modal > h4:first-child, .fn-oc-compat-modal > h4:first-child {
+	margin: 0 0 14px;
+	font-size: 1.55rem;
+	line-height: 1.2;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.fn-oc-modal-description { margin: 0 0 20px; color: var(--fn-text-secondary); font-family: var(--fn-font-text); line-height: 1.45; }
+.fn-oc-form-grid, .fn-oc-peer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.fn-oc-wide-field { grid-column: 1 / -1; }
+.fn-oc-form-grid .fn-settings-field, .fn-oc-peer-grid .fn-settings-field { margin-bottom: 0; }
+.fn-oc-form-grid .fn-input, .fn-oc-peer-grid .fn-input { width: 100%; min-height: 40px; }
+.fn-oc-enable, .fn-oc-checkbox-field { display: flex; align-items: center; gap: 8px; margin: 16px 0 4px; color: var(--fn-text); cursor: pointer; }
+.fn-oc-enable input, .fn-oc-checkbox-field input { width: 16px; height: 16px; margin: 0; accent-color: var(--fn-accent); }
+.fn-oc-field-hint, .fn-oc-key-status { display: block; margin-top: 4px; color: var(--fn-text-secondary); font-family: var(--fn-font-text); font-size: .85rem; line-height: 1.35; }
+.fn-oc-key-status { color: var(--fn-accent); }
+.fn-oc-key-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.fn-oc-small-btn { width: auto; padding: 6px 10px; font-size: .9rem; }
+.fn-oc-advanced { margin-top: 18px; border-top: 1px solid var(--fn-border); border-bottom: 1px solid var(--fn-border); }
+.fn-oc-advanced > summary { padding: 13px 0; color: var(--fn-accent); cursor: pointer; font-weight: 600; }
+.fn-oc-advanced[hidden] { display: none; }
+.fn-oc-awg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; padding-bottom: 14px; }
+.fn-oc-peer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 10px; }
+.fn-oc-peer-head h3 { margin: 0; font-size: 1.1rem; }
+.fn-oc-peer-edit-list { display: flex; flex-direction: column; gap: 10px; }
+.fn-oc-peer-editor { border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius); background: var(--fn-surface-alt); overflow: hidden; }
+.fn-oc-peer-editor > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; color: var(--fn-text); cursor: pointer; list-style-position: inside; }
+.fn-oc-peer-editor > summary:hover { background: var(--fn-accent-soft); }
+.fn-oc-peer-summary-key { color: var(--fn-text-secondary); font: .8rem ui-monospace, SFMono-Regular, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fn-oc-peer-grid { padding: 2px 14px 14px; }
+.fn-oc-peer-actions { grid-column: 1 / -1; justify-content: flex-end; }
+.fn-oc-modal-actions { justify-content: flex-end; margin-top: 20px; }
+.fn-oc-file-input { display: none; }
+.fn-oc-import-modal { position: relative; width: min(94%, 680px); max-width: 680px; max-height: calc(100vh - 32px); margin: 16px auto; padding: 28px 32px 24px; overflow-y: auto; }
+.fn-oc-import-text { display: block; width: 100%; min-height: 230px; resize: vertical; font: .9rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.fn-oc-import-file { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.fn-oc-file-name { color: var(--fn-text-secondary); font-family: var(--fn-font-text); overflow-wrap: anywhere; }
+.fn-oc-compat-modal { position: relative; width: min(94%, 680px); max-width: 680px; max-height: calc(100vh - 32px); margin: 16px auto; padding: 28px 32px 24px; overflow-y: auto; }
+.fn-oc-compat-note { display: flex; flex-direction: column; gap: 4px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--fn-border-strong); border-left: 3px solid var(--fn-warning); border-radius: var(--fn-radius-sm); background: var(--fn-surface-alt); }
+.fn-oc-compat-note strong { color: var(--fn-text); }
+.fn-oc-compat-note span { color: var(--fn-text-secondary); font-family: var(--fn-font-text); line-height: 1.4; }
+.fn-oc-compat-choice { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 10px 0; padding: 14px 16px; border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius-sm); background: var(--fn-surface-alt); }
+.fn-oc-compat-choice > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fn-oc-compat-choice strong { color: var(--fn-text); }
+.fn-oc-compat-choice span { color: var(--fn-text-secondary); font-family: var(--fn-font-text); line-height: 1.35; }
+.fn-oc-compat-choice .fn-settings-btn { width: auto; flex: 0 0 auto; white-space: nowrap; }
+
+@media (max-width: 900px) {
+	.fn-oc-title-row { flex-direction: column; }
+	.fn-oc-head-actions { width: 100%; }
+	.fn-oc-head-actions .fn-settings-btn { flex: 1 1 0; }
+	.fn-oc-support-grid { grid-template-columns: minmax(0, 1fr); }
+	.fn-oc-connections { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+	.fn-oc-head-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.fn-oc-head-actions .fn-settings-btn { width: 100%; padding: 8px 6px; }
+	.fn-oc-card-head { flex-wrap: wrap; }
+	.fn-oc-card-head .fn-oc-card-title { min-width: calc(100% - 34px); }
+	.fn-oc-card-head .fn-oc-switch { margin-left: auto; }
+	.fn-oc-card-head .fn-status-pill { margin-left: auto; }
+	.fn-oc-peer-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+	.fn-oc-peer-ips, .fn-oc-peer-stats { align-self: stretch; text-align: left; }
+	.fn-oc-form-grid, .fn-oc-peer-grid { display: flex; flex-direction: column; gap: 12px; }
+	.fn-oc-awg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.fn-oc-modal, .fn-oc-import-modal, .fn-oc-compat-modal { width: calc(100% - 24px); max-height: calc(100vh - 24px); margin: 12px auto; padding: 24px 20px 18px; }
+	.fn-oc-modal-actions { flex-direction: column-reverse; }
+	.fn-oc-modal-actions .fn-settings-btn { width: 100%; }
+	.fn-oc-compat-choice { align-items: stretch; flex-direction: column; }
+	.fn-oc-compat-choice .fn-settings-btn { width: 100%; }
+}
+
+@media (max-width: 420px) {
+	.fn-oc-awg-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* Firewall: rule table needs its own column layout (toggle/name/action/
    protocol/traffic/buttons) — more columns than Port Forwarding's grid. */
@@ -2803,6 +3027,54 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 }
 
 /* Applications ("Приложения") component catalog */
+.fn-apps-intro { max-width: 980px; line-height: 1.45; }
+.fn-apps-tabs {
+	display: flex;
+	align-items: stretch;
+	gap: 6px;
+	margin: 20px 0;
+	padding: 4px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+	overflow-x: auto;
+}
+.fn-apps-tab {
+	flex: 0 0 auto;
+	min-height: 38px;
+	padding: 7px 14px;
+	border: 1px solid transparent;
+	border-radius: var(--fn-radius-sm);
+	background: transparent;
+	color: var(--fn-text-secondary);
+	font: 600 .95rem/1.2 var(--fn-font-text);
+	white-space: nowrap;
+	cursor: pointer;
+}
+.fn-apps-tab:hover { color: var(--fn-text); background: var(--fn-accent-soft); }
+.fn-apps-tab:focus-visible { outline: 3px solid var(--fn-accent-soft); outline-offset: 1px; }
+.fn-apps-tab-active {
+	border-color: var(--fn-border-strong);
+	background: var(--fn-surface);
+	color: var(--fn-accent);
+	box-shadow: var(--fn-shadow-1);
+}
+.fn-apps-catalog { min-width: 0; }
+.fn-apps-advanced-note {
+	display: flex;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	gap: 4px 14px;
+	margin: 0 0 20px;
+	padding: 13px 16px;
+	border: 1px solid var(--fn-border-strong);
+	border-left: 3px solid var(--fn-warning);
+	border-radius: var(--fn-radius);
+	background: var(--fn-warning-soft);
+	font-family: var(--fn-font-text);
+}
+.fn-apps-advanced-note strong { color: var(--fn-warning); }
+.fn-apps-advanced-note span { flex: 1 1 300px; color: var(--fn-text-secondary); line-height: 1.4; }
 .fn-apps-group { margin-bottom: 20px; }
 .fn-apps-list { border: 1px solid var(--fn-border); border-radius: var(--fn-radius); overflow: hidden; }
 .fn-apps-row {
@@ -2816,10 +3088,256 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-apps-row:last-child { border-bottom: none; }
 .fn-apps-row > .fn-icon { flex: 0 0 auto; color: var(--fn-text-secondary); }
 .fn-apps-info { flex: 1 1 auto; min-width: 0; }
-.fn-apps-name { font-weight: 600; font-size: 1.125rem; letter-spacing: .03em; }
-.fn-apps-desc { font-size: 0.75rem; color: var(--fn-text-secondary); margin-top: 2px; }
+.fn-apps-name {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	font-weight: 600;
+	font-size: 1.125rem;
+	letter-spacing: .03em;
+}
+.fn-apps-desc {
+	font-size: 0.75rem;
+	color: var(--fn-text-secondary);
+	margin-top: 2px;
+	overflow-wrap: anywhere;
+}
+.fn-apps-tier {
+	display: inline-flex;
+	align-items: center;
+	min-height: 20px;
+	padding: 2px 7px;
+	border: 1px solid var(--fn-warning);
+	border-radius: 999px;
+	color: var(--fn-warning);
+	font: 600 .7rem/1 var(--fn-font-text);
+	letter-spacing: .04em;
+	text-transform: uppercase;
+}
+.fn-status-unavailable { background: var(--fn-warning-soft); color: var(--fn-warning); }
+.fn-apps-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 116px;
+	padding: 20px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-text);
+	text-align: center;
+}
 .fn-apps-row .fn-status-pill { flex: 0 0 auto; margin-right: 4px; letter-spacing: .08em; }
 .fn-apps-row .fn-settings-btn { flex: 0 0 auto; width: auto; padding: 7px 16px; }
+
+@keyframes fn-wifi-acl-card-in {
+	from { opacity: 0; transform: translateY(6px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fn-wifi-acl-row-in {
+	from { opacity: 0; transform: translateX(-4px); }
+	to { opacity: 1; transform: translateX(0); }
+}
+
+/* Wi-Fi ACL: each card edits one wifi-iface's native macfilter/maclist.  Keep
+   the two add paths side by side on wide screens and stack them naturally on
+   phones, where MAC addresses and client names need the extra width. */
+.fn-wifi-acl-cards { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.fn-wifi-acl-card {
+	animation: fn-wifi-acl-card-in .28s ease both;
+}
+.fn-wifi-acl-card:nth-child(2) { animation-delay: 35ms; }
+.fn-wifi-acl-card:nth-child(3) { animation-delay: 70ms; }
+.fn-wifi-acl-card:nth-child(4) { animation-delay: 105ms; }
+.fn-wifi-acl-card-head { align-items: center; }
+.fn-wifi-acl-mode-field { max-width: none; margin-bottom: 6px; }
+.fn-wifi-acl-expand {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 10px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: transparent;
+	color: var(--fn-accent);
+	font: 600 .9rem/1.2 var(--fn-font-text);
+	cursor: pointer;
+	transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
+}
+.fn-wifi-acl-expand:hover { background: var(--fn-accent-soft); }
+.fn-wifi-acl-expand:active { transform: translateY(1px); }
+.fn-wifi-acl-expand:focus-visible { outline: 3px solid var(--fn-accent-soft); outline-offset: 1px; }
+.fn-wifi-acl-expand-icon { font-size: 1.1rem; line-height: .8; transition: transform .15s ease; }
+.fn-wifi-acl-expand[aria-expanded="true"] .fn-wifi-acl-expand-icon { transform: rotate(180deg); }
+.fn-wifi-acl-body {
+	display: grid;
+	grid-template-rows: minmax(0, 1fr);
+	transition: grid-template-rows .28s ease, padding .28s ease, opacity .18s ease, visibility 0s linear 0s;
+}
+.fn-wifi-acl-body-grid { min-height: 0; overflow: hidden; }
+.fn-wifi-acl-body.fn-wifi-acl-body-collapsed {
+	grid-template-rows: minmax(0, 0fr);
+	padding: 0;
+	opacity: 0;
+	visibility: hidden;
+	transition: grid-template-rows .28s ease, padding .28s ease, opacity .18s ease, visibility 0s linear .28s;
+}
+.fn-wifi-acl-body-grid {
+	display: grid;
+	grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr);
+	gap: 18px 24px;
+	align-items: start;
+}
+.fn-wifi-acl-settings { min-width: 0; }
+.fn-wifi-acl-editor { min-width: 0; }
+.fn-wifi-acl-hint {
+	min-height: 1.35em;
+	margin: 0;
+	color: var(--fn-text-secondary);
+	font-family: var(--fn-font-text);
+	font-size: .95rem;
+	line-height: 1.4;
+}
+.fn-wifi-acl-subtitle { margin-top: 2px; }
+.fn-wifi-acl-list { margin-bottom: 12px; }
+.fn-wifi-acl-row { min-width: 0; animation: fn-wifi-acl-row-in .2s ease both; }
+.fn-wifi-acl-row .fn-apps-name { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .04em; }
+.fn-wifi-acl-row .fn-settings-btn { margin-left: auto; }
+.fn-wifi-acl-mac-icon {
+	flex: 0 0 28px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: var(--fn-accent-soft);
+	color: var(--fn-accent);
+	font-size: 1.2rem;
+	line-height: 1;
+}
+.fn-wifi-acl-add-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+	margin-top: 14px;
+}
+.fn-wifi-acl-add-control { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
+.fn-wifi-acl-add-control .fn-input { min-width: 0; }
+.fn-wifi-acl-add-button { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 12px; padding-right: 12px; font-size: 1rem; }
+.fn-wifi-acl-actions { margin-top: 16px; }
+.fn-wifi-acl-actions .fn-settings-btn { width: auto; min-width: 120px; }
+.fn-wifi-acl-empty { grid-column: 1 / -1; }
+.fn-wifi-acl-warning { margin-bottom: 16px; }
+
+/* Access & Routing Policy lives beside the ACL editor, but operates on the
+   network segment behind one or more SSIDs.  Keep that distinction visible:
+   each segment gets one compact card and the explanatory copy sits above the
+   controls rather than being repeated in every Wi-Fi card. */
+.fn-wifi-policy-section {
+	margin: 0 0 26px;
+	padding: 18px 20px 20px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+}
+.fn-wifi-policy-head { margin-bottom: 14px; }
+.fn-wifi-acl-section-title {
+	margin: 0 0 5px;
+	font-size: 1.25rem;
+	font-weight: 700;
+	letter-spacing: .01em;
+	color: var(--fn-text);
+}
+.fn-wifi-policy-description {
+	max-width: 900px;
+	margin: 0;
+	color: var(--fn-text-secondary);
+	font: .95rem/1.45 var(--fn-font-text);
+}
+.fn-wifi-policy-notice { margin: 0 0 14px; }
+.fn-wifi-policy-notice > span { flex-basis: 360px; }
+.fn-wifi-policy-link { color: var(--fn-accent); white-space: nowrap; }
+.fn-wifi-policy-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+	gap: 12px;
+}
+.fn-wifi-policy-card { min-width: 0; background: var(--fn-surface); }
+.fn-wifi-policy-card:hover { transform: none; }
+.fn-wifi-policy-card-head { align-items: flex-start; }
+.fn-wifi-policy-card-head .fn-status-pill { flex: 0 0 auto; margin-top: 4px; }
+.fn-wifi-policy-form {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 12px 16px;
+}
+.fn-wifi-policy-form .fn-settings-field { margin-bottom: 0; }
+.fn-wifi-policy-form .fn-input { width: 100%; min-height: 40px; }
+.fn-wifi-policy-vpn-field[hidden] { display: none; }
+.fn-wifi-policy-hint {
+	min-height: 1.4em;
+	margin: 12px 0 0;
+	color: var(--fn-text-secondary);
+	font: .875rem/1.4 var(--fn-font-text);
+}
+.fn-wifi-policy-warning {
+	margin-top: 12px;
+	padding: 9px 11px;
+	border-left: 3px solid var(--fn-warning);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-warning-soft);
+	color: var(--fn-warning);
+	font: .85rem/1.35 var(--fn-font-text);
+}
+.fn-wifi-policy-actions { margin-top: 14px; }
+.fn-wifi-policy-actions .fn-settings-btn { min-width: 100px; }
+.fn-wifi-policy-empty { grid-column: 1 / -1; min-height: 112px; }
+.fn-wifi-device-policy-head {
+	margin: 24px 0 12px;
+	padding-top: 18px;
+	border-top: 1px solid var(--fn-border-strong);
+}
+.fn-wifi-device-policy-head h3 {
+	margin: 0 0 4px;
+	font-size: 1.08rem;
+	font-weight: 700;
+	color: var(--fn-text);
+}
+.fn-wifi-device-policy-head p {
+	max-width: 900px;
+	margin: 0;
+	color: var(--fn-text-secondary);
+	font: .9rem/1.45 var(--fn-font-text);
+}
+.fn-wifi-device-policy-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+	gap: 12px;
+}
+.fn-wifi-device-policy-card { min-width: 0; background: var(--fn-surface); }
+.fn-wifi-device-policy-card:hover { transform: none; }
+.fn-wifi-device-policy-empty { grid-column: 1 / -1; min-height: 104px; }
+@media (max-width: 900px) {
+	.fn-wifi-policy-form { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+@media (max-width: 640px) {
+	.fn-wifi-policy-section { padding: 14px 12px 16px; }
+	.fn-wifi-policy-cards { grid-template-columns: minmax(0, 1fr); }
+	.fn-wifi-device-policy-head { margin-top: 20px; padding-top: 15px; }
+	.fn-wifi-device-policy-cards { grid-template-columns: minmax(0, 1fr); }
+	.fn-wifi-policy-card-head { flex-wrap: wrap; }
+	.fn-wifi-policy-card-head .fn-oc-card-title { min-width: 0; flex: 1 1 180px; }
+	.fn-wifi-policy-card-head .fn-status-pill { margin-left: auto; }
+	.fn-wifi-policy-actions .fn-settings-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.fn-wifi-acl-card, .fn-wifi-acl-row { animation: none; }
+	.fn-wifi-acl-body, .fn-wifi-acl-expand, .fn-wifi-acl-expand-icon { transition: none; }
+}
 
 /* Diagnostics: safe ping/traceroute controls and bounded command output. */
 .fn-diag-uplink + .fn-diag-uplink {
@@ -2876,6 +3394,8 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 		min-width: 0;
 		overflow-wrap: anywhere;
 	}
+	.fn-wifi-acl-body-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+	.fn-wifi-acl-settings { padding-bottom: 14px; border-bottom: 1px solid var(--fn-border); }
 	.fn-table-actions { flex-wrap: wrap; }
 	/* Hover elevation is not meaningful on touch screens and can leave a
 	   tapped card visually shifted while an overlay drawer is opening. */
@@ -2944,8 +3464,15 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 		gap: 10px;
 	}
 	.fn-route-form-grid { display: flex; }
+	.fn-apps-tabs { margin-top: 16px; margin-bottom: 16px; }
+	.fn-apps-tab { min-height: 40px; padding-left: 12px; padding-right: 12px; }
 	.fn-apps-row { flex-wrap: wrap; }
 	.fn-apps-row .fn-settings-btn { margin-left: auto; }
+	.fn-wifi-acl-add-grid { grid-template-columns: minmax(0, 1fr); }
+	.fn-wifi-acl-add-control { flex-direction: column; }
+	.fn-wifi-acl-add-button { width: 100%; }
+	.fn-wifi-acl-actions .fn-settings-btn { width: 100%; }
+	.fn-apps-advanced-note { padding: 12px 13px; }
 	.fn-route-head-actions { flex-wrap: wrap; justify-content: flex-end; }
 	.fn-route-import-row { grid-template-columns: 28px 1fr 1.5fr; }
 	.fn-route-import-row > :nth-child(4),

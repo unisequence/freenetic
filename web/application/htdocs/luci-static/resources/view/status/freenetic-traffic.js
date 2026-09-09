@@ -296,8 +296,8 @@ return view.extend({
 			]),
 			spark,
 			E('div', { class: 'fn-spark-legend' }, [
-				E('span', { class: 'fn-legend-dot fn-legend-rx' }), _('Download: '), rxLabel,
-				E('span', { class: 'fn-legend-dot fn-legend-tx' }), _('Upload: '), txLabel
+				E('span', { class: 'fn-legend-dot fn-legend-rx' }), _('Download:'), ' ', rxLabel,
+				E('span', { class: 'fn-legend-dot fn-legend-tx' }), _('Upload:'), ' ', txLabel
 			]),
 			infoGrid
 		]);

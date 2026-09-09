@@ -29,6 +29,7 @@ const ubusCall = rpc.call;
 
 const HISTORY_LEN = 40;
 const POLL_INTERVAL = 3; /* seconds */
+const MIN_CPU_SAMPLE_INTERVAL = 1000; /* milliseconds */
 const FREENETIC_REPOSITORY = 'https://github.com/unisequence/freenetic';
 const FREENETIC_RELEASES_API = 'https://api.github.com/repos/unisequence/freenetic/releases?per_page=30';
 const FREENETIC_PACKAGE_NAMES = [ 'luci-theme-freenetic', 'luci-app-freenetic' ];
@@ -626,8 +627,8 @@ return view.extend({
 			]),
 			spark,
 			E('div', { class: 'fn-spark-legend' }, [
-				E('span', { class: 'fn-legend-dot fn-legend-rx' }), _('Download: '), rxLabel,
-				E('span', { class: 'fn-legend-dot fn-legend-tx' }), _('Upload: '), txLabel
+				E('span', { class: 'fn-legend-dot fn-legend-rx' }), _('Download:'), ' ', rxLabel,
+				E('span', { class: 'fn-legend-dot fn-legend-tx' }), _('Upload:'), ' ', txLabel
 			]),
 			infoGrid,
 			ipv6Details
@@ -1477,8 +1478,8 @@ return view.extend({
 				dom_empty(status);
 				status.appendChild(document.createTextNode(
 					latest.assets && latest.assets.length
-						? _('Latest release: ') + ' '
-						: _('Found a release without APK assets: ')
+						? _('Latest release:') + ' '
+						: _('Found a release without APK assets:') + ' '
 				));
 				status.appendChild(link);
 				status.className = 'fn-update-status fn-update-status-' + (latest.assets && latest.assets.length ? 'success' : 'info');
@@ -1585,7 +1586,13 @@ return view.extend({
 				return;
 
 			if (stat) {
-				if (this.cpuLastSample) {
+				const now = Date.now();
+				const elapsed = this.cpuLastSampleAt ? now - this.cpuLastSampleAt : 0;
+				/* The initial dashboard poll and the first SSE snapshot can arrive
+				 * almost together.  A delta over a few milliseconds has a tiny
+				 * denominator and turns page startup work into a misleading 80%+
+				 * reading, so keep it only as the baseline for the next sample. */
+				if (this.cpuLastSample && elapsed >= MIN_CPU_SAMPLE_INTERVAL) {
 					const dIdle = stat.idle - this.cpuLastSample.idle;
 					const dTotal = stat.total - this.cpuLastSample.total;
 					const pct = dTotal > 0 ? Math.max(0, Math.min(100, Math.round(100 * (1 - dIdle / dTotal)))) : 0;
@@ -1593,6 +1600,7 @@ return view.extend({
 					dom_content(els.cpuValue, pct + '%');
 				}
 				this.cpuLastSample = stat;
+				this.cpuLastSampleAt = now;
 			}
 
 			if (info.memory) {

@@ -474,7 +474,7 @@ return view.extend({
 
 		button.disabled = true;
 		return uci.save().then(() => applyChanges()).then(() => {
-			notify(_('%d route%s saved.').format(selected.length, selected.length === 1 ? '' : 's'), 'info');
+			notify(_('Saved routes: %d.').format(selected.length), 'info');
 			this.selectedRoutes = {};
 			return this.refresh();
 		}).catch(error => {
@@ -488,7 +488,7 @@ return view.extend({
 		const selected = this.selectedRouteKeys();
 		if (!selected.length)
 			return;
-		if (!window.confirm(_('Delete %d selected route%s?').format(selected.length, selected.length === 1 ? '' : 's')))
+		if (!window.confirm(_('Delete selected routes (%d)?').format(selected.length)))
 			return;
 
 		if (this.activeFamily === 'dns') {
@@ -506,7 +506,7 @@ return view.extend({
 
 		button.disabled = true;
 		return uci.save().then(() => applyChanges()).then(() => {
-			notify(_('%d route%s deleted.').format(selected.length, selected.length === 1 ? '' : 's'), 'info');
+			notify(_('Deleted routes: %d.').format(selected.length), 'info');
 			this.selectedRoutes = {};
 			return this.refresh();
 		}).catch(error => {
@@ -680,7 +680,7 @@ return view.extend({
 		])));
 
 		if (dns.otherCount)
-			table.appendChild(E('p', { class: 'fn-info-empty fn-route-preserved' }, _('%d other dnsmasq server entr%s are preserved.').format(dns.otherCount, dns.otherCount === 1 ? 'y' : 'ies')));
+			table.appendChild(E('p', { class: 'fn-info-empty fn-route-preserved' }, _('Other dnsmasq server entries preserved: %d.').format(dns.otherCount)));
 		this.updateSelectionButtons();
 	},
 
@@ -1024,7 +1024,7 @@ return view.extend({
 
 		const messages = [];
 		if (parsed.routes.length)
-			messages.push(E('p', { class: 'fn-info-empty' }, _('%d route record%s parsed from %s. Select the records to import and choose their OpenWrt interface.').format(parsed.routes.length, parsed.routes.length === 1 ? '' : 's', fileName)));
+			messages.push(E('p', { class: 'fn-info-empty' }, _('Parsed route records: %d from %s. Select the records to import and choose their OpenWrt interface.').format(parsed.routes.length, fileName)));
 		else
 			messages.push(E('p', { class: 'fn-info-empty' }, _('No compatible route records were found in %s.').format(fileName)));
 		if (parsed.ignored)
@@ -1116,8 +1116,8 @@ return view.extend({
 
 		button.disabled = true;
 		return uci.save().then(() => applyChanges()).then(() => {
-			const suffix = skipped ? ' ' + _('%d duplicate route%s skipped.').format(skipped, skipped === 1 ? '' : 's') : '';
-			notify(_('%d route%s imported.%s').format(added, added === 1 ? '' : 's', suffix), 'info');
+			const suffix = skipped ? ' ' + _('Skipped duplicate routes: %d.').format(skipped) : '';
+			notify(_('Imported routes: %d.').format(added) + suffix, 'info');
 			this.closeImport();
 			return this.refresh();
 		}).catch(error => {

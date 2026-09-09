@@ -1,0 +1,2689 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: freenetic\n"
+"Report-Msgid-Bugs-To: https://github.com/unisequence/freenetic/issues\n"
+"POT-Creation-Date: 2026-09-09 00:00+0000\n"
+"PO-Revision-Date: 2026-09-09 00:00+0000\n"
+"Last-Translator: Freenetic contributors\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+# Shell, navigation and login
+msgid "auto"
+msgstr "авто"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Automatic"
+msgstr "Автоматически"
+
+msgid "Light"
+msgstr "Светлая"
+
+msgid "Dark"
+msgstr "Тёмная"
+
+msgid "Command Line"
+msgstr "Командная строка"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Appearance"
+msgstr "Оформление"
+
+msgid "Interface"
+msgstr "Интерфейс"
+
+msgid "System Log"
+msgstr "Системный журнал"
+
+msgid "Support Center"
+msgstr "Центр поддержки"
+
+msgid "Reboot"
+msgstr "Перезагрузить"
+
+msgid "Log out"
+msgstr "Выйти"
+
+msgid "Switch interface style?"
+msgstr "Сменить стиль интерфейса?"
+
+#, javascript-format
+msgid "This replaces the Freenetic interface with %s for everyone using this router's web UI, not just this browser. You can switch back the same way from the new interface's own system settings page."
+msgstr "Это заменит интерфейс Freenetic на %s для всех пользователей веб-интерфейса роутера, а не только в этом браузере. Вернуться обратно можно через системные настройки нового интерфейса."
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Switch"
+msgstr "Переключить"
+
+msgid "Expand menu"
+msgstr "Развернуть меню"
+
+msgid "Collapse menu"
+msgstr "Свернуть меню"
+
+msgid "Status"
+msgstr "Состояние"
+
+msgid "Internet"
+msgstr "Интернет"
+
+msgid "My Networks & Wi-Fi"
+msgstr "Мои сети и Wi‑Fi"
+
+msgid "Network Rules"
+msgstr "Правила сети"
+
+msgid "Services"
+msgstr "Сервисы"
+
+msgid "Management"
+msgstr "Управление"
+
+msgid "Unsorted"
+msgstr "Без категории"
+
+msgid "Dashboard"
+msgstr "Панель управления"
+
+msgid "Client List"
+msgstr "Список клиентов"
+
+msgid "Traffic Monitor"
+msgstr "Монитор трафика"
+
+msgid "Wi-Fi Monitor"
+msgstr "Монитор Wi‑Fi"
+
+msgid "Other Connections"
+msgstr "Другие подключения"
+
+msgid "Dynamic DNS"
+msgstr "Динамический DNS"
+
+msgid "Home Network"
+msgstr "Домашняя сеть"
+
+msgid "Guest Network"
+msgstr "Гостевая сеть"
+
+msgid "Access & Routing Policy"
+msgstr "Политика доступа и маршрутизации"
+
+msgid "Port Forwarding"
+msgstr "Перенаправление портов"
+
+msgid "Firewall"
+msgstr "Межсетевой экран"
+
+msgid "Routing"
+msgstr "Маршрутизация"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Diagnostics"
+msgstr "Диагностика"
+
+msgid "Applications"
+msgstr "Приложения"
+
+msgid "Sign in to the web configurator"
+msgstr "Войти в веб-конфигуратор"
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Show password"
+msgstr "Показать пароль"
+
+msgid "Log in"
+msgstr "Войти"
+
+#, javascript-format
+msgid "Failed to save language: %s"
+msgstr "Не удалось сохранить язык: %s"
+
+msgid "Save & Apply"
+msgstr "Сохранить и применить"
+
+msgid "Apply unchecked"
+msgstr "Применить без проверки"
+
+msgid "Reset"
+msgstr "Сбросить"
+
+msgid "Close menu"
+msgstr "Закрыть меню"
+
+msgid "Hide password"
+msgstr "Скрыть пароль"
+
+msgid "Can't sign in?"
+msgstr "Не удаётся войти?"
+
+#, javascript-format
+msgid "The default username is %s."
+msgstr "Имя пользователя по умолчанию: %s."
+
+msgid "If you forgot the password, press and hold the Reset button on the device for 10 seconds to restore factory defaults. This will erase your configuration."
+msgstr "Если вы забыли пароль, нажмите и удерживайте кнопку Reset на устройстве 10 секунд для восстановления заводских настроек. Конфигурация будет удалена."
+
+msgid "System running in recovery (initramfs) mode."
+msgstr "Система работает в режиме восстановления (initramfs)."
+
+msgid "No changes to settings will be stored and are lost after rebooting. This mode should only be used to install a firmware upgrade"
+msgstr "Изменения настроек не сохраняются и будут потеряны после перезагрузки. Этот режим следует использовать только для установки обновления прошивки"
+
+msgid "Go to firmware upgrade..."
+msgstr "Перейти к обновлению прошивки…"
+
+msgid "JavaScript required!"
+msgstr "Требуется JavaScript!"
+
+msgid "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr "Включите JavaScript в браузере, иначе LuCI не будет работать корректно."
+
+msgid "Can't sign in"
+msgstr "Не удаётся войти"
+
+msgid "Other management options"
+msgstr "Другие варианты управления"
+
+msgid "Switch color theme"
+msgstr "Переключить цветовую тему"
+
+msgid "Loading view…"
+msgstr "Загрузка страницы…"
+
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+msgid "Unable to load this page"
+msgstr "Не удалось загрузить эту страницу"
+
+msgid "Discard unsaved changes and leave this page?"
+msgstr "Отменить несохранённые изменения и покинуть страницу?"
+
+msgid "Invalid username and/or password! Please try again."
+msgstr "Неверное имя пользователя и/или пароль! Попробуйте ещё раз."
+
+# Dashboard and system cards
+msgid "Internet (IPv6)"
+msgstr "Интернет (IPv6)"
+
+msgid "Internet connection"
+msgstr "Интернет-соединение"
+
+#, javascript-format
+msgid "Internet connection %s"
+msgstr "Интернет-соединение %s"
+
+msgid "Connection status"
+msgstr "Состояние подключения"
+
+msgid "Connected"
+msgstr "Подключено"
+
+msgid "Disconnected"
+msgstr "Отключено"
+
+msgid "No WAN interface or default route was found."
+msgstr "Интерфейс WAN или маршрут по умолчанию не найден."
+
+msgid "Host name or IP address"
+msgstr "Имя хоста или IP-адрес"
+
+msgid "Ping"
+msgstr "Проверить"
+
+msgid "Traceroute"
+msgstr "Трассировка маршрута"
+
+msgid "Not started"
+msgstr "Не запущено"
+
+msgid "Run a check to see its output here."
+msgstr "Запустите проверку, чтобы увидеть её результат здесь."
+
+msgid "Internet diagnostics"
+msgstr "Диагностика интернета"
+
+msgid "Network check"
+msgstr "Проверка сети"
+
+msgid "Check whether a host is reachable or inspect the route taken by packets."
+msgstr "Проверьте доступность хоста или посмотрите маршрут, по которому идут пакеты."
+
+msgid "Target"
+msgstr "Цель"
+
+msgid "Enter a valid host name or IP address."
+msgstr "Введите корректное имя хоста или IP-адрес."
+
+msgid "Running…"
+msgstr "Выполняется…"
+
+msgid "The command produced no output."
+msgstr "Команда не вернула данных."
+
+msgid "Passed"
+msgstr "Успешно"
+
+msgid "Failed"
+msgstr "Ошибка"
+
+msgid "Bandwidth"
+msgstr "Пропускная способность"
+
+msgid "Traffic by device"
+msgstr "Трафик по устройствам"
+
+msgid "Connected clients"
+msgstr "Подключённые клиенты"
+
+msgid "Live info"
+msgstr "Данные в реальном времени"
+
+msgid "TX power"
+msgstr "Мощность передачи"
+
+msgid "Bitrate"
+msgstr "Скорость передачи"
+
+msgid "No wireless radios found."
+msgstr "Беспроводные радиомодули не найдены."
+
+msgid "Development build"
+msgstr "Сборка для разработки"
+
+#, javascript-format
+msgid "Channel: %s"
+msgstr "Канал: %s"
+
+msgid "Open"
+msgstr "Открытая"
+
+msgid "No WAN interface configured."
+msgstr "Интерфейс WAN не настроен."
+
+msgid "IPv6 details"
+msgstr "Данные IPv6"
+
+msgid "Download:"
+msgstr "Загрузка:"
+
+msgid "Upload:"
+msgstr "Отдача:"
+
+msgid "IPv6 active"
+msgstr "IPv6 активен"
+
+msgid "IPv6 DNS"
+msgstr "DNS IPv6"
+
+msgid "Received"
+msgstr "Получено"
+
+msgid "Sent"
+msgstr "Отправлено"
+
+msgid "Wi-Fi"
+msgstr "Wi‑Fi"
+
+msgid "Ports"
+msgstr "Порты"
+
+msgid "IPv4 address"
+msgstr "IPv4-адрес"
+
+msgid "DHCP pool usage"
+msgstr "Использование пула DHCP"
+
+msgid "No wireless networks configured."
+msgstr "Беспроводные сети не настроены."
+
+msgid "(hidden)"
+msgstr "(скрытая)"
+
+msgid "disabled"
+msgstr "отключено"
+
+msgid "Wi-Fi QR code"
+msgstr "QR-код Wi‑Fi"
+
+msgid "Enable guest network"
+msgstr "Включить гостевую сеть"
+
+msgid "Guests get internet access but can't see your other devices."
+msgstr "Гости получают доступ в интернет, но не видят другие ваши устройства."
+
+msgid "Please enter a guest network name."
+msgstr "Введите имя гостевой сети."
+
+msgid "Please enter a guest password of at least 8 characters."
+msgstr "Введите пароль гостевой сети длиной не менее 8 символов."
+
+msgid "Guest network enabled."
+msgstr "Гостевая сеть включена."
+
+#, javascript-format
+msgid "Failed to enable guest network: %s"
+msgstr "Не удалось включить гостевую сеть: %s"
+
+#, javascript-format
+msgid "Failed to apply Wi-Fi change: %s"
+msgstr "Не удалось применить изменение Wi‑Fi: %s"
+
+msgid "Copy"
+msgstr "Копировать"
+
+msgid "Wireless network information"
+msgstr "Информация о беспроводной сети"
+
+#, javascript-format
+msgid "\"%s\" in the %s band"
+msgstr "«%s», диапазон %s"
+
+msgid "Scan this QR code with your phone's camera to connect to the wireless network."
+msgstr "Отсканируйте этот QR-код камерой телефона, чтобы подключиться к беспроводной сети."
+
+msgid "Copied to clipboard."
+msgstr "Скопировано в буфер обмена."
+
+msgid "Network Ports"
+msgstr "Сетевые порты"
+
+msgid "This radio is disabled."
+msgstr "Этот радиомодуль отключён."
+
+msgid "No data yet."
+msgstr "Пока нет данных."
+
+msgid "Failed to read channel survey."
+msgstr "Не удалось получить данные сканирования каналов."
+
+msgid "No active connections."
+msgstr "Нет активных подключений."
+
+msgid "Other devices"
+msgstr "Другие устройства"
+
+msgid "Freenetic"
+msgstr "Freenetic"
+
+msgid "Installed"
+msgstr "Установлено"
+
+msgid "Repository"
+msgstr "Репозиторий"
+
+msgid "Updates"
+msgstr "Обновления"
+
+msgid "CPU"
+msgstr "ЦП"
+
+msgid "RAM"
+msgstr "ОЗУ"
+
+msgid "Uptime"
+msgstr "Время работы"
+
+msgid "Current time"
+msgstr "Текущее время"
+
+msgid "Active connections"
+msgstr "Активные подключения"
+
+msgid "System updates"
+msgstr "Обновления системы"
+
+msgid "OS version"
+msgstr "Версия ОС"
+
+msgid "Update channel"
+msgstr "Канал обновлений"
+
+msgid "Auto-update"
+msgstr "Автообновление"
+
+msgid "Device"
+msgstr "Устройство"
+
+msgid "Model"
+msgstr "Модель"
+
+msgid "Kernel version"
+msgstr "Версия ядра"
+
+msgid "About System"
+msgstr "О системе"
+
+msgid "Stable"
+msgstr "Стабильный"
+
+msgid "Beta"
+msgstr "Бета"
+
+msgid "Not checked yet."
+msgstr "Проверка ещё не выполнялась."
+
+msgid "Check for updates"
+msgstr "Проверить обновления"
+
+msgid "Saving channel…"
+msgstr "Сохранение канала…"
+
+msgid "Channel saved."
+msgstr "Канал сохранён."
+
+#, javascript-format
+msgid "Failed to save channel: %s"
+msgstr "Не удалось сохранить канал: %s"
+
+msgid "Checking…"
+msgstr "Проверка…"
+
+#, javascript-format
+msgid "Looking for a %s release…"
+msgstr "Поиск выпуска %s…"
+
+msgid "beta"
+msgstr "бета"
+
+msgid "stable"
+msgstr "стабильного"
+
+msgid "No release is available for this channel."
+msgstr "Для этого канала нет доступного выпуска."
+
+msgid "Unnamed release"
+msgstr "Выпуск без названия"
+
+msgid "Latest release:"
+msgstr "Последний выпуск:"
+
+#, javascript-format
+msgid "Update check failed: %s"
+msgstr "Не удалось проверить обновления: %s"
+
+# Applications
+msgid "Recommended"
+msgstr "Рекомендуемые"
+
+msgid "Advanced networking"
+msgstr "Расширенная сеть"
+
+msgid "All"
+msgstr "Все"
+
+msgid "Application filters"
+msgstr "Фильтры приложений"
+
+msgid "Advanced networking tools"
+msgstr "Расширенные сетевые инструменты"
+
+msgid "VPN clients"
+msgstr "VPN-клиенты"
+
+msgid "WireGuard VPN"
+msgstr "VPN WireGuard"
+
+msgid "Modern, fast VPN client built into the Linux kernel, with native LuCI support."
+msgstr "Современный быстрый VPN-клиент на основе ядра Linux с поддержкой LuCI."
+
+msgid "PPTP client"
+msgstr "Клиент PPTP"
+
+msgid "Connect to a PPTP VPN server."
+msgstr "Подключение к VPN-серверу PPTP."
+
+msgid "L2TP client"
+msgstr "Клиент L2TP"
+
+msgid "Connect to an L2TP VPN server."
+msgstr "Подключение к VPN-серверу L2TP."
+
+msgid "L2TP/IPsec client"
+msgstr "Клиент L2TP/IPsec"
+
+msgid "L2TP over an IPsec-encrypted tunnel."
+msgstr "L2TP поверх туннеля с шифрованием IPsec."
+
+msgid "OpenVPN client and server"
+msgstr "Клиент и сервер OpenVPN"
+
+msgid "Widely supported, certificate-based VPN."
+msgstr "Распространённый VPN на основе сертификатов."
+
+msgid "UPnP service"
+msgstr "Сервис UPnP"
+
+msgid "Lets apps and game consoles open ports automatically."
+msgstr "Позволяет приложениям и игровым консолям автоматически открывать порты."
+
+msgid "DDNS client"
+msgstr "Клиент DDNS"
+
+msgid "Keeps a hostname pointed at this router's changing address."
+msgstr "Поддерживает имя хоста, указывающее на меняющийся адрес роутера."
+
+msgid "mDNS service"
+msgstr "Сервис mDNS"
+
+msgid "Local device/service discovery (Bonjour/Zeroconf)."
+msgstr "Обнаружение устройств и сервисов в локальной сети (Bonjour/Zeroconf)."
+
+msgid "SNMP server"
+msgstr "SNMP-сервер"
+
+msgid "Exposes router metrics to monitoring software."
+msgstr "Предоставляет метрики роутера системам мониторинга."
+
+msgid "Security and DNS"
+msgstr "Безопасность и DNS"
+
+msgid "DNS-over-HTTPS proxy"
+msgstr "Прокси DNS-over-HTTPS"
+
+msgid "Encrypts outgoing DNS lookups."
+msgstr "Шифрует исходящие DNS-запросы."
+
+msgid "Ad blocking (Adblock)"
+msgstr "Блокировка рекламы (Adblock)"
+
+msgid "Blocks ads and trackers for the whole network via DNS."
+msgstr "Блокирует рекламу и трекеры во всей сети через DNS."
+
+msgid "Files and media"
+msgstr "Файлы и мультимедиа"
+
+msgid "File server (Samba)"
+msgstr "Файловый сервер (Samba)"
+
+msgid "Share a USB drive as a network folder."
+msgstr "Открывает USB-накопитель как сетевую папку."
+
+msgid "DLNA server"
+msgstr "DLNA-сервер"
+
+msgid "Streams media from a USB drive to TVs and players."
+msgstr "Передаёт мультимедиа с USB-накопителя на телевизоры и проигрыватели."
+
+msgid "USB storage"
+msgstr "USB-накопители"
+
+msgid "USB storage support"
+msgstr "Поддержка USB-накопителей"
+
+msgid "Mount USB drives and inspect connected storage devices."
+msgstr "Подключает USB-накопители и показывает подключённые устройства хранения."
+
+msgid "Common USB filesystems"
+msgstr "Распространённые файловые системы USB"
+
+msgid "Read common Linux, Windows and removable-drive filesystems."
+msgstr "Читает распространённые файловые системы Linux, Windows и съёмных дисков."
+
+msgid "USB peripherals"
+msgstr "USB-периферия"
+
+msgid "USB printer server"
+msgstr "Сервер USB-принтера"
+
+msgid "Share a USB printer with devices on the local network."
+msgstr "Открывает USB-принтер для устройств в локальной сети."
+
+msgid "USB UPS monitoring"
+msgstr "Мониторинг USB-ИБП"
+
+msgid "Monitor a UPS connected to the router over USB."
+msgstr "Контролирует ИБП, подключённый к роутеру по USB."
+
+msgid "USB modems"
+msgstr "USB-модемы"
+
+msgid "LTE/5G modem (QMI)"
+msgstr "LTE/5G-модем (QMI)"
+
+msgid "Connect cellular modems that expose a Qualcomm QMI network interface."
+msgstr "Подключает сотовые модемы с сетевым интерфейсом Qualcomm QMI."
+
+msgid "LTE/5G modem (MBIM)"
+msgstr "LTE/5G-модем (MBIM)"
+
+msgid "Connect LTE/5G modems that expose a standards-based MBIM interface."
+msgstr "Подключает LTE/5G-модемы со стандартным интерфейсом MBIM."
+
+msgid "Legacy 3G/4G modem (PPP)"
+msgstr "Устаревший 3G/4G-модем (PPP)"
+
+msgid "Support older USB modems through serial ports or PPP."
+msgstr "Поддерживает старые USB-модемы через последовательный порт или PPP."
+
+msgid "Automatic modem management"
+msgstr "Автоматическое управление модемами"
+
+msgid "Detect and manage supported cellular modems through ModemManager."
+msgstr "Обнаруживает и управляет поддерживаемыми модемами через ModemManager."
+
+msgid "USB tethering"
+msgstr "USB-модем через телефон"
+
+msgid "Use an Android phone or another USB network device as an uplink."
+msgstr "Использует Android-телефон или другое USB-сетевое устройство как канал связи."
+
+msgid "Policy-based routing"
+msgstr "Маршрутизация по политикам"
+
+msgid "Route a network segment through a selected WAN or VPN tunnel."
+msgstr "Направляет сегмент сети через выбранный WAN или VPN-туннель."
+
+msgid "Zapret"
+msgstr "Zapret"
+
+msgid "Advanced traffic-processing tool for regional connectivity scenarios."
+msgstr "Расширенный инструмент обработки трафика для особых сценариев подключения."
+
+msgid "MagiTrickle"
+msgstr "MagiTrickle"
+
+msgid "Specialized traffic-routing and filtering tool for experienced users."
+msgstr "Специализированный инструмент маршрутизации и фильтрации трафика для опытных пользователей."
+
+msgid "Install additional features on demand. Recommended features are suitable for most routers; Advanced networking tools can change traffic processing and are intended for experienced users. Packages come from the router's configured repositories."
+msgstr "Устанавливайте дополнительные функции по необходимости. Рекомендуемые функции подходят большинству роутеров, а расширенные сетевые инструменты могут менять обработку трафика и предназначены для опытных пользователей. Пакеты загружаются из настроенных репозиториев роутера."
+
+msgid "No applications are installed yet."
+msgstr "Приложения пока не установлены."
+
+msgid "No advanced networking tools are available in the current catalog."
+msgstr "В текущем каталоге нет расширенных сетевых инструментов."
+
+msgid "No applications are available in the current catalog."
+msgstr "В текущем каталоге нет доступных приложений."
+
+msgid "Not installed"
+msgstr "Не установлено"
+
+#, javascript-format
+msgid "Required package(s) are unavailable for this firmware: %s."
+msgstr "Необходимые пакеты недоступны для этой прошивки: %s."
+
+msgid "Install"
+msgstr "Установить"
+
+#, javascript-format
+msgid "%s Required package(s) are unavailable for this firmware: %s."
+msgstr "%s Необходимые пакеты недоступны для этой прошивки: %s."
+
+msgid "Advanced"
+msgstr "Дополнительно"
+
+msgid "Removing…"
+msgstr "Удаление…"
+
+msgid "unknown error"
+msgstr "неизвестная ошибка"
+
+#, javascript-format
+msgid "Failed to %s %s: %s"
+msgstr "Не удалось %s %s: %s"
+
+msgid "remove"
+msgstr "удалить"
+
+msgid "install"
+msgstr "установить"
+
+#, javascript-format
+msgid "%s removed."
+msgstr "%s удалено."
+
+#, javascript-format
+msgid "%s installed. Network service restarted."
+msgstr "%s установлено. Сетевой сервис перезапущен."
+
+#, javascript-format
+msgid "%s installed, but the network service could not be restarted: %s Reboot the router before using this feature."
+msgstr "%s установлено, но сетевой сервис не удалось перезапустить: %s Перезагрузите роутер перед использованием этой функции."
+
+# Other Connections / VPN
+msgid "Manage additional VPN and tunnel connections through the OpenWrt network stack."
+msgstr "Управляйте дополнительными VPN-подключениями и туннелями через сетевой стек OpenWrt."
+
+msgid "Import .conf"
+msgstr "Импортировать .conf"
+
+msgid "Add connection"
+msgstr "Добавить подключение"
+
+msgid "Native OpenWrt kernel protocol is ready."
+msgstr "Штатный протокол ядра OpenWrt готов."
+
+#, javascript-format
+msgid "Required package(s) are missing: %s."
+msgstr "Отсутствуют необходимые пакеты: %s."
+
+msgid "WireGuard"
+msgstr "WireGuard"
+
+msgid "Standard kernel-based VPN protocol"
+msgstr "Стандартный VPN-протокол на основе ядра"
+
+msgid "Ready"
+msgstr "Готово"
+
+msgid "Unavailable"
+msgstr "Недоступно"
+
+msgid "AWG parameters are available in the connection editor."
+msgstr "Параметры AWG доступны в редакторе подключения."
+
+msgid "Optional WireGuard-compatible obfuscation with AmneziaWG parameters."
+msgstr "Необязательная совместимая с WireGuard обфускация с параметрами AmneziaWG."
+
+#, javascript-format
+msgid "Signed feed for %s/%s is configured, but AmneziaWG packages are not installed."
+msgstr "Подписанный фид для %s/%s настроен, но пакеты AmneziaWG не установлены."
+
+#, javascript-format
+msgid "The signed AmneziaWG feed targets %s/%s. Connect it to verify and install matching packages."
+msgstr "Подписанный фид AmneziaWG предназначен для %s/%s. Подключите его, чтобы проверить и установить подходящие пакеты."
+
+msgid "SNAPSHOT builds may not have a matching kernel package."
+msgstr "Для сборок SNAPSHOT может не существовать пакета для соответствующего ядра."
+
+msgid "Connect feed and install"
+msgstr "Подключить фид и установить"
+
+msgid "AmneziaWG"
+msgstr "AmneziaWG"
+
+msgid "WireGuard-compatible protocol with AWG obfuscation"
+msgstr "Совместимый с WireGuard протокол с обфускацией AWG"
+
+msgid "No other connections configured"
+msgstr "Другие подключения не настроены"
+
+msgid "Add a connection or import a provider configuration file."
+msgstr "Добавьте подключение или импортируйте конфигурационный файл провайдера."
+
+msgid "Not connected"
+msgstr "Не подключено"
+
+msgid "Addresses"
+msgstr "Адреса"
+
+msgid "Peers"
+msgstr "Пиры"
+
+msgid "Listen port"
+msgstr "Порт прослушивания"
+
+msgid "Random"
+msgstr "Случайный"
+
+msgid "No peers configured."
+msgstr "Пиры не настроены."
+
+msgid "No handshake"
+msgstr "Нет рукопожатия"
+
+msgid "Untitled peer"
+msgstr "Пир без названия"
+
+msgid "Endpoint not set"
+msgstr "Конечная точка не задана"
+
+msgid "No allowed IPs"
+msgstr "Нет разрешённых IP-адресов"
+
+#, javascript-format
+msgid "Handshake: %s"
+msgstr "Рукопожатие: %s"
+
+#, javascript-format
+msgid "↓ %s · ↑ %s"
+msgstr "↓ %s · ↑ %s"
+
+msgid "Export"
+msgstr "Экспортировать"
+
+msgid "AmneziaWG obfuscation parameters enabled"
+msgstr "Параметры обфускации AmneziaWG включены"
+
+msgid "New VPN connection"
+msgstr "Новое VPN-подключение"
+
+msgid "VPN connection"
+msgstr "VPN-подключение"
+
+msgid "Base64 private key"
+msgstr "Приватный ключ Base64"
+
+msgid "Generate from private key"
+msgstr "Сгенерировать из приватного ключа"
+
+msgid "Key present"
+msgstr "Ключ задан"
+
+msgid "Key not set"
+msgstr "Ключ не задан"
+
+msgid "Invalid key"
+msgstr "Недействительный ключ"
+
+msgid "Generating…"
+msgstr "Генерация…"
+
+msgid "Generate key pair"
+msgstr "Сгенерировать пару ключей"
+
+msgid "Update public key"
+msgstr "Обновить публичный ключ"
+
+msgid "AmneziaWG parameters"
+msgstr "Параметры AmneziaWG"
+
+msgid "Add peer"
+msgstr "Добавить пира"
+
+msgid "Connection enabled"
+msgstr "Подключение включено"
+
+msgid "Connection name"
+msgstr "Имя подключения"
+
+msgid "Private key"
+msgstr "Приватный ключ"
+
+msgid "Public key"
+msgstr "Публичный ключ"
+
+msgid "Interface addresses"
+msgstr "Адреса интерфейса"
+
+msgid "DNS servers"
+msgstr "DNS-серверы"
+
+msgid "MTU"
+msgstr "MTU"
+
+msgid "Firewall mark"
+msgstr "Метка межсетевого экрана"
+
+msgid "Do not create host routes"
+msgstr "Не создавать маршруты к узлам"
+
+msgid "Edit connection"
+msgstr "Изменить подключение"
+
+msgid "No peers. Add at least one peer to establish a tunnel."
+msgstr "Нет пиров. Добавьте хотя бы одного пира, чтобы создать туннель."
+
+#, javascript-format
+msgid "Peer %d"
+msgstr "Пир %d"
+
+msgid "Description"
+msgstr "Описание"
+
+msgid "Allowed IPs"
+msgstr "Разрешённые IP-адреса"
+
+msgid "Endpoint host"
+msgstr "Хост конечной точки"
+
+msgid "Endpoint port"
+msgstr "Порт конечной точки"
+
+msgid "Persistent keepalive"
+msgstr "Постоянное поддержание соединения"
+
+msgid "Route allowed IPs"
+msgstr "Маршрутизировать разрешённые IP"
+
+msgid "Disable peer"
+msgstr "Отключить пира"
+
+msgid "Saving…"
+msgstr "Сохранение…"
+
+msgid "Connection settings saved."
+msgstr "Настройки подключения сохранены."
+
+#, javascript-format
+msgid "Failed to save connection: %s"
+msgstr "Не удалось сохранить подключение: %s"
+
+msgid "Connection enabled."
+msgstr "Подключение включено."
+
+msgid "Connection disabled."
+msgstr "Подключение отключено."
+
+#, javascript-format
+msgid "Failed to change connection state: %s"
+msgstr "Не удалось изменить состояние подключения: %s"
+
+msgid "Import VPN configuration"
+msgstr "Импорт конфигурации VPN"
+
+msgid "Paste a WireGuard or AmneziaWG .conf file here…"
+msgstr "Вставьте сюда файл .conf WireGuard или AmneziaWG…"
+
+msgid "No file selected"
+msgstr "Файл не выбран"
+
+msgid "Choose file"
+msgstr "Выбрать файл"
+
+msgid "Import settings"
+msgstr "Импортировать настройки"
+
+# Routing and traffic policy
+msgid "IPv4"
+msgstr "IPv4"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "Active IPv4 routes"
+msgstr "Активные маршруты IPv4"
+
+msgid "Routes currently installed in the kernel, including connected and default routes."
+msgstr "Маршруты, установленные в ядре, включая подключённые сети и маршрут по умолчанию."
+
+msgid "User routes"
+msgstr "Пользовательские маршруты"
+
+msgid "Add route"
+msgstr "Добавить маршрут"
+
+msgid "Route file"
+msgstr "Файл маршрутов"
+
+msgid "Upload"
+msgstr "Загрузить"
+
+msgid "IPv4 routes"
+msgstr "Маршруты IPv4"
+
+msgid "IPv6 routes"
+msgstr "Маршруты IPv6"
+
+msgid "DNS routes"
+msgstr "Маршруты DNS"
+
+msgid "Add DNS route"
+msgstr "Добавить DNS-маршрут"
+
+msgid "No active routes"
+msgstr "Нет активных маршрутов"
+
+msgid "Select all routes"
+msgstr "Выбрать все маршруты"
+
+msgid "Destination"
+msgstr "Назначение"
+
+msgid "Gateway"
+msgstr "Шлюз"
+
+msgid "Metric"
+msgstr "Метрика"
+
+msgid "No DNS routes configured."
+msgstr "DNS-маршруты не настроены."
+
+msgid "Domain"
+msgstr "Домен"
+
+msgid "DNS server"
+msgstr "DNS-сервер"
+
+msgid "DNS routing"
+msgstr "Маршрутизация DNS"
+
+msgid "Active IPv6 routes"
+msgstr "Активные маршруты IPv6"
+
+msgid "No active routes reported by netifd."
+msgstr "netifd не сообщил об активных маршрутах."
+
+msgid "Route to host"
+msgstr "Маршрут к узлу"
+
+msgid "Route to network"
+msgstr "Маршрут к сети"
+
+msgid "Default route"
+msgstr "Маршрут по умолчанию"
+
+msgid "Optional description"
+msgstr "Необязательное описание"
+
+msgid "Choose a gateway or an interface for the route."
+msgstr "Выберите шлюз или интерфейс для маршрута."
+
+msgid "Add automatically"
+msgstr "Добавлять автоматически"
+
+msgid "Host address"
+msgstr "Адрес узла"
+
+msgid "Network address (CIDR)"
+msgstr "Адрес сети (CIDR)"
+
+msgid "Route type"
+msgstr "Тип маршрута"
+
+msgid "Metric (optional)"
+msgstr "Метрика (необязательно)"
+
+msgid "Static route parameters"
+msgstr "Параметры статического маршрута"
+
+msgid "No network interfaces found"
+msgstr "Сетевые интерфейсы не найдены"
+
+msgid "Upload route list from computer"
+msgstr "Загрузить список маршрутов с компьютера"
+
+msgid "You can add routes from a Windows operating system batch file or any text file containing route records in a compatible format."
+msgstr "Можно добавить маршруты из пакетного файла ОС Windows или любого текстового файла с записями маршрутов в совместимом формате."
+
+msgid "Example of a valid route record:"
+msgstr "Пример допустимой записи маршрута:"
+
+msgid "OpenWrt interface for imported routes"
+msgstr "Интерфейс OpenWrt для импортированных маршрутов"
+
+msgid "All routes from this file will be assigned to the selected interface."
+msgstr "Все маршруты из этого файла будут назначены выбранному интерфейсу."
+
+msgid "Import selected"
+msgstr "Импортировать выбранные"
+
+msgid "Select an OpenWrt interface for the imported routes."
+msgstr "Выберите интерфейс OpenWrt для импортируемых маршрутов."
+
+msgid "Select at least one route to import."
+msgstr "Выберите хотя бы один маршрут для импорта."
+
+#, javascript-format
+msgid "%d route%s imported.%s"
+msgstr "Импортировано маршрутов: %d%s.%s"
+
+#, javascript-format
+msgid "Failed to import routes: %s"
+msgstr "Не удалось импортировать маршруты: %s"
+
+msgid "Metric must be a non-negative number."
+msgstr "Метрика должна быть неотрицательным числом."
+
+msgid "Gateway must be a valid IPv6 address."
+msgstr "Шлюз должен быть корректным IPv6-адресом."
+
+msgid "Gateway must be a valid IPv4 address."
+msgstr "Шлюз должен быть корректным IPv4-адресом."
+
+msgid "Enter a gateway or choose an interface."
+msgstr "Введите шлюз или выберите интерфейс."
+
+msgid "Destination must be a valid IPv6 address or CIDR."
+msgstr "Назначение должно быть корректным IPv6-адресом или CIDR."
+
+msgid "Destination must be a valid IPv4 address or CIDR."
+msgstr "Назначение должно быть корректным IPv4-адресом или CIDR."
+
+msgid "Route saved."
+msgstr "Маршрут сохранён."
+
+msgid "Route added."
+msgstr "Маршрут добавлен."
+
+#, javascript-format
+msgid "Failed to save route: %s"
+msgstr "Не удалось сохранить маршрут: %s"
+
+msgid "Route deleted."
+msgstr "Маршрут удалён."
+
+#, javascript-format
+msgid "Failed to delete route: %s"
+msgstr "Не удалось удалить маршрут: %s"
+
+msgid "DNS route saved."
+msgstr "DNS-маршрут сохранён."
+
+msgid "DNS route added."
+msgstr "DNS-маршрут добавлен."
+
+#, javascript-format
+msgid "Failed to save DNS route: %s"
+msgstr "Не удалось сохранить DNS-маршрут: %s"
+
+msgid "DNS route deleted."
+msgstr "DNS-маршрут удалён."
+
+#, javascript-format
+msgid "Failed to delete DNS route: %s"
+msgstr "Не удалось удалить DNS-маршрут: %s"
+
+# Access & Routing Policy and Wi-Fi ACL
+msgid "VPN tunnel"
+msgstr "VPN-туннель"
+
+msgid "Block Internet"
+msgstr "Заблокировать интернет"
+
+msgid "Direct (WAN)"
+msgstr "Прямое подключение (WAN)"
+
+msgid "Network default"
+msgstr "По умолчанию для сети"
+
+msgid "Unassigned network"
+msgstr "Сеть не назначена"
+
+msgid "Wi-Fi radio"
+msgstr "Радиомодуль Wi‑Fi"
+
+msgid "Allow list"
+msgstr "Белый список"
+
+msgid "Deny list"
+msgstr "Чёрный список"
+
+msgid "Connected Wi-Fi client"
+msgstr "Подключённый Wi‑Fi-клиент"
+
+msgid "Open Client List"
+msgstr "Открыть список клиентов"
+
+msgid "Manage Wi-Fi access rules and choose how traffic from network segments or individual devices reaches the internet."
+msgstr "Управляйте правилами доступа Wi‑Fi и выбирайте, как трафик сетевых сегментов или отдельных устройств выходит в интернет."
+
+msgid "Allow lists block unlisted devices"
+msgstr "Белые списки блокируют неуказанные устройства"
+
+msgid "Add your management device first. Applying a rule may briefly restart Wi-Fi."
+msgstr "Сначала добавьте устройство управления. Применение правила может ненадолго перезапустить Wi‑Fi."
+
+msgid "Wi-Fi access control"
+msgstr "Управление доступом Wi‑Fi"
+
+msgid "Choose how traffic from each network segment reaches the internet. The policy applies to all Wi-Fi and wired clients in that segment."
+msgstr "Выберите, как трафик каждого сетевого сегмента выходит в интернет. Политика действует на всех Wi‑Fi- и проводных клиентов этого сегмента."
+
+msgid "Device policies"
+msgstr "Политики устройств"
+
+msgid "Override the segment policy for individual clients. Rules match the device MAC address, so a DHCP address change does not break the rule."
+msgstr "Переопределяйте политику сегмента для отдельных клиентов. Правила используют MAC-адрес устройства, поэтому смена DHCP-адреса их не нарушит."
+
+msgid "Configured device"
+msgstr "Настроенное устройство"
+
+msgid "No clients available"
+msgstr "Нет доступных клиентов"
+
+msgid "Connect a device or wait for a DHCP lease to assign a per-device policy."
+msgstr "Подключите устройство или дождитесь DHCP-аренды, чтобы назначить политику для устройства."
+
+msgid "VPN routing is not installed"
+msgstr "Маршрутизация через VPN не установлена"
+
+msgid "Direct and Block Internet work without extra packages. Install the advanced “Policy-based routing” package from Applications to route a segment through WireGuard."
+msgstr "Прямое подключение и блокировка интернета работают без дополнительных пакетов. Установите расширенный пакет «Маршрутизация по политикам» в разделе «Приложения», чтобы направлять сегмент через WireGuard."
+
+msgid "Policies apply per network segment"
+msgstr "Политики применяются к сетевым сегментам"
+
+msgid "Home and Guest may include both Wi-Fi bands and wired clients. IPv4 is supported in this first version; IPv6 keeps its normal route."
+msgstr "Домашняя и гостевая сети могут включать оба диапазона Wi‑Fi и проводных клиентов. В первой версии поддерживается IPv4, а IPv6 сохраняет обычный маршрут."
+
+msgid "No local network segments found"
+msgstr "Локальные сетевые сегменты не найдены"
+
+msgid "Create a Home or Guest network before assigning a traffic policy."
+msgstr "Создайте домашнюю или гостевую сеть перед назначением политики трафика."
+
+msgid "Select a WireGuard connection"
+msgstr "Выберите подключение WireGuard"
+
+msgid "No WireGuard connections configured"
+msgstr "Подключения WireGuard не настроены"
+
+msgid "Only IPv4 traffic from this segment uses the selected tunnel."
+msgstr "Только IPv4-трафик этого сегмента использует выбранный туннель."
+
+msgid "Internet forwarding is rejected for this segment; access to the router remains available."
+msgstr "Перенаправление в интернет для этого сегмента запрещено; доступ к роутеру сохраняется."
+
+msgid "Traffic follows the regular Internet (WAN) route."
+msgstr "Трафик использует обычный маршрут в интернет (WAN)."
+
+msgid "IPv4 address is not configured"
+msgstr "IPv4-адрес не настроен"
+
+#, javascript-format
+msgid "Firewall zone %s"
+msgstr "Зона межсетевого экрана %s"
+
+msgid "No firewall zone"
+msgstr "Зона межсетевого экрана отсутствует"
+
+msgid "Traffic policy"
+msgstr "Политика трафика"
+
+msgid "Set an IPv4 address and subnet mask for this network first."
+msgstr "Сначала задайте IPv4-адрес и маску подсети для этой сети."
+
+msgid "A firewall zone for this network and the Internet is required for this policy."
+msgstr "Для этой политики нужна зона межсетевого экрана для сети и интернета."
+
+msgid "Network not detected"
+msgstr "Сеть не обнаружена"
+
+msgid "Use network default"
+msgstr "Использовать настройки сети"
+
+msgid "This device is matched by its MAC address; only its IPv4 traffic uses the selected tunnel."
+msgstr "Устройство определяется по MAC-адресу; только его IPv4-трафик использует выбранный туннель."
+
+msgid "Internet forwarding is rejected for this device; access to the router remains available."
+msgstr "Перенаправление в интернет для этого устройства запрещено; доступ к роутеру сохраняется."
+
+msgid "This device uses the regular Internet (WAN) route, regardless of the segment policy."
+msgstr "Это устройство использует обычный маршрут в интернет (WAN), независимо от политики сегмента."
+
+#, javascript-format
+msgid "The device follows the %s policy: %s."
+msgstr "Устройство использует политику %s: %s."
+
+msgid "its network"
+msgstr "своей сети"
+
+msgid "The network segment could not be detected. Block Internet requires a DHCP lease or an active Wi-Fi connection."
+msgstr "Сетевой сегмент не удалось определить. Для блокировки интернета нужна DHCP-аренда или активное Wi‑Fi-подключение."
+
+msgid "A firewall zone for this network and the Internet is required for Block Internet."
+msgstr "Для блокировки интернета нужна зона межсетевого экрана для этой сети и интернета."
+
+msgid "No wireless networks configured"
+msgstr "Беспроводные сети не настроены"
+
+msgid "Create an access point on the Home Network or Guest Network page first."
+msgstr "Сначала создайте точку доступа на странице «Домашняя сеть» или «Гостевая сеть»."
+
+msgid "MAC address"
+msgstr "MAC-адрес"
+
+msgid "Select a client"
+msgstr "Выберите клиента"
+
+msgid "No clients found"
+msgstr "Клиенты не найдены"
+
+msgid "Only listed MAC addresses may connect to this SSID."
+msgstr "К этому SSID могут подключаться только указанные MAC-адреса."
+
+msgid "Listed MAC addresses will be refused; all other devices may connect."
+msgstr "Указанным MAC-адресам будет отказано, остальные устройства смогут подключаться."
+
+msgid "No MAC filtering is applied."
+msgstr "Фильтрация MAC-адресов не применяется."
+
+msgid "No devices allowed yet."
+msgstr "Разрешённых устройств пока нет."
+
+msgid "No MAC addresses listed."
+msgstr "MAC-адреса не указаны."
+
+msgid "Remove"
+msgstr "Удалить"
+
+msgid "Enter a valid MAC address, for example AA:BB:CC:DD:EE:FF."
+msgstr "Введите корректный MAC-адрес, например AA:BB:CC:DD:EE:FF."
+
+msgid "This MAC address is already listed."
+msgstr "Этот MAC-адрес уже указан."
+
+msgid "Add"
+msgstr "Добавить"
+
+msgid "Add client"
+msgstr "Добавить клиента"
+
+msgid "Network disabled"
+msgstr "Сеть отключена"
+
+msgid "Hide settings"
+msgstr "Скрыть настройки"
+
+msgid "Configure"
+msgstr "Настроить"
+
+msgid "Access control"
+msgstr "Управление доступом"
+
+msgid "MAC addresses"
+msgstr "MAC-адреса"
+
+msgid "Unnamed network"
+msgstr "Сеть без названия"
+
+msgid "An allow list must contain at least one MAC address."
+msgstr "Белый список должен содержать хотя бы один MAC-адрес."
+
+#, javascript-format
+msgid "Wi-Fi access rules saved for %s."
+msgstr "Правила доступа Wi‑Fi для %s сохранены."
+
+#, javascript-format
+msgid "Failed to save Wi-Fi access rules: %s"
+msgstr "Не удалось сохранить правила доступа Wi‑Fi: %s"
+
+# Common labels used by the Freenetic pages
+msgid "Protocol"
+msgstr "Протокол"
+
+msgid "Address"
+msgstr "Адрес"
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "Channel"
+msgstr "Канал"
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Disabled"
+msgstr "Отключено"
+
+msgid "Wired"
+msgstr "Проводное подключение"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Refresh"
+msgstr "Обновить"
+
+msgid "Edit"
+msgstr "Изменить"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Network"
+msgstr "Сеть"
+
+msgid "Home network"
+msgstr "Домашняя сеть"
+
+msgid "Guest network"
+msgstr "Гостевая сеть"
+
+msgid "No data"
+msgstr "Нет данных"
+
+msgid "Not available"
+msgstr "Недоступно"
+
+msgid "Optional"
+msgstr "Необязательно"
+
+msgid "Provided by your ISP"
+msgstr "Предоставляется вашим провайдером"
+
+msgid "Not set"
+msgstr "Не задано"
+
+msgid "Connection type"
+msgstr "Тип подключения"
+
+msgid "IPv6 address"
+msgstr "IPv6-адрес"
+
+msgid "IPv6 gateway"
+msgstr "Шлюз IPv6"
+
+msgid "No password set!"
+msgstr "Пароль не задан!"
+
+msgid "There is no password set on this router. Please configure a root password to protect the web interface."
+msgstr "На этом роутере не задан пароль. Настройте пароль root, чтобы защитить веб-интерфейс."
+
+msgid "Go to password configuration..."
+msgstr "Перейти к настройке пароля…"
+
+msgid "Don't ask again"
+msgstr "Больше не спрашивать"
+
+msgid "IPv4 connection settings"
+msgstr "Настройки подключения IPv4"
+
+msgid "IPv6 connection settings"
+msgstr "Настройки подключения IPv6"
+
+msgid "Connection settings"
+msgstr "Настройки подключения"
+
+msgid "System files"
+msgstr "Системные файлы"
+
+msgid "Download"
+msgstr "Скачать"
+
+#, javascript-format
+msgid "Download %s"
+msgstr "Скачать %s"
+
+msgid "Input"
+msgstr "Вход"
+
+msgid "Output"
+msgstr "Выход"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "Actions"
+msgstr "Действия"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Running"
+msgstr "Работает"
+
+msgid "Not running"
+msgstr "Не запущено"
+
+msgid "Never"
+msgstr "Никогда"
+
+msgid "Update now"
+msgstr "Обновить сейчас"
+
+msgid "Record"
+msgstr "Запись"
+
+msgid "Current IP"
+msgstr "Текущий IP"
+
+msgid "Last update"
+msgstr "Последнее обновление"
+
+# Dynamic DNS
+msgid "Add profile"
+msgstr "Добавить профиль"
+
+msgid "Keep a hostname pointed at this router when its public IP changes. Freenetic uses the native OpenWrt ddns-scripts service and never creates a separate updater."
+msgstr "Сохраняет имя хоста, указывающее на этот роутер при изменении публичного IP. Freenetic использует штатный сервис ddns-scripts OpenWrt и не создаёт отдельный обновлятор."
+
+msgid "DDNS service"
+msgstr "Сервис DDNS"
+
+msgid "Install ddns-scripts to configure Dynamic DNS profiles."
+msgstr "Установите ddns-scripts для настройки профилей динамического DNS."
+
+msgid "This firmware does not provide a compatible ddns-scripts package."
+msgstr "Эта прошивка не предоставляет совместимый пакет ddns-scripts."
+
+msgid "Dynamic DNS is not installed"
+msgstr "Динамический DNS не установлен"
+
+msgid "Open Applications"
+msgstr "Открыть приложения"
+
+msgid "Install ddns-scripts before starting updates."
+msgstr "Установите ddns-scripts перед запуском обновлений."
+
+msgid "Autostart is enabled; profiles run on boot and interface events."
+msgstr "Автозапуск включён; профили запускаются при загрузке и событиях интерфейсов."
+
+msgid "Autostart is disabled; profiles can still be run manually."
+msgstr "Автозапуск отключён; профили по-прежнему можно запускать вручную."
+
+msgid "No Dynamic DNS profiles configured"
+msgstr "Профили динамического DNS не настроены"
+
+msgid "Add a provider and hostname to keep a DNS record synchronized with this router."
+msgstr "Добавьте провайдера и имя хоста, чтобы синхронизировать DNS-запись с этим роутером."
+
+msgid "Provider"
+msgstr "Провайдер"
+
+msgid "Custom provider"
+msgstr "Другой провайдер"
+
+msgid "Hostname"
+msgstr "Имя хоста"
+
+msgid "Configuration error"
+msgstr "Ошибка конфигурации"
+
+msgid "Install ddns-scripts before adding a profile."
+msgstr "Установите ddns-scripts перед добавлением профиля."
+
+msgid "Home router"
+msgstr "Домашний роутер"
+
+msgid "Password or API token"
+msgstr "Пароль или токен API"
+
+msgid "IPv4 address (A)"
+msgstr "IPv4-адрес (A)"
+
+msgid "IPv6 address (AAAA)"
+msgstr "IPv6-адрес (AAAA)"
+
+msgid "Custom update URL"
+msgstr "Пользовательский URL обновления"
+
+msgid "Use [DOMAIN], [USERNAME], [PASSWORD] and [IP] placeholders as required by the provider."
+msgstr "Используйте подстановки [DOMAIN], [USERNAME], [PASSWORD] и [IP] согласно требованиям провайдера."
+
+msgid "Use a provider hostname or your own domain. Credentials stay in the router UCI configuration and are never sent to Freenetic."
+msgstr "Используйте имя хоста провайдера или собственный домен. Учётные данные хранятся в конфигурации UCI роутера и никогда не отправляются в Freenetic."
+
+msgid "Profile ID"
+msgstr "ID профиля"
+
+msgid "Letters, numbers and underscores; used as the OpenWrt service name."
+msgstr "Буквы, цифры и символы подчёркивания; используется как имя сервиса OpenWrt."
+
+msgid "Display name"
+msgstr "Отображаемое имя"
+
+msgid "Password / token"
+msgstr "Пароль / токен"
+
+msgid "Record type"
+msgstr "Тип записи"
+
+msgid "IP address source"
+msgstr "Источник IP-адреса"
+
+msgid "Profile enabled"
+msgstr "Профиль включён"
+
+msgid "Edit DDNS profile"
+msgstr "Изменить профиль DDNS"
+
+msgid "Add DDNS profile"
+msgstr "Добавить профиль DDNS"
+
+msgid "Profile ID must start with a letter and contain only letters, numbers or underscores."
+msgstr "ID профиля должен начинаться с буквы и содержать только буквы, цифры или символы подчёркивания."
+
+msgid "Enter a display name."
+msgstr "Введите отображаемое имя."
+
+msgid "Enter a valid hostname, for example home.example.com."
+msgstr "Введите корректное имя хоста, например home.example.com."
+
+msgid "Enter an HTTP or HTTPS update URL for the custom provider."
+msgstr "Введите URL обновления HTTP или HTTPS для другого провайдера."
+
+msgid "That profile ID is already in use."
+msgstr "Этот ID профиля уже используется."
+
+#, javascript-format
+msgid "DDNS profile saved."
+msgstr "Профиль DDNS сохранён."
+
+msgid "DDNS profile added."
+msgstr "Профиль DDNS добавлен."
+
+#, javascript-format
+msgid "The DDNS service could not be restarted: %s"
+msgstr "Не удалось перезапустить сервис DDNS: %s"
+
+#, javascript-format
+msgid "Failed to save DDNS profile: %s"
+msgstr "Не удалось сохранить профиль DDNS: %s"
+
+msgid "Updating…"
+msgstr "Обновление…"
+
+#, javascript-format
+msgid "DDNS update started for %s."
+msgstr "Обновление DDNS запущено для %s."
+
+#, javascript-format
+msgid "DDNS update failed: %s"
+msgstr "Не удалось обновить DDNS: %s"
+
+#, javascript-format
+msgid "Failed to change DDNS profile state: %s"
+msgstr "Не удалось изменить состояние профиля DDNS: %s"
+
+#, javascript-format
+msgid "Delete DDNS profile %s?"
+msgstr "Удалить профиль DDNS %s?"
+
+msgid "DDNS profile deleted."
+msgstr "Профиль DDNS удалён."
+
+#, javascript-format
+msgid "Failed to delete DDNS profile: %s"
+msgstr "Не удалось удалить профиль DDNS: %s"
+
+# Firewall
+msgid "Any"
+msgstr "Любой"
+
+msgid "Reject"
+msgstr "Отклонить"
+
+msgid "Block"
+msgstr "Блокировать"
+
+msgid "Allow"
+msgstr "Разрешить"
+
+msgid "Add rule"
+msgstr "Добавить правило"
+
+msgid "Rules control what traffic is allowed to pass between segments and the internet. Rules are evaluated top to bottom — the first match wins."
+msgstr "Правила определяют, какой трафик может проходить между сегментами и интернетом. Правила проверяются сверху вниз — применяется первое совпадение."
+
+msgid "Traffic"
+msgstr "Трафик"
+
+msgid "No firewall rules configured."
+msgstr "Правила межсетевого экрана не настроены."
+
+msgid "any"
+msgstr "любой"
+
+msgid "e.g. Block IoT from internet"
+msgstr "например, запретить IoT-доступ в интернет"
+
+msgid "From"
+msgstr "Откуда"
+
+msgid "To"
+msgstr "Куда"
+
+msgid "Source address"
+msgstr "Адрес источника"
+
+msgid "Destination address"
+msgstr "Адрес назначения"
+
+msgid "Source port"
+msgstr "Порт источника"
+
+msgid "Destination port"
+msgstr "Порт назначения"
+
+msgid "Please enter a name for the rule."
+msgstr "Введите имя правила."
+
+msgid "Rule saved."
+msgstr "Правило сохранено."
+
+msgid "Rule added."
+msgstr "Правило добавлено."
+
+#, javascript-format
+msgid "Failed to save rule: %s"
+msgstr "Не удалось сохранить правило: %s"
+
+#, javascript-format
+msgid "Failed to apply change: %s"
+msgstr "Не удалось применить изменение: %s"
+
+msgid "Rule deleted."
+msgstr "Правило удалено."
+
+#, javascript-format
+msgid "Failed to delete rule: %s"
+msgstr "Не удалось удалить правило: %s"
+
+# My Networks & Wi-Fi
+msgid "Password (min. 8 characters)"
+msgstr "Пароль (не менее 8 символов)"
+
+msgid "Splitting your network into segments improves security and lets you tune each one independently."
+msgstr "Разделение сети на сегменты повышает безопасность и позволяет настраивать каждый сегмент отдельно."
+
+msgid "Requires the avahi-daemon package (not installed)."
+msgstr "Требуется пакет avahi-daemon (не установлен)."
+
+msgid "Relay mDNS"
+msgstr "Ретрансляция mDNS"
+
+msgid "Passes mDNS and DNS-SD announcements between all network segments."
+msgstr "Передаёт объявления mDNS и DNS-SD между всеми сетевыми сегментами."
+
+msgid "Pool start address"
+msgstr "Начальный адрес пула"
+
+msgid "Pool size"
+msgstr "Размер пула"
+
+msgid "Lease time, sec"
+msgstr "Время аренды, сек."
+
+msgid "Gateway address"
+msgstr "Адрес шлюза"
+
+msgid "DNS server 1"
+msgstr "DNS-сервер 1"
+
+msgid "DNS server 2"
+msgstr "DNS-сервер 2"
+
+msgid "Show DHCP settings"
+msgstr "Показать настройки DHCP"
+
+msgid "Hide DHCP settings"
+msgstr "Скрыть настройки DHCP"
+
+msgid "IP address"
+msgstr "IP-адрес"
+
+msgid "Subnet mask"
+msgstr "Маска подсети"
+
+msgid "DHCP server enabled"
+msgstr "DHCP-сервер включён"
+
+msgid "DHCP server disabled"
+msgstr "DHCP-сервер отключён"
+
+msgid "Segment name"
+msgstr "Имя сегмента"
+
+msgid "Wireless networks"
+msgstr "Беспроводные сети"
+
+msgid "IP parameters"
+msgstr "Параметры IP"
+
+msgid "Enable IPv4"
+msgstr "Включить IPv4"
+
+msgid "Delete segment"
+msgstr "Удалить сегмент"
+
+msgid "Guest network name"
+msgstr "Имя гостевой сети"
+
+msgid "Network name (SSID)"
+msgstr "Имя сети (SSID)"
+
+msgid "No security"
+msgstr "Без защиты"
+
+msgid "Name (SSID)"
+msgstr "Имя (SSID)"
+
+msgid "Security"
+msgstr "Защита"
+
+#, javascript-format
+msgid "Wireless network Wi-Fi %s"
+msgstr "Беспроводная сеть Wi‑Fi %s"
+
+msgid "Auto"
+msgstr "Авто"
+
+#, javascript-format
+msgid "Channel %d (%d MHz)"
+msgstr "Канал %d (%d МГц)"
+
+msgid "MHz"
+msgstr "МГц"
+
+msgid "Channel width"
+msgstr "Ширина канала"
+
+msgid "Transmit power"
+msgstr "Мощность передачи"
+
+msgid "Regulatory region"
+msgstr "Регион регулирования"
+
+msgid "Advanced settings"
+msgstr "Расширенные настройки"
+
+msgid "Hide advanced settings"
+msgstr "Скрыть расширенные настройки"
+
+msgid "Network settings are identical to the 2.4 GHz network."
+msgstr "Настройки сети совпадают с сетью 2,4 ГГц."
+
+msgid "Same as 2.4 GHz network"
+msgstr "Как в сети 2,4 ГГц"
+
+msgid "Please enter a network name (SSID)."
+msgstr "Введите имя сети (SSID)."
+
+msgid "Please enter a password of at least 8 characters."
+msgstr "Введите пароль длиной не менее 8 символов."
+
+msgid "Settings saved."
+msgstr "Настройки сохранены."
+
+#, javascript-format
+msgid "Failed to save: %s"
+msgstr "Не удалось сохранить: %s"
+
+msgid "Delete the guest network segment? This removes its Wi-Fi networks, IP settings and firewall rules."
+msgstr "Удалить сегмент гостевой сети? Будут удалены его сети Wi‑Fi, IP-настройки и правила межсетевого экрана."
+
+msgid "Guest network deleted."
+msgstr "Гостевая сеть удалена."
+
+#, javascript-format
+msgid "Failed to delete: %s"
+msgstr "Не удалось удалить: %s"
+
+# Other connections / WireGuard
+#, javascript-format
+msgid "%d sec ago"
+msgstr "%d с назад"
+
+#, javascript-format
+msgid "%d min ago"
+msgstr "%d мин назад"
+
+#, javascript-format
+msgid "%d h ago"
+msgstr "%d ч назад"
+
+#, javascript-format
+msgid "%d d ago"
+msgstr "%d дн. назад"
+
+msgid "PrivateKey is missing or invalid."
+msgstr "PrivateKey отсутствует или некорректен."
+
+msgid "Address contains an invalid IP or prefix."
+msgstr "Адрес содержит некорректный IP-адрес или префикс."
+
+msgid "A peer is missing a valid PublicKey."
+msgstr "У пира отсутствует корректный PublicKey."
+
+msgid "A peer has an invalid PresharedKey."
+msgstr "У пира некорректный PresharedKey."
+
+msgid "A peer has an invalid AllowedIPs value."
+msgstr "У пира некорректное значение AllowedIPs."
+
+msgid "A peer has an invalid Endpoint."
+msgstr "У пира некорректная конечная точка."
+
+msgid "Imported connection"
+msgstr "Импортированное подключение"
+
+msgid "Key generation needs rpcd-mod-wireguard."
+msgstr "Для генерации ключей требуется rpcd-mod-wireguard."
+
+msgid "Enter a valid private key first."
+msgstr "Сначала введите корректный приватный ключ."
+
+msgid "Public key calculation needs the WireGuard or AmneziaWG tools package."
+msgstr "Для расчёта публичного ключа требуется пакет инструментов WireGuard или AmneziaWG."
+
+msgid "These values must match the remote AmneziaWG peer. They are ignored by standard WireGuard only when the protocol is explicitly changed to WireGuard."
+msgstr "Эти значения должны совпадать с настройками удалённого пира AmneziaWG. Обычный WireGuard игнорирует их только после явного переключения протокола на WireGuard."
+
+msgid "AmneziaWG support is installed."
+msgstr "Поддержка AmneziaWG установлена."
+
+msgid "AmneziaWG packages are not installed yet. Saving will ask whether to install the optional feed or remove AWG parameters."
+msgstr "Пакеты AmneziaWG ещё не установлены. При сохранении будет предложено подключить дополнительный фид или удалить параметры AWG."
+
+msgid "Standard WireGuard does not use AmneziaWG obfuscation parameters."
+msgstr "Обычный WireGuard не использует параметры обфускации AmneziaWG."
+
+msgid "Use the native OpenWrt interface and peer settings. Private keys stay on the router and are included only when you explicitly export a configuration."
+msgstr "Используйте штатные настройки интерфейса и пиров OpenWrt. Приватные ключи остаются на роутере и включаются в конфигурацию только при явном экспорте."
+
+msgid "Stored for display only; netifd derives the active key from the private key."
+msgstr "Сохраняется только для отображения; netifd получает рабочий ключ из приватного."
+
+msgid "Required Base64 public key"
+msgstr "Обязательный публичный ключ Base64"
+
+msgid "Optional private key"
+msgstr "Необязательный приватный ключ"
+
+msgid "Optional preshared key"
+msgstr "Необязательный предварительно согласованный ключ"
+
+msgid "Preshared key generation needs the WireGuard or AmneziaWG tools package."
+msgstr "Для генерации предварительно согласованного ключа требуется пакет инструментов WireGuard или AmneziaWG."
+
+msgid "Generate PSK"
+msgstr "Сгенерировать PSK"
+
+msgid "Remove peer"
+msgstr "Удалить пира"
+
+msgid "Private key (optional)"
+msgstr "Приватный ключ (необязательно)"
+
+msgid "Preshared key (optional)"
+msgstr "Предварительно согласованный ключ (необязательно)"
+
+msgid "Enter a connection name."
+msgstr "Введите имя подключения."
+
+msgid "Enter a valid Base64 private key or generate one."
+msgstr "Введите корректный приватный ключ Base64 или сгенерируйте его."
+
+msgid "Enter at least one valid interface address."
+msgstr "Укажите хотя бы один корректный адрес интерфейса."
+
+msgid "Listen port must be between 1 and 65535."
+msgstr "Порт прослушивания должен быть от 1 до 65535."
+
+msgid "MTU must be between 576 and 8940."
+msgstr "MTU должен быть от 576 до 8940."
+
+msgid "Firewall mark must be hexadecimal, for example 0x1000."
+msgstr "Метка межсетевого экрана должна быть шестнадцатеричной, например 0x1000."
+
+msgid "DNS servers must be valid IP addresses."
+msgstr "DNS-серверы должны быть корректными IP-адресами."
+
+#, javascript-format
+msgid "%s is outside its supported range."
+msgstr "Значение %s выходит за допустимый диапазон."
+
+msgid "Every peer needs a valid Base64 public key."
+msgstr "Каждому пиру нужен корректный публичный ключ Base64."
+
+msgid "A peer has an invalid private key."
+msgstr "У пира некорректный приватный ключ."
+
+msgid "A peer has an invalid preshared key."
+msgstr "У пира некорректный предварительно согласованный ключ."
+
+msgid "A peer has an invalid Allowed IPs value."
+msgstr "У пира некорректное значение разрешённых IP-адресов."
+
+msgid "A peer has an invalid endpoint."
+msgstr "У пира некорректная конечная точка."
+
+msgid "Persistent keepalive must be between 0 and 65535."
+msgstr "Постоянное поддержание соединения должно быть от 0 до 65535."
+
+#, javascript-format
+msgid "Delete connection \"%s\" and all its peers?"
+msgstr "Удалить подключение «%s» и всех его пиров?"
+
+msgid "Connection deleted."
+msgstr "Подключение удалено."
+
+#, javascript-format
+msgid "Failed to delete connection: %s"
+msgstr "Не удалось удалить подключение: %s"
+
+msgid "This connection has no private key to export."
+msgstr "У этого подключения нет приватного ключа для экспорта."
+
+msgid "The exported file contains private keys. Continue?"
+msgstr "Экспортируемый файл содержит приватные ключи. Продолжить?"
+
+msgid "this router target"
+msgstr "цель этого роутера"
+
+msgid "Install AmneziaWG support"
+msgstr "Установить поддержку AmneziaWG"
+
+msgid "AWG parameters were removed. The connection will be saved as standard WireGuard."
+msgstr "Параметры AWG удалены. Подключение будет сохранено как обычный WireGuard."
+
+msgid "Use standard WireGuard"
+msgstr "Использовать обычный WireGuard"
+
+msgid "AmneziaWG support is required"
+msgstr "Требуется поддержка AmneziaWG"
+
+msgid "This configuration contains AmneziaWG obfuscation parameters. Standard WireGuard cannot use Jc/Jmin/Jmax, S1/S2 or H1–H4, so they must not be written to a regular WireGuard interface."
+msgstr "Эта конфигурация содержит параметры обфускации AmneziaWG. Обычный WireGuard не поддерживает Jc/Jmin/Jmax, S1/S2 и H1–H4, поэтому их нельзя записывать в обычный интерфейс WireGuard."
+
+msgid "Target-specific signed feed"
+msgstr "Подписанный фид для конкретной цели"
+
+#, javascript-format
+msgid "The installer will use the AmneziaWG feed for %s and verify its signing key. A package must exist for this exact OpenWrt release and kernel."
+msgstr "Установщик использует фид AmneziaWG для %s и проверит его ключ подписи. Для этой версии OpenWrt и ядра должен существовать подходящий пакет."
+
+msgid "Install AmneziaWG"
+msgstr "Установить AmneziaWG"
+
+msgid "Keep every AWG parameter and install the kernel module, tools and LuCI protocol."
+msgstr "Сохранить все параметры AWG и установить модуль ядра, инструменты и протокол LuCI."
+
+msgid "Continue as standard WireGuard"
+msgstr "Продолжить как обычный WireGuard"
+
+msgid "Remove only the AWG-specific parameters and keep the common interface and peer settings."
+msgstr "Удалить только параметры AWG и сохранить общие настройки интерфейса и пиров."
+
+msgid "Import a standard WireGuard or legacy AmneziaWG configuration. AWG parameters are detected automatically and never silently discarded."
+msgstr "Импортируйте обычную конфигурацию WireGuard или старую конфигурацию AmneziaWG. Параметры AWG определяются автоматически и никогда не удаляются без предупреждения."
+
+msgid "Connect the signed AmneziaWG feed and install its kernel module and LuCI protocol? The router needs internet access and a compatible package for its exact OpenWrt kernel."
+msgstr "Подключить подписанный фид AmneziaWG и установить его модуль ядра и протокол LuCI? Роутеру нужен доступ в интернет и пакет, совместимый с его точным ядром OpenWrt."
+
+msgid "Installing…"
+msgstr "Установка…"
+
+msgid "No compatible AWG package was found."
+msgstr "Совместимый пакет AWG не найден."
+
+msgid "AmneziaWG support installed. Network service restarted."
+msgstr "Поддержка AmneziaWG установлена. Сетевой сервис перезапущен."
+
+#, javascript-format
+msgid "AmneziaWG support installed, but the network service could not be restarted: %s Reboot the router before starting a new AWG interface."
+msgstr "Поддержка AmneziaWG установлена, но сетевой сервис не удалось перезапустить: %s Перезагрузите роутер перед запуском нового интерфейса AWG."
+
+#, javascript-format
+msgid "AmneziaWG installation failed: %s"
+msgstr "Не удалось установить AmneziaWG: %s"
+
+# Port forwarding
+msgid "Port Forwarding Rules"
+msgstr "Правила перенаправления портов"
+
+msgid "No open ports"
+msgstr "Открытых портов нет"
+
+msgid "Here, you can allow access to services on your network from the Internet using both the IPv4 (port forwarding) and IPv6 (pinholing) protocols. When the setting is enabled, the firewall will permit incoming service traffic to reach a local destination. You can also monitor the rules automatically created via UPnP."
+msgstr "Здесь можно открыть доступ из интернета к сервисам вашей сети через IPv4 (перенаправление портов) и IPv6 (pinholing). При включении настройки межсетевой экран разрешит входящий трафик к локальному адресу. Также можно просматривать правила, автоматически созданные через UPnP."
+
+msgid "UPnP Port Forwarding Table"
+msgstr "Таблица перенаправления портов UPnP"
+
+msgid "No rules created so far."
+msgstr "Правила ещё не созданы."
+
+msgid "External port"
+msgstr "Внешний порт"
+
+msgid "Internal address"
+msgstr "Внутренний адрес"
+
+msgid "Select a destination"
+msgstr "Выберите назначение"
+
+msgid "Enter address manually"
+msgstr "Ввести адрес вручную"
+
+msgid "same as external"
+msgstr "совпадает с внешним"
+
+msgid "Open the port"
+msgstr "Открыть порт"
+
+msgid "Open the ports"
+msgstr "Открыть порты"
+
+msgid "Redirect to port"
+msgstr "Перенаправить на порт"
+
+msgid "Fill in this field"
+msgstr "Заполните это поле"
+
+msgid "To grant access to the local network from the outside, select the network interface or subnet address and the protocol/port for the incoming traffic. For the outgoing traffic, select the client or interface destination. Port redirection can be set for single-port rules."
+msgstr "Чтобы предоставить доступ к локальной сети извне, выберите сетевой интерфейс или адрес подсети, а также протокол и порт входящего трафика. Для исходящего трафика выберите клиента или интерфейс назначения. Перенаправление можно настроить для правил с одним портом."
+
+msgid "Enable rule"
+msgstr "Включить правило"
+
+msgid "Rule type"
+msgstr "Тип правила"
+
+msgid "Single port"
+msgstr "Один порт"
+
+msgid "Port range"
+msgstr "Диапазон портов"
+
+msgid "Work schedule"
+msgstr "Расписание работы"
+
+msgid "Always on"
+msgstr "Всегда включено"
+
+msgid "Port Forwarding Rule"
+msgstr "Правило перенаправления порта"
+
+msgid "Please enter an external port."
+msgstr "Введите внешний порт."
+
+msgid "External port must be a number or a range (e.g. 8080-8090)."
+msgstr "Внешний порт должен быть числом или диапазоном (например, 8080-8090)."
+
+msgid "Please enter a valid internal IPv6 address."
+msgstr "Введите корректный внутренний IPv6-адрес."
+
+msgid "Please enter a valid internal IPv4 address."
+msgstr "Введите корректный внутренний IPv4-адрес."
+
+# Routing
+msgid "invalid IPv4 destination"
+msgstr "некорректное назначение IPv4"
+
+msgid "invalid IPv4 netmask"
+msgstr "некорректная маска IPv4"
+
+msgid "invalid IPv4 gateway"
+msgstr "некорректный шлюз IPv4"
+
+msgid "invalid IPv6 destination"
+msgstr "некорректное назначение IPv6"
+
+msgid "invalid IPv6 prefix"
+msgstr "некорректный префикс IPv6"
+
+msgid "invalid IPv6 gateway"
+msgstr "некорректный шлюз IPv6"
+
+msgid "invalid metric"
+msgstr "некорректная метрика"
+
+msgid "expected an ADD route record"
+msgstr "ожидалась запись маршрута ADD"
+
+msgid "User routes take priority over dynamically learned routes. Configure access to IP addresses and networks through a selected gateway or network interface."
+msgstr "Пользовательские маршруты имеют приоритет над динамически полученными. Настройте доступ к IP-адресам и сетям через выбранный шлюз или сетевой интерфейс."
+
+#, javascript-format
+msgid "%d route%s saved."
+msgstr "Сохранено маршрутов: %d%s."
+
+#, javascript-format
+msgid "Failed to save routes: %s"
+msgstr "Не удалось сохранить маршруты: %s"
+
+#, javascript-format
+msgid "Delete %d selected route%s?"
+msgstr "Удалить выбранные маршруты (%d%s)?"
+
+#, javascript-format
+msgid "%d route%s deleted."
+msgstr "Удалено маршрутов: %d%s."
+
+#, javascript-format
+msgid "Failed to delete routes: %s"
+msgstr "Не удалось удалить маршруты: %s"
+
+#, javascript-format
+msgid "Select route %s"
+msgstr "Выбрать маршрут %s"
+
+msgid "Select all DNS routes"
+msgstr "Выбрать все DNS-маршруты"
+
+#, javascript-format
+msgid "Select DNS route %s"
+msgstr "Выбрать DNS-маршрут %s"
+
+#, javascript-format
+msgid "%d other dnsmasq server entr%s are preserved."
+msgstr "Сохранено других записей серверов dnsmasq: %d%s."
+
+msgid "DNS forwarding rules are listed in the DNS routes table above."
+msgstr "Правила перенаправления DNS перечислены в расположенной выше таблице DNS-маршрутов."
+
+msgid "There are no kernel routes to display for DNS routing."
+msgstr "Нет маршрутов ядра для отображения в DNS-маршрутизации."
+
+msgid "Apply the route when the selected gateway or interface is available."
+msgstr "Применять маршрут, когда выбранный шлюз или интерфейс доступен."
+
+msgid "Choose a route type and destination. Enter a gateway or select the interface through which traffic should be sent."
+msgstr "Выберите тип и назначение маршрута. Введите шлюз или выберите интерфейс, через который нужно отправлять трафик."
+
+msgid "Queries for this domain will be forwarded to the selected DNS server."
+msgstr "Запросы для этого домена будут направляться на выбранный DNS-сервер."
+
+msgid "Route files are limited to 2 MiB."
+msgstr "Размер файла маршрутов ограничен 2 МиБ."
+
+msgid "Unable to read the selected route file."
+msgstr "Не удалось прочитать выбранный файл маршрутов."
+
+msgid "Family"
+msgstr "Семейство"
+
+#, javascript-format
+msgid "%d route record%s parsed from %s. Select the records to import and choose their OpenWrt interface."
+msgstr "Разобрано записей маршрутов: %d%s из файла %s. Выберите записи для импорта и интерфейс OpenWrt."
+
+#, javascript-format
+msgid "No compatible route records were found in %s."
+msgstr "В файле %s не найдено совместимых записей маршрутов."
+
+msgid "1 unrelated line was ignored."
+msgstr "Проигнорирована 1 посторонняя строка."
+
+#, javascript-format
+msgid "%d unrelated lines were ignored."
+msgstr "Проигнорировано посторонних строк: %d."
+
+msgid "1 route line needs attention:"
+msgstr "Требует проверки 1 строка маршрута:"
+
+#, javascript-format
+msgid "%d route lines need attention:"
+msgstr "Требуют проверки строк маршрутов: %d."
+
+#, javascript-format
+msgid "Line %d: %s"
+msgstr "Строка %d: %s"
+
+msgid "Only the first 20 errors are shown."
+msgstr "Показаны только первые 20 ошибок."
+
+msgid "All selected routes already exist for this interface."
+msgstr "Все выбранные маршруты уже существуют для этого интерфейса."
+
+#, javascript-format
+msgid "%d duplicate route%s skipped."
+msgstr "Пропущено дубликатов маршрутов: %d%s."
+
+msgid "IPv6 prefix must be between 0 and 128."
+msgstr "Префикс IPv6 должен быть от 0 до 128."
+
+msgid "A host route must use the /128 prefix."
+msgstr "Для маршрута к узлу необходимо использовать префикс /128."
+
+msgid "A network route must include a CIDR prefix."
+msgstr "Маршрут к сети должен содержать префикс CIDR."
+
+msgid "Use Route to host for a /128 destination."
+msgstr "Для назначения /128 выберите «Маршрут к узлу»."
+
+msgid "IPv4 prefix must be between 0 and 32."
+msgstr "Префикс IPv4 должен быть от 0 до 32."
+
+msgid "A host route must use the /32 prefix."
+msgstr "Для маршрута к узлу необходимо использовать префикс /32."
+
+msgid "Use Route to host for a /32 destination."
+msgstr "Для назначения /32 выберите «Маршрут к узлу»."
+
+#, javascript-format
+msgid "Delete this %s route?"
+msgstr "Удалить этот маршрут %s?"
+
+msgid "Enter a valid domain pattern."
+msgstr "Введите корректный шаблон домена."
+
+msgid "DNS server must be an IPv4/IPv6 address, optionally followed by #port."
+msgstr "DNS-сервер должен быть IPv4/IPv6-адресом, за которым при необходимости следует #порт."
+
+msgid "Delete this DNS route?"
+msgstr "Удалить этот DNS-маршрут?"
+
+# WAN connection settings
+msgid "Automatic (DHCP)"
+msgstr "Автоматически (DHCP)"
+
+msgid "PPPoE"
+msgstr "PPPoE"
+
+msgid "Static IP"
+msgstr "Статический IP"
+
+msgid "Login"
+msgstr "Имя пользователя"
+
+msgid "VLAN ID"
+msgstr "ID VLAN"
+
+msgid "Automatic (DHCPv6)"
+msgstr "Автоматически (DHCPv6)"
+
+msgid "Static IPv6"
+msgstr "Статический IPv6"
+
+msgid "Try to request an address"
+msgstr "Попробовать запросить адрес"
+
+msgid "Require an address"
+msgstr "Требовать адрес"
+
+msgid "Do not request an address"
+msgstr "Не запрашивать адрес"
+
+msgid "Automatic prefix"
+msgstr "Автоматический префикс"
+
+msgid "/48 prefix"
+msgstr "Префикс /48"
+
+msgid "/56 prefix"
+msgstr "Префикс /56"
+
+msgid "/60 prefix"
+msgstr "Префикс /60"
+
+msgid "/64 prefix"
+msgstr "Префикс /64"
+
+msgid "Do not request a prefix"
+msgstr "Не запрашивать префикс"
+
+msgid "Delegated prefix"
+msgstr "Делегированный префикс"
+
+msgid "Request address"
+msgstr "Запрашивать адрес"
+
+msgid "Prefix delegation"
+msgstr "Делегирование префикса"
+
+msgid "Please enter the PPPoE login and password."
+msgstr "Введите имя пользователя и пароль PPPoE."
+
+msgid "Please enter a valid IP address, subnet mask and gateway."
+msgstr "Введите корректные IP-адрес, маску подсети и шлюз."
+
+msgid "VLAN ID must be a number."
+msgstr "ID VLAN должен быть числом."
+
+msgid "VLAN ID must be between 1 and 4094."
+msgstr "ID VLAN должен быть от 1 до 4094."
+
+msgid "Please enter a valid DNS server address."
+msgstr "Введите корректный адрес DNS-сервера."
+
+msgid "IPv4 connection settings saved."
+msgstr "Настройки подключения IPv4 сохранены."
+
+msgid "Please enter a valid IPv6 address with prefix and gateway."
+msgstr "Введите корректный IPv6-адрес с префиксом и шлюзом."
+
+msgid "Please enter a valid delegated IPv6 prefix."
+msgstr "Введите корректный делегированный префикс IPv6."
+
+msgid "Please enter a valid IPv6 DNS server address."
+msgstr "Введите корректный адрес DNS-сервера IPv6."
+
+msgid "IPv6 connection settings saved."
+msgstr "Настройки подключения IPv6 сохранены."
+
+#, javascript-format
+msgid "Failed to save IPv6 settings: %s"
+msgstr "Не удалось сохранить настройки IPv6: %s"
+
+# Access & Routing Policy
+msgid "Install Policy-based routing and configure a WireGuard connection first."
+msgstr "Сначала установите маршрутизацию по политикам и настройте подключение WireGuard."
+
+msgid "A non-Freenetic firewall rule already uses this device exception name."
+msgstr "Это имя исключения устройства уже используется сторонним правилом межсетевого экрана."
+
+msgid "The policy routing service did not restart."
+msgstr "Сервис маршрутизации по политикам не перезапустился."
+
+msgid "A firewall zone for this network and the Internet is required."
+msgstr "Для этой сети и интернета требуется зона межсетевого экрана."
+
+msgid "A non-Freenetic pbr policy already uses this name."
+msgstr "Это имя уже используется сторонней политикой pbr."
+
+msgid "A non-Freenetic firewall rule already uses this name."
+msgstr "Это имя уже используется сторонним правилом межсетевого экрана."
+
+#, javascript-format
+msgid "Traffic policy saved, but policy routing could not be reloaded: %s"
+msgstr "Политика трафика сохранена, но маршрутизацию по политикам не удалось перезагрузить: %s"
+
+#, javascript-format
+msgid "Traffic policy saved for %s."
+msgstr "Политика трафика для %s сохранена."
+
+#, javascript-format
+msgid "Failed to save traffic policy: %s"
+msgstr "Не удалось сохранить политику трафика: %s"
+
+msgid "A detected network segment with firewall zones is required for Block Internet."
+msgstr "Для блокировки интернета требуется обнаруженный сетевой сегмент с зонами межсетевого экрана."
+
+msgid "A non-Freenetic pbr policy already uses this device name."
+msgstr "Это имя устройства уже используется сторонней политикой pbr."
+
+msgid "A non-Freenetic firewall rule already uses this device name."
+msgstr "Это имя устройства уже используется сторонним правилом межсетевого экрана."
+
+#, javascript-format
+msgid "Device policy saved, but policy routing could not be reloaded: %s"
+msgstr "Политика устройства сохранена, но маршрутизацию по политикам не удалось перезагрузить: %s"
+
+#, javascript-format
+msgid "Device policy saved for %s."
+msgstr "Политика устройства для %s сохранена."
+
+#, javascript-format
+msgid "Failed to save device policy: %s"
+msgstr "Не удалось сохранить политику устройства: %s"
+
+# Client list
+msgid "Devices seen on the network but without a saved reservation show up as unregistered. Registering a client keeps its name and address even while it's offline."
+msgstr "Устройства, замеченные в сети без сохранённой резервации, отображаются как незарегистрированные. Регистрация сохраняет имя и адрес клиента, даже когда он не в сети."
+
+msgid "Unregistered clients"
+msgstr "Незарегистрированные клиенты"
+
+msgid "Registered clients"
+msgstr "Зарегистрированные клиенты"
+
+msgid "Blocked clients"
+msgstr "Заблокированные клиенты"
+
+msgid "Not in network"
+msgstr "Не в сети"
+
+msgid "No unregistered clients."
+msgstr "Незарегистрированных клиентов нет."
+
+msgid "Register"
+msgstr "Зарегистрировать"
+
+msgid "No registered clients."
+msgstr "Зарегистрированных клиентов нет."
+
+msgid "Forget"
+msgstr "Забыть"
+
+msgid "No blocked clients."
+msgstr "Заблокированных клиентов нет."
+
+msgid "Unblock"
+msgstr "Разблокировать"
+
+msgid "Client"
+msgstr "Клиент"
+
+msgid "Segment"
+msgstr "Сегмент"
+
+msgid "Connection"
+msgstr "Подключение"
+
+msgid "private"
+msgstr "частный"
+
+msgid "Client registered."
+msgstr "Клиент зарегистрирован."
+
+#, javascript-format
+msgid "Failed to register client: %s"
+msgstr "Не удалось зарегистрировать клиента: %s"
+
+msgid "Client forgotten."
+msgstr "Клиент забыт."
+
+#, javascript-format
+msgid "Failed to forget client: %s"
+msgstr "Не удалось забыть клиента: %s"
+
+msgid "Client blocked."
+msgstr "Клиент заблокирован."
+
+#, javascript-format
+msgid "Failed to block client: %s"
+msgstr "Не удалось заблокировать клиента: %s"
+
+msgid "Client unblocked."
+msgstr "Клиент разблокирован."
+
+#, javascript-format
+msgid "Failed to unblock client: %s"
+msgstr "Не удалось разблокировать клиента: %s"
+
+# Dashboard and applications
+msgid "PPPoE connection"
+msgstr "Подключение PPPoE"
+
+msgid "PPPoA connection"
+msgstr "Подключение PPPoA"
+
+msgid "IPv6 connection"
+msgstr "Подключение IPv6"
+
+msgid "Ethernet connection"
+msgstr "Ethernet-подключение"
+
+msgid "Internet (WAN)"
+msgstr "Интернет (WAN)"
+
+msgid "Found a release without APK assets:"
+msgstr "Найдена версия без APK-файлов:"
+
+msgid "The network service did not restart."
+msgstr "Сетевой сервис не перезапустился."
+
+msgid "These packages can change routing, DNS, firewall rules or traffic processing. Install them only when you understand their interaction with the current network setup."
+msgstr "Эти пакеты могут изменять маршрутизацию, DNS, правила межсетевого экрана или обработку трафика. Устанавливайте их только понимая их взаимодействие с текущей настройкой сети."
+
+# System / firmware
+msgid "Files for managing this device. You can save them to your computer, or replace the running firmware with a saved one."
+msgstr "Файлы для управления устройством. Их можно сохранить на компьютер или заменить работающую прошивку сохранённой копией."
+
+msgid "Raw bootloader partitions, for diagnostics and backups before risky low-level operations. Read-only — download to save them to your computer."
+msgstr "Необработанные разделы загрузчика для диагностики и резервного копирования перед рискованными низкоуровневыми операциями. Только чтение — скачайте их, чтобы сохранить на компьютере."
+
+msgid "Download firmware image"
+msgstr "Скачать образ прошивки"
+
+msgid "Flash a new firmware image"
+msgstr "Прошить новый образ"
+
+msgid "Download configuration and package list"
+msgstr "Скачать конфигурацию и список пакетов"
+
+msgid "Restore (coming soon)"
+msgstr "Восстановить (скоро)"
+
+msgid "Full device settings — configuration files and the list of installed packages"
+msgstr "Полные настройки устройства — файлы конфигурации и список установленных пакетов"
+
+msgid "Failed to build the backup archive."
+msgstr "Не удалось создать архив резервной копии."
+
+msgid "Checking image…"
+msgstr "Проверка образа…"
+
+msgid "Verifying the uploaded image file."
+msgstr "Проверка загруженного файла образа."
+
+msgid "Image check failed"
+msgstr "Проверка образа не пройдена"
+
+msgid "Flash new firmware image?"
+msgstr "Прошить новый образ?"
+
+msgid "The uploaded image passed verification. Flashing starts immediately and cannot be undone — the device will reboot when done. The theme is preserved across the upgrade."
+msgstr "Загруженный образ прошёл проверку. Прошивка начнётся сразу и необратима — после завершения устройство перезагрузится. Тема сохранится после обновления."
+
+msgid "Flashing…"
+msgstr "Прошивка…"
+
+msgid "The firmware is being flashed. Do not power off the device."
+msgstr "Выполняется прошивка. Не выключайте устройство."
+
+msgid "Rebooting…"
+msgstr "Перезагрузка…"
+
+msgid "The system is rebooting now."
+msgstr "Система перезагружается."
+
+msgid "Flash"
+msgstr "Прошить"
+
+msgid "Firmware"
+msgstr "Прошивка"
+
+msgid "Startup configuration"
+msgstr "Начальная конфигурация"
+
+msgid "Factory partition"
+msgstr "Заводской раздел"
+
+# Route operation summaries use count-only messages so Russian wording does
+# not inherit the English plural suffix passed by the old UI.
+#, javascript-format
+msgid "Saved routes: %d."
+msgstr "Сохранено маршрутов: %d."
+
+#, javascript-format
+msgid "Delete selected routes (%d)?"
+msgstr "Удалить выбранные маршруты (%d шт.)?"
+
+#, javascript-format
+msgid "Deleted routes: %d."
+msgstr "Удалено маршрутов: %d."
+
+#, javascript-format
+msgid "Other dnsmasq server entries preserved: %d."
+msgstr "Сохранено других записей серверов dnsmasq: %d."
+
+#, javascript-format
+msgid "Parsed route records: %d from %s. Select the records to import and choose their OpenWrt interface."
+msgstr "Разобрано записей маршрутов: %d из файла %s. Выберите записи для импорта и интерфейс OpenWrt."
+
+#, javascript-format
+msgid "Skipped duplicate routes: %d."
+msgstr "Пропущено дубликатов маршрутов: %d."
+
+#, javascript-format
+msgid "Imported routes: %d."
+msgstr "Импортировано маршрутов: %d."

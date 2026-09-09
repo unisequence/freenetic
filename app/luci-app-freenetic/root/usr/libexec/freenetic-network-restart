@@ -1,0 +1,32 @@
+#!/bin/sh
+# Restart netifd after installing a package that adds a network protocol
+# handler.  The helper is intentionally narrow: callers cannot select an
+# arbitrary init script or pass arguments through rpcd.
+
+set -u
+
+fail() {
+	printf '{"ok":false,"error":"%s"}\n' "$1"
+	exit 0
+}
+
+[ "$(id -u)" = 0 ] || fail "The network service restart requires root privileges."
+[ -x /etc/init.d/network ] || fail "The OpenWrt network service is unavailable."
+
+if ! /etc/init.d/network restart >/dev/null 2>&1; then
+	fail "The OpenWrt network service failed to restart."
+fi
+
+# procd starts netifd asynchronously.  Wait briefly so a successful response
+# means that the daemon which loads netifd protocol handlers is actually back.
+attempt=0
+while [ "$attempt" -lt 10 ]; do
+	if pidof netifd >/dev/null 2>&1; then
+		printf '{"ok":true,"service":"netifd"}\n'
+		exit 0
+	fi
+	attempt=$((attempt + 1))
+	sleep 1
+done
+
+fail "netifd did not start after the network service restart."

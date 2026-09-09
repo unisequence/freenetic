@@ -3,6 +3,7 @@
 'require ui';
 'require uci';
 'require fs';
+'require rpc';
 
 function svgIcon(d, size) {
 	size = size || 18;
@@ -14,6 +15,12 @@ function svgIcon(d, size) {
 }
 
 const GEAR_PATH = 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1';
+const commitUci = rpc.declare({
+	object: 'uci',
+	method: 'commit',
+	params: [ 'config' ],
+	reject: true
+});
 
 return baseclass.extend({
 	__init__() {
@@ -149,8 +156,19 @@ return baseclass.extend({
 		syncSettingsA11y();
 
 		langSelect.addEventListener('change', () => {
+			if (langSelect.value === curlang)
+				return;
 			uci.set('luci', 'main', 'lang', langSelect.value);
-			uci.save().then(() => location.reload());
+			/* Language is read by the next LuCI request and does not need a
+			   network-safe checked apply. Commit this small luci-only change
+			   directly so switching languages cannot leave a rollback timer or
+			   an "Unsaved Changes" banner behind. */
+			uci.save().then(() => commitUci('luci'))
+				.then(() => location.reload())
+				.catch(error => {
+					langSelect.value = curlang;
+					ui.addNotification(null, E('p', {}, _('Failed to save language: %s').format(error.message || error)));
+				});
 		});
 
 		themeSelect.addEventListener('change', () => {

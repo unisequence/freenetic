@@ -10,6 +10,30 @@ THEME_PACKAGE_DIR="$APP_DIR/luci-theme-freenetic"
 APPLICATION_PACKAGE_DIR="$APP_DIR/luci-app-freenetic"
 THEME_WEB_DIR="$PROJECT_DIR/web/theme"
 APPLICATION_WEB_DIR="$PROJECT_DIR/web/application"
+RU_PO_FILE="$APPLICATION_PACKAGE_DIR/po/ru/freenetic.po"
+
+# A normal OpenWrt package build turns PO catalogs into LMO files through
+# luci-base's host tool.  Development deployments should expose the same
+# locale immediately when that tool is available in PATH or in the local
+# OpenWrt build tree.
+PO2LMO_BIN="${PO2LMO:-}"
+if [ -z "$PO2LMO_BIN" ]; then
+    PO2LMO_BIN="$(command -v po2lmo 2>/dev/null || true)"
+fi
+if [ -z "$PO2LMO_BIN" ] && [ -x "$PROJECT_DIR/../openwrt-upstream/staging_dir/hostpkg/bin/po2lmo" ]; then
+    PO2LMO_BIN="$PROJECT_DIR/../openwrt-upstream/staging_dir/hostpkg/bin/po2lmo"
+fi
+RU_LMO_FILE=""
+cleanup_translation() {
+    if [ -n "$RU_LMO_FILE" ]; then
+        rm -f "$RU_LMO_FILE"
+    fi
+}
+trap cleanup_translation EXIT INT TERM
+if [ -f "$RU_PO_FILE" ] && [ -n "$PO2LMO_BIN" ]; then
+    RU_LMO_FILE="$(mktemp "${TMPDIR:-/tmp}/freenetic-ru.XXXXXX.lmo")"
+    "$PO2LMO_BIN" "$RU_PO_FILE" "$RU_LMO_FILE"
+fi
 
 # Both the /tmp staging dir and the on-router destination dirs are wiped
 # before every extract/copy — tar and cp only ever add/overwrite, so a file
@@ -51,6 +75,7 @@ $SSH_CMD "$ROUTER" '
     cp /tmp/freenetic-pkg/root/usr/share/rpcd/acl.d/*.json /usr/share/rpcd/acl.d/
     cp /tmp/freenetic-pkg/root/usr/libexec/freenetic-* /usr/libexec/
     chmod +x /usr/libexec/freenetic-*
+    mkdir -p /usr/lib/lua/luci/i18n
     mkdir -p /www/cgi-bin
     cp /tmp/freenetic-pkg/root/www/cgi-bin/freenetic-events /www/cgi-bin/freenetic-events
     chmod +x /www/cgi-bin/freenetic-events
@@ -73,6 +98,9 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/settings-freenetic.js \
              /www/luci-static/resources/view/network/freenetic-firewall.js \
              /www/luci-static/resources/view/network/freenetic-mynetworks.js \
+             /www/luci-static/resources/view/network/freenetic-wifi-acl.js \
+             /www/luci-static/resources/view/network/freenetic-other-connections.js \
+             /www/luci-static/resources/view/network/freenetic-ddns.js \
              /www/luci-static/resources/view/network/freenetic-portforward.js \
              /www/luci-static/resources/view/network/freenetic-routing.js \
              /www/luci-static/resources/view/network/freenetic-wan.js \
@@ -84,12 +112,22 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/view/system/freenetic-diagnostics.js \
              /www/luci-static/resources/view/system/freenetic-system.js \
              /www/cgi-bin/freenetic-events \
+             /usr/lib/lua/luci/i18n/freenetic.ru.lmo \
              /usr/share/luci/menu.d/zz-luci-freenetic.json \
              /usr/share/rpcd/acl.d/luci-theme-freenetic.json \
              /usr/share/rpcd/acl.d/luci-app-freenetic.json \
              /usr/libexec/freenetic-backup-call /usr/libexec/freenetic-clear-luci-cache \
-             /usr/libexec/freenetic-diagnostics-call; do
+             /usr/libexec/freenetic-diagnostics-call /usr/libexec/freenetic-awg-feed \
+             /usr/libexec/freenetic-package-status /usr/libexec/freenetic-network-restart \
+             /usr/libexec/freenetic-pbr-restart; do
         grep -qxF "$p" /etc/sysupgrade.conf || echo "$p" >> /etc/sysupgrade.conf
     done
 '
+if [ -n "$RU_LMO_FILE" ]; then
+    $SSH_CMD "$ROUTER" 'mkdir -p /usr/lib/lua/luci/i18n'
+    $SSH_CMD "$ROUTER" 'cat > /usr/lib/lua/luci/i18n/freenetic.ru.lmo' < "$RU_LMO_FILE"
+    $SSH_CMD "$ROUTER" "uci -q set luci.languages.ru='Русский'; uci -q commit luci"
+elif [ -f "$RU_PO_FILE" ]; then
+    echo "Warning: po2lmo was not found; Russian translations will be included by the OpenWrt package build."
+fi
 echo "Deployed. Hard-refresh the LuCI page (Ctrl+Shift+R)."

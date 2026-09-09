@@ -1,0 +1,74 @@
+#!/bin/sh
+# Return compact availability information for a finite package list.
+#
+# The package manager's complete "list-available" response is deliberately
+# not used here: on a normal OpenWrt snapshot it can be several megabytes of
+# JSON.  Freenetic pages only need to know whether their small set of concrete
+# packages can be resolved on this firmware.
+
+json_escape() {
+	# Package names passed by Freenetic are deliberately conservative.  Keep
+	# this escape helper anyway so the output remains valid JSON if another
+	# caller supplies a legal-but-unusual package name in the future.
+	printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+valid_package_name() {
+	case "$1" in
+		''|*[!A-Za-z0-9+_.:@/-]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+if [ "$#" -eq 0 ]; then
+	printf '{"ok":true,"packages":{}}\n'
+	exit 0
+fi
+
+manager=''
+if command -v apk >/dev/null 2>&1; then
+	manager='apk'
+elif command -v opkg >/dev/null 2>&1; then
+	manager='opkg'
+else
+	printf '{"ok":false,"error":"No supported package manager was found."}\n'
+	exit 0
+fi
+
+# One index lookup for all requested names.  apk search is expensive when
+# repeated for every package because each call reopens all repository indexes.
+available=''
+if [ "$manager" = 'apk' ]; then
+	available=$(apk search -e "$@" 2>/dev/null || true)
+else
+	# opkg accepts one optional pattern, unlike apk's multi-pattern search.
+	# Read its plain-text catalogue once so every requested name is checked.
+	available=$(opkg list 2>/dev/null || true)
+fi
+
+printf '{"ok":true,"package_manager":"%s","packages":{' "$manager"
+first=1
+for package in "$@"; do
+	valid_package_name "$package" || continue
+
+	installed=false
+	if [ "$manager" = 'apk' ]; then
+		apk info -e "$package" >/dev/null 2>&1 && installed=true
+	else
+		opkg status "$package" 2>/dev/null | grep -q '^Status:.*[[:space:]]install[[:space:]]ok[[:space:]]installed' && installed=true
+	fi
+
+	available_flag=false
+	if [ "$manager" = 'apk' ]; then
+		# `apk search -e name` prints name-version for every matching variant.
+		printf '%s\n' "$available" | grep -Fq -- "$package-" && available_flag=true
+	else
+		printf '%s\n' "$available" | awk -v p="$package" '$1 == p { found = 1 } END { exit !found }' && available_flag=true
+	fi
+
+	[ "$first" -eq 1 ] || printf ','
+	first=0
+	printf '"%s":{"installed":%s,"available":%s}' \
+		"$(json_escape "$package")" "$installed" "$available_flag"
+done
+printf '}}\n'

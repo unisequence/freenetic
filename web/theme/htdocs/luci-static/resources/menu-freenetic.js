@@ -26,10 +26,10 @@ var SIDEBAR_GROUPS = [
 		'status/dashboard', 'status/traffic', 'status/wifimonitor'
 	] },
 	{ title: 'Internet', icon: 'internet', paths: [
-		'network/internet'
+		'network/internet', 'network/other_connections', 'network/ddns'
 	] },
 	{ title: 'My Networks & Wi-Fi', icon: 'wireless', paths: [
-		'status/clients', 'network/home_network', 'network/guest_network'
+		'status/clients', 'network/home_network', 'network/guest_network', 'network/wifi_acl'
 	] },
 	{ title: 'Network Rules', icon: 'netrules', paths: [
 		'network/port_forwarding', 'network/firewall', 'network/routes'
@@ -238,7 +238,11 @@ return baseclass.extend({
 				e.section.name === L.env.requestpath[1] && e.child.name === L.env.requestpath[2])
 				|| (!anyActive && index === 0);
 
-			const li = E('li', { 'class': 'fn-nav-item' + (isGroupActive ? ' fn-active' : '') });
+			/* Keep a stable semantic hook for group-specific responsive treatment.
+			 * The wireless heading is intentionally allowed to wrap in the rail:
+			 * its descriptive name is longer than the other top-level groups, and
+			 * clipping it makes the sidebar look like a broken menu. */
+			const li = E('li', { 'class': 'fn-nav-item fn-nav-group-' + group.icon + (isGroupActive ? ' fn-active' : '') });
 			const subId = 'fn-nav-sub-' + index;
 
 			const head = E('a', {

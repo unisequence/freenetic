@@ -95,7 +95,10 @@ const uiHelper = new Function('baseclass', 'ui', 'uci', 'document', 'E', 'setTim
 
 	const expectedViews = [
 		'view/network/freenetic-firewall.js',
+		'view/network/freenetic-ddns.js',
 		'view/network/freenetic-mynetworks.js',
+		'view/network/freenetic-wifi-acl.js',
+		'view/network/freenetic-other-connections.js',
 		'view/network/freenetic-portforward.js',
 		'view/network/freenetic-routing.js',
 		'view/network/freenetic-wan.js',

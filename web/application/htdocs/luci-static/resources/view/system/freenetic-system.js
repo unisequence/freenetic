@@ -174,7 +174,7 @@ return view.extend({
 		return E('div', { class: 'fn-apps-row' }, [
 			svgIcon(ICON_FILE, 22),
 			E('div', { class: 'fn-apps-info' }, [
-				E('div', { class: 'fn-apps-name' }, 'firmware'),
+				E('div', { class: 'fn-apps-name' }, _('Firmware')),
 				E('div', { class: 'fn-apps-desc' }, desc)
 			]),
 			swapBtn,
@@ -205,7 +205,7 @@ return view.extend({
 		return E('div', { class: 'fn-apps-row' }, [
 			svgIcon(ICON_FILE, 22),
 			E('div', { class: 'fn-apps-info' }, [
-				E('div', { class: 'fn-apps-name' }, 'startup-config'),
+				E('div', { class: 'fn-apps-name' }, _('Startup configuration')),
 				E('div', { class: 'fn-apps-desc' }, _('Full device settings — configuration files and the list of installed packages'))
 			]),
 			swapBtn,
@@ -246,7 +246,7 @@ return view.extend({
 		return E('div', { class: 'fn-apps-row' }, [
 			svgIcon(ICON_FILE, 22),
 			E('div', { class: 'fn-apps-info' }, [
-				E('div', { class: 'fn-apps-name' }, name)
+				E('div', { class: 'fn-apps-name' }, name === 'Factory' ? _('Factory partition') : name)
 			]),
 			dlBtn
 		]);
