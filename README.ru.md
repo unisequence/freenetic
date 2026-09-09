@@ -20,6 +20,8 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 |---|---|
 | ![Логин](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |
 | ![Системные файлы](web/docs/screenshots/system.webp) | ![Приложения](web/docs/screenshots/applications.webp) |
+| ![Другие подключения](web/docs/screenshots/other-connections.webp) | ![Маршрутизация](web/docs/screenshots/routing.webp) |
+| ![Мобильная панель управления](web/docs/screenshots/mobile-dashboard.webp) | |
 
 ## Что уже работает
 

@@ -21,6 +21,8 @@ OpenWrt — mainline U-Boot, no proprietary components.
 |---|---|
 | ![Login](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |
 | ![System files](web/docs/screenshots/system.webp) | ![Applications](web/docs/screenshots/applications.webp) |
+| ![Other Connections](web/docs/screenshots/other-connections.webp) | ![Routing](web/docs/screenshots/routing.webp) |
+| ![Mobile dashboard](web/docs/screenshots/mobile-dashboard.webp) | |
 
 ## What's working
 
