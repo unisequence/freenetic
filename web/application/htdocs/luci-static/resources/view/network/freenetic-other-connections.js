@@ -38,6 +38,7 @@ const OPENVPN_PROFILE_DIR = '/etc/openvpn/freenetic';
 const OPENVPN_PROFILE_HELPER = '/usr/libexec/freenetic-openvpn-profile';
 const OPENVPN_PROFILE_MAX = 512 * 1024;
 const IPSEC_RESTART_HELPER = '/usr/libexec/freenetic-ipsec-restart';
+const IPSEC_STATUS_HELPER = '/usr/libexec/freenetic-ipsec-status';
 const L2TP_IPSEC_PACKAGES = [ 'xl2tpd', 'ppp-mod-pppol2tp', 'kmod-l2tp', 'kmod-pppol2tp', 'strongswan-default', 'luci-proto-ppp' ];
 const IKEV2_PACKAGES = [ 'strongswan-default', 'strongswan-mod-eap-identity', 'strongswan-mod-eap-mschapv2', 'xfrm', 'kmod-xfrm-interface', 'luci-proto-xfrm' ];
 
@@ -380,6 +381,20 @@ function getFeedStatus() {
 		.then(result => result && typeof result === 'object' ? result : null).catch(() => null);
 }
 
+function getIpsecStatus() {
+	return fs.exec_direct(IPSEC_STATUS_HELPER, [], 'json')
+		.then(result => result && typeof result === 'object' ? result : {
+			ok: false,
+			available: false,
+			error: _('The IPsec status helper is unavailable.')
+		})
+		.catch(error => ({
+			ok: false,
+			available: false,
+			error: error && (error.message || error) || _('The IPsec status helper is unavailable.')
+		}));
+}
+
 function packageMap(list) {
 	const result = {};
 	(list || []).forEach(item => {
@@ -565,7 +580,8 @@ return view.extend({
 			getWireGuardStatus(),
 			getInstalledPackages(),
 			getFeedStatus(),
-			uci.load(IPSEC_CONFIG).catch(() => null)
+			uci.load(IPSEC_CONFIG).catch(() => null),
+			getIpsecStatus()
 		]);
 	},
 
@@ -576,12 +592,14 @@ return view.extend({
 		this.packages = packageMap(data[3]);
 		this.feed = data[4];
 		this.ipsecAvailable = data[5] !== null;
+		this.ipsecStatus = data[6] || { ok: false, available: false, error: _('The IPsec status helper is unavailable.') };
 		this.modalOpen = false;
 
 		this.supportNode = E('div');
 		this.listNode = E('div');
 		this.renderSupport();
 		this.fillConnections();
+		this.startIpsecPolling();
 
 		return E('div', { class: 'fn-pf-page fn-oc-page' }, [
 			E('div', { class: 'fn-oc-title-row' }, [
@@ -854,6 +872,72 @@ return view.extend({
 		return this.wgRpc && this.wgRpc.data && this.wgRpc.data[name] || null;
 	},
 
+	parseIpsecSas(value) {
+		const result = {};
+		String(value || '').split(/\r?\n/).forEach(line => {
+			/* swanctl --list-sas --pretty starts each IKE SA with
+			 * "<connection>: #<id>, <STATE>, ...".  Keep the parser strict
+			 * enough to avoid mistaking child-SA detail lines for connections. */
+			const match = line.match(/^\s*([^:\s]+):\s*#\d+,\s*([A-Z][A-Z_-]*)\b/);
+			if (match)
+				result[match[1]] = match[2];
+		});
+		return result;
+	},
+
+	ipsecSaState(connection) {
+		const status = this.ipsecStatus || {};
+		const sas = this.parseIpsecSas(status.sas);
+		const names = [ connection.remoteSection, connection.section ].filter(Boolean);
+		for (const name of names) {
+			if (sas[name])
+				return sas[name];
+		}
+		return '';
+	},
+
+	ipsecPresentation(connection) {
+		const interfaceUp = !!(connection.status && connection.status.up);
+		const state = this.ipsecSaState(connection);
+		if (!connection.enabled)
+			return { text: _('Disabled'), className: 'fn-status-off', state: state, interfaceUp: interfaceUp };
+		if (state === 'ESTABLISHED' || state === 'INSTALLED')
+			return { text: _('Connected'), className: 'fn-status-ok', state: state, interfaceUp: interfaceUp };
+		if (/^(CONNECTING|REKEYING|ROUTED|TRAPPED|NEGOTIATING)$/.test(state))
+			return { text: _('Negotiating'), className: 'fn-status-warn', state: state, interfaceUp: interfaceUp };
+		if (interfaceUp)
+			return {
+				text: connection.protocol === L2TP_IPSEC_PROTO ? _('Connected') : _('Interface ready'),
+				className: 'fn-status-ok',
+				state: state,
+				interfaceUp: interfaceUp
+			};
+		if (this.ipsecStatus && (this.ipsecStatus.available === false || this.ipsecStatus.ok === false))
+			return { text: _('IPsec service unavailable'), className: 'fn-status-warn', state: state, interfaceUp: interfaceUp };
+		return { text: _('Not connected'), className: 'fn-status-off', state: state, interfaceUp: interfaceUp };
+	},
+
+	refreshIpsecStatus() {
+		return Promise.all([ getIpsecStatus(), getInterfaceDump() ]).then(data => {
+			this.ipsecStatus = data[0] || { ok: false, available: false, error: _('The IPsec status helper is unavailable.') };
+			this.interfaceDump = data[1] || {};
+			this.fillConnections();
+			return this.ipsecStatus;
+		});
+	},
+
+	startIpsecPolling() {
+		this.stopIpsecPolling();
+		this.ipsecTimer = window.setInterval(() => this.refreshIpsecStatus().catch(() => null), 15000);
+	},
+
+	stopIpsecPolling() {
+		if (this.ipsecTimer) {
+			window.clearInterval(this.ipsecTimer);
+			this.ipsecTimer = null;
+		}
+	},
+
 	fillConnections() {
 		if (!this.listNode)
 			return;
@@ -917,13 +1001,8 @@ return view.extend({
 
 	renderIpsecConnection(connection) {
 		const status = connection.status;
-		const up = !!(status && status.up);
-		const disabled = !connection.enabled;
-		const statusClass = disabled ? 'fn-status-off' : (up ? 'fn-status-ok' : 'fn-status-off');
-		const statusText = disabled ? _('Disabled') : (up
-			? (connection.protocol === L2TP_IPSEC_PROTO ? _('Connected') : _('Interface ready'))
-			: _('Not connected'));
-		const statusPill = E('span', { class: 'fn-status-pill ' + statusClass }, statusText);
+		const presentation = this.ipsecPresentation(connection);
+		const statusPill = E('span', { class: 'fn-status-pill ' + presentation.className }, presentation.text);
 		const toggle = E('input', { type: 'checkbox', class: 'fn-switch-input' });
 		toggle.checked = connection.enabled;
 		const toggleLabel = E('label', { class: 'fn-switch fn-oc-switch' }, [ toggle, E('span', { class: 'fn-switch-slider' }) ]);
@@ -951,6 +1030,8 @@ return view.extend({
 		const hint = connection.protocol === IKEV2_PROTO
 			? _('The XFRM interface is created by netifd; strongSwan establishes the IKEv2 security association on top of it.')
 			: _('The PPP tunnel is carried by xl2tpd after strongSwan negotiates the IPsec transport connection.');
+		const diagnostics = E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openIpsecDiagnostics(connection) }, _('Diagnostics'));
+		const reconnect = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', disabled: !connection.enabled, click: () => this.reconnectIpsec(connection, reconnect) }, _('Reconnect'));
 		const edit = E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openForm(connection) }, _('Edit'));
 		const remove = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-danger', click: () => this.deleteConnection(connection) }, _('Delete'));
 
@@ -964,9 +1045,91 @@ return view.extend({
 			E('div', { class: 'fn-card-body' }, [
 				grid,
 				E('p', { class: 'fn-oc-profile-note' }, hint),
-				E('div', { class: 'fn-pf-actions fn-oc-actions' }, [ edit, remove ])
+				E('div', { class: 'fn-pf-actions fn-oc-actions' }, [ reconnect, diagnostics, edit, remove ])
 			])
 		]);
+	},
+
+	reconnectIpsec(connection, button) {
+		if (!connection.enabled) {
+			notify(_('Enable the connection before reconnecting it.'), 'warning');
+			return Promise.resolve(false);
+		}
+		button.disabled = true;
+		dom_content(button, _('Reconnecting…'));
+		return restartIpsec()
+			.then(() => this.refreshIpsecStatus())
+			.then(() => {
+				notify(_('Reconnect requested. The current negotiation status is shown on the connection card.'), 'info');
+				return true;
+			})
+			.catch(error => {
+				notify(_('Failed to reconnect IPsec: %s').format(error.message || error), 'danger');
+				return false;
+			})
+			.finally(() => {
+				button.disabled = !connection.enabled;
+				dom_content(button, _('Reconnect'));
+			});
+	},
+
+	openIpsecDiagnostics(connection) {
+		if (this.modalOpen)
+			ui.hideModal();
+
+		const statusNode = E('div', { class: 'fn-oc-diagnostics-status' });
+		const errorNode = E('div', { class: 'fn-oc-diagnostics-error' });
+		const sasNode = E('pre', { class: 'fn-oc-diagnostics-output' });
+		const connsNode = E('pre', { class: 'fn-oc-diagnostics-output' });
+		const logsNode = E('pre', { class: 'fn-oc-diagnostics-output' });
+		const snapshot = () => this.ipsecStatus || {};
+		const update = () => {
+			const current = snapshot();
+			const latestConnection = this.getConnections().find(item => item.section === connection.section) || connection;
+			const presentation = this.ipsecPresentation(latestConnection);
+			dom_empty(statusNode);
+			statusNode.appendChild(E('span', { class: 'fn-status-pill ' + presentation.className }, presentation.text));
+			if (presentation.state)
+				statusNode.appendChild(E('span', { class: 'fn-oc-diagnostics-state' }, _('strongSwan state: %s').format(presentation.state)));
+			else if (presentation.interfaceUp)
+				statusNode.appendChild(E('span', { class: 'fn-oc-diagnostics-state' }, _('The network interface is present; no IKE security association was reported.')));
+			else
+				statusNode.appendChild(E('span', { class: 'fn-oc-diagnostics-state' }, _('No active IKE security association was reported.')));
+			dom_content(errorNode, current.error || '');
+			dom_content(sasNode, current.sas || _('No security associations reported.'));
+			dom_content(connsNode, current.conns || _('No loaded IPsec connections reported.'));
+			dom_content(logsNode, current.logs || _('No matching IPsec log entries reported.'));
+		};
+
+		const close = E('button', { type: 'button', class: 'fn-settings-btn', click: () => { ui.hideModal(); this.modalOpen = false; } }, _('Close'));
+		const refresh = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => {
+			refresh.disabled = true;
+			dom_content(refresh, _('Refreshing…'));
+			return this.refreshIpsecStatus().then(update).catch(error => {
+				notify(_('Failed to refresh IPsec diagnostics: %s').format(error.message || error), 'danger');
+			}).finally(() => {
+				refresh.disabled = false;
+				dom_content(refresh, _('Refresh'));
+			});
+		} }, _('Refresh'));
+
+		update();
+		ui.showModal(_('IPsec diagnostics: %s').format(connection.name), [
+			E('p', { class: 'fn-oc-modal-description' }, _('Read-only strongSwan status, loaded connection definitions and recent relevant log entries. Private keys and passwords are not requested or displayed.')),
+			statusNode,
+			errorNode,
+			E('h4', { class: 'fn-oc-diagnostics-heading' }, _('Security associations')),
+			sasNode,
+			E('h4', { class: 'fn-oc-diagnostics-heading' }, _('Loaded connections')),
+			connsNode,
+			E('h4', { class: 'fn-oc-diagnostics-heading' }, _('Recent IPsec logs')),
+			logsNode,
+			E('div', { class: 'fn-pf-actions fn-oc-modal-actions' }, [ close, refresh ])
+		]);
+		this.modalOpen = true;
+		const modal = document.querySelector('#modal_overlay .modal');
+		if (modal)
+			modal.classList.add('fn-oc-diagnostics-modal');
 	},
 
 	renderConnection(connection) {
@@ -2298,12 +2461,13 @@ return view.extend({
 	},
 
 	refresh() {
-		return Promise.all([ getInterfaceDump(), getWireGuardStatus(), getInstalledPackages(), getFeedStatus(), uci.load(IPSEC_CONFIG).catch(() => null) ]).then(data => {
+		return Promise.all([ getInterfaceDump(), getWireGuardStatus(), getInstalledPackages(), getFeedStatus(), uci.load(IPSEC_CONFIG).catch(() => null), getIpsecStatus() ]).then(data => {
 			this.interfaceDump = data[0] || {};
 			this.wgRpc = data[1] || { available: false, data: {} };
 			this.packages = packageMap(data[2]);
 			this.feed = data[3];
 			this.ipsecAvailable = data[4] !== null;
+			this.ipsecStatus = data[5] || { ok: false, available: false, error: _('The IPsec status helper is unavailable.') };
 			this.renderSupport();
 			this.fillConnections();
 		});
@@ -2313,6 +2477,7 @@ return view.extend({
 		if (this.modalOpen)
 			ui.hideModal();
 		this.modalOpen = false;
+		this.stopIpsecPolling();
 		if (window.__freeneticActiveView === this)
 			window.__freeneticActiveView = null;
 	},

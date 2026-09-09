@@ -3082,3 +3082,67 @@ msgstr "Пропущено дубликатов маршрутов: %d."
 #, javascript-format
 msgid "Imported routes: %d."
 msgstr "Импортировано маршрутов: %d."
+
+# IPsec runtime status and diagnostics
+msgid "Negotiating"
+msgstr "Согласование"
+
+msgid "IPsec service unavailable"
+msgstr "Сервис IPsec недоступен"
+
+msgid "Reconnect"
+msgstr "Переподключить"
+
+msgid "Reconnecting…"
+msgstr "Переподключение…"
+
+msgid "Enable the connection before reconnecting it."
+msgstr "Перед переподключением включите соединение."
+
+msgid "Reconnect requested. The current negotiation status is shown on the connection card."
+msgstr "Запрос на переподключение отправлен. Текущий статус согласования показан на карточке соединения."
+
+msgid "Failed to reconnect IPsec: %s"
+msgstr "Не удалось переподключить IPsec: %s"
+
+msgid "IPsec diagnostics: %s"
+msgstr "Диагностика IPsec: %s"
+
+msgid "Read-only strongSwan status, loaded connection definitions and recent relevant log entries. Private keys and passwords are not requested or displayed."
+msgstr "Статус strongSwan, загруженные подключения и последние относящиеся к делу записи журнала доступны только для чтения. Закрытые ключи и пароли не запрашиваются и не отображаются."
+
+msgid "strongSwan state: %s"
+msgstr "Состояние strongSwan: %s"
+
+msgid "The network interface is present; no IKE security association was reported."
+msgstr "Сетевой интерфейс существует, но IKE-соединение не обнаружено."
+
+msgid "No active IKE security association was reported."
+msgstr "Активное IKE-соединение не обнаружено."
+
+msgid "Security associations"
+msgstr "Ассоциации безопасности"
+
+msgid "Loaded connections"
+msgstr "Загруженные подключения"
+
+msgid "Recent IPsec logs"
+msgstr "Последние журналы IPsec"
+
+msgid "No security associations reported."
+msgstr "Ассоциации безопасности не обнаружены."
+
+msgid "No loaded IPsec connections reported."
+msgstr "Загруженные подключения IPsec не обнаружены."
+
+msgid "No matching IPsec log entries reported."
+msgstr "Подходящие записи журнала IPsec не обнаружены."
+
+msgid "Refreshing…"
+msgstr "Обновление…"
+
+msgid "Failed to refresh IPsec diagnostics: %s"
+msgstr "Не удалось обновить диагностику IPsec: %s"
+
+msgid "The IPsec status helper is unavailable."
+msgstr "Вспомогательная служба статуса IPsec недоступна."

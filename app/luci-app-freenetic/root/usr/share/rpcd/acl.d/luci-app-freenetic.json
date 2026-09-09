@@ -28,6 +28,7 @@
 				"/usr/libexec/package-manager-call list-installed": [ "exec" ],
 				"/usr/libexec/freenetic-package-status *": [ "exec" ],
 				"/usr/libexec/freenetic-awg-feed status": [ "exec" ],
+				"/usr/libexec/freenetic-ipsec-status": [ "exec" ],
 				"/etc/openvpn/freenetic/*": [ "read" ],
 				"/usr/share/ddns/default": [ "list" ],
 				"/usr/share/ddns/default/*": [ "read" ],

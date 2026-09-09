@@ -10,6 +10,10 @@ All notable Freenetic changes are documented here.
   IKEv2/IPsec editors backed by OpenWrt network UCI and strongSwan. L2TP
   uses xl2tpd with PPP credentials; IKEv2 supports PSK and EAP-MSCHAPv2,
   XFRM interface IDs, traffic selectors and automatic service reloads.
+- L2TP/IPsec and IKEv2/IPsec cards now expose strongSwan runtime state,
+  bounded read-only diagnostics and a manual reconnect action. The status
+  helper reports active security associations, loaded connections and recent
+  relevant logs without returning private keys or passwords.
 - Dashboard summary cards now link directly to their full native views for
   Internet, traffic, Wi‑Fi, network, port and system details, including the
   same in-place SPA navigation on mobile.

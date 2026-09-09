@@ -1,0 +1,63 @@
+#!/bin/sh
+# Return read-only strongSwan diagnostics for the Freenetic Other Connections
+# view.  Keep this helper deliberately narrow: it never accepts a command or
+# path from the browser and the output contains status/configuration metadata,
+# not secrets.
+set -u
+
+json_escape() {
+	awk 'BEGIN { ORS = "" }
+	{
+		if (NR > 1) printf "\\n"
+		for (i = 1; i <= length($0); i++) {
+			c = substr($0, i, 1)
+			if (c == "\\") printf "\\\\"
+			else if (c == "\"") printf "\\\""
+			else if (c == "\t") printf "\\t"
+			else printf "%s", c
+		}
+	}'
+}
+
+json_text() {
+	# Command substitution removes trailing newlines; the escaping function
+	# turns every remaining line break into the JSON literal \\n.
+	[ -n "$1" ] || return 0
+	printf '%s\n' "$1" | json_escape
+}
+
+if ! command -v swanctl >/dev/null 2>&1; then
+	printf '{"ok":false,"available":false,"error":"The swanctl command is not installed."}\n'
+	exit 0
+fi
+
+SAS=''
+CONNS=''
+SAS_RC=0
+CONNS_RC=0
+sas_output="$(swanctl --list-sas --pretty 2>&1)" || SAS_RC=$?
+conns_output="$(swanctl --list-conns --pretty 2>&1)" || CONNS_RC=$?
+SAS="$sas_output"
+CONNS="$conns_output"
+
+LOGS=''
+if command -v logread >/dev/null 2>&1; then
+	# The filter intentionally omits generic command output and possible
+	# credential-bearing lines.  The last 80 records are enough for a failed
+	# negotiation while keeping the RPC response small on low-memory targets.
+	LOGS="$(logread 2>/dev/null | grep -Ei 'charon|swanctl|xl2tpd|pppd|ipsec' | grep -Eiv 'password|private[ _-]*key|pre[ -]*shared[ _-]*key|secret' | tail -n 80 || true)"
+fi
+
+OK=true
+ERROR=''
+if [ "$SAS_RC" -ne 0 ] || [ "$CONNS_RC" -ne 0 ]; then
+	OK=false
+	ERROR='Unable to query the strongSwan status.'
+fi
+
+printf '{"ok":%s,"available":true,"sas":"%s","conns":"%s","logs":"%s"' \
+	"$OK" "$(json_text "$SAS")" "$(json_text "$CONNS")" "$(json_text "$LOGS")"
+if [ -n "$ERROR" ]; then
+	printf ',"error":"%s"' "$(json_text "$ERROR")"
+fi
+printf '}\n'

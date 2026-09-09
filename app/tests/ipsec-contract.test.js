@@ -15,16 +15,23 @@ const wifiPath = path.join(root, 'web', 'application', 'htdocs', 'luci-static',
 	'resources', 'view', 'network', 'freenetic-wifi-acl.js');
 const helperPath = path.join(root, 'app', 'luci-app-freenetic', 'root', 'usr',
 	'libexec', 'freenetic-ipsec-restart');
+const statusHelperPath = path.join(root, 'app', 'luci-app-freenetic', 'root', 'usr',
+	'libexec', 'freenetic-ipsec-status');
 
 const view = fs.readFileSync(viewPath, 'utf8');
 const apps = fs.readFileSync(appsPath, 'utf8');
 const wifi = fs.readFileSync(wifiPath, 'utf8');
 const helper = fs.readFileSync(helperPath, 'utf8');
+const statusHelper = fs.readFileSync(statusHelperPath, 'utf8');
 const acl = JSON.parse(fs.readFileSync(aclPath, 'utf8'))['luci-app-freenetic'];
 
 assert.ok(fs.statSync(helperPath).mode & 0o111, 'IPsec restart helper must be executable');
+assert.ok(fs.statSync(statusHelperPath).mode & 0o111, 'IPsec status helper must be executable');
 assert.match(helper, /\/etc\/init\.d\/swanctl/, 'helper must support the swanctl service');
 assert.match(helper, /\/etc\/init\.d\/ipsec/, 'helper must support the legacy ipsec service');
+assert.match(statusHelper, /swanctl --list-sas --pretty/, 'status helper must report active security associations');
+assert.match(statusHelper, /swanctl --list-conns --pretty/, 'status helper must report loaded IPsec connections');
+assert.match(statusHelper, /logread[\s\S]*tail -n 80/, 'status helper must include a bounded IPsec log tail');
 assert.match(view, /const L2TP_IPSEC_PROTO = 'l2tp_ipsec'/, 'Other Connections must expose L2TP/IPsec');
 assert.match(view, /const IKEV2_PROTO = 'ikev2'/, 'Other Connections must expose IKEv2/IPsec');
 assert.match(view, /proto === L2TP_PROTO && section\.freenetic_protocol === L2TP_IPSEC_PROTO/, 'managed L2TP interfaces must be listed');
@@ -36,6 +43,10 @@ assert.match(view, /uci\.set\(IPSEC_CONFIG, remoteName, 'keyexchange', 'ikev2'\)
 assert.match(view, /'dynamic\[udp\/l2tp\]'/, 'L2TP/IPsec must use the standard UDP/L2TP transport selectors');
 assert.match(view, /uci\.set\(IPSEC_CONFIG, childName, 'if_id'/, 'IKEv2 must bind the child SA to the XFRM interface ID');
 assert.match(view, /uci\.set\(IPSEC_CONFIG, connection\.remoteSection, 'enabled', '1'\)/, 'IPsec re-enable must explicitly set strongSwan enabled=1');
+assert.match(view, /const IPSEC_STATUS_HELPER = '\/usr\/libexec\/freenetic-ipsec-status'/, 'Other Connections must use the read-only IPsec status helper');
+assert.match(view, /getIpsecStatus\(\)/, 'Other Connections must load IPsec runtime status');
+assert.match(view, /openIpsecDiagnostics\(connection\)/, 'IPsec cards must expose diagnostics');
+assert.match(view, /reconnectIpsec\(connection, reconnect\)/, 'IPsec cards must expose a reconnect action');
 assert.match(apps, /id: 'l2tp_ipsec',[\s\S]*restartNetifdOnInstall:\s*true/, 'L2TP/IPsec package install must restart netifd');
 assert.match(apps, /id: 'ikev2_ipsec',[\s\S]*restartNetifdOnInstall:\s*true/, 'IKEv2 package install must restart netifd');
 assert.match(apps, /xl2tpd.*ppp-mod-pppol2tp.*strongswan-default/, 'L2TP/IPsec catalog must install xl2tpd, PPP and strongSwan');
@@ -44,5 +55,6 @@ assert.match(wifi, /proto === 'l2tp' \|\| proto === 'xfrm'/, 'Access & Routing P
 assert.ok(acl.read.uci.includes('ipsec'), 'IPsec UCI reads must be covered by the rpcd ACL');
 assert.ok(acl.write.uci.includes('ipsec'), 'IPsec UCI writes must be covered by the rpcd ACL');
 assert.ok(acl.write.file['/usr/libexec/freenetic-ipsec-restart'], 'IPsec restart helper must be covered by the rpcd ACL');
+assert.ok(acl.read.file['/usr/libexec/freenetic-ipsec-status'], 'IPsec status helper must be covered by the rpcd ACL');
 
 console.log('IPsec connection contract: ok');
