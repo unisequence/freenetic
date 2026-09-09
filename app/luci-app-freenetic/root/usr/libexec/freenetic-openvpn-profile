@@ -1,0 +1,47 @@
+#!/bin/sh
+# Store Freenetic-managed OpenVPN profiles with restrictive permissions.
+# The browser writes a temporary file through LuCI's file RPC; this helper
+# performs the only move into /etc/openvpn and validates the generated name.
+
+set -u
+
+json_escape() {
+	printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+fail() {
+	printf '{"ok":false,"error":"%s"}\n' "$(json_escape "$1")"
+	exit 0
+}
+
+[ "$(id -u)" = 0 ] || fail "The OpenVPN profile helper requires root privileges."
+
+action=${1:-}
+name=${2:-}
+case "$name" in
+	''|*[!A-Za-z0-9_-]*) fail "The OpenVPN profile name is invalid." ;;
+esac
+
+profile_dir=/etc/openvpn/freenetic
+profile="$profile_dir/$name.ovpn"
+temporary="/tmp/freenetic-openvpn-$name.ovpn"
+
+case "$action" in
+	install)
+		[ -f "$temporary" ] || fail "The temporary OpenVPN profile is missing."
+		mkdir -p "$profile_dir" || fail "Unable to create the OpenVPN profile directory."
+		chmod 700 "$profile_dir" || fail "Unable to protect the OpenVPN profile directory."
+		chmod 600 "$temporary" || fail "Unable to protect the temporary OpenVPN profile."
+		mv -f "$temporary" "$profile" || fail "Unable to install the OpenVPN profile."
+		chmod 600 "$profile" || fail "Unable to protect the installed OpenVPN profile."
+		printf '{"ok":true,"path":"%s"}\n' "$(json_escape "$profile")"
+		;;
+	remove)
+		rm -f "$profile" || fail "Unable to remove the OpenVPN profile."
+		rm -f "$temporary"
+		printf '{"ok":true,"path":"%s"}\n' "$(json_escape "$profile")"
+		;;
+	*)
+		fail "Unknown action. Use install or remove."
+		;;
+esac

@@ -64,7 +64,7 @@ const GROUPS = [
 				desc: _('Connect to an L2TP VPN server.') },
 			{ id: 'l2tp_ipsec', name: _('L2TP/IPsec client'), packages: [ 'ppp-mod-pppol2tp', 'strongswan-swanctl' ],
 				desc: _('L2TP over an IPsec-encrypted tunnel.') },
-			{ id: 'openvpn', name: _('OpenVPN client and server'), packages: [ 'openvpn-openssl' ],
+			{ id: 'openvpn', name: _('OpenVPN client and server'), restartNetifdOnInstall: true, packages: [ 'openvpn-openssl' ],
 				desc: _('Widely supported, certificate-based VPN.') }
 		]
 	},

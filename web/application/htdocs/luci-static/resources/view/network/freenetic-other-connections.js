@@ -8,10 +8,11 @@
 
 /*
  * Other Connections is intentionally a small editor over OpenWrt's native
- * network UCI model.  WireGuard and AmneziaWG are two different netifd
- * protocols; AWG options are never written to a regular wireguard section.
- * This keeps configurations usable from stock LuCI and makes the optional
- * AmneziaWG feed a capability, not a hidden runtime dependency.
+ * network UCI model.  WireGuard, AmneziaWG and OpenVPN are native netifd
+ * protocols; AWG options are never written to a regular wireguard section,
+ * while OpenVPN profiles stay as provider-supplied files.  This keeps
+ * configurations usable from stock LuCI and makes optional packages explicit
+ * capabilities instead of hidden runtime dependencies.
  */
 const ubusCall = rpc.call;
 const dom_empty = uiHelper.empty;
@@ -24,8 +25,14 @@ const NETWORK_RESTART_HELPER = '/usr/libexec/freenetic-network-restart';
 
 const WG_PROTO = 'wireguard';
 const AWG_PROTO = 'amneziawg';
+const OVPN_PROTO = 'openvpn';
 const WG_PEER_TYPE = 'wireguard_';
 const AWG_PEER_TYPE = 'amneziawg_';
+const OPENVPN_PROFILE_DIR = '/etc/openvpn/freenetic';
+const OPENVPN_PROFILE_HELPER = '/usr/libexec/freenetic-openvpn-profile';
+const OPENVPN_PROFILE_MAX = 512 * 1024;
+
+const OPENVPN_VARIANTS = [ 'openvpn-openssl', 'openvpn-mbedtls', 'openvpn-wolfssl', 'openvpn' ];
 
 const AWG_OPTIONS = [
 	[ 'awg_jc', 'Jc', 0, 65535 ],
@@ -238,6 +245,71 @@ function generatePresharedKey() {
 function getInstalledPackages() {
 	return fs.exec_direct('/usr/libexec/package-manager-call', [ 'list-installed' ], 'json')
 		.then(list => Array.isArray(list) ? list : []).catch(() => []);
+}
+
+function openvpnAvailable(packages) {
+	packages = packages || {};
+	return OPENVPN_VARIANTS.some(name => !!packages[name]);
+}
+
+function openvpnProfileName(section) {
+	return String(section || '').replace(/[^A-Za-z0-9_-]/g, '_') || 'connection';
+}
+
+function openvpnProfilePath(section) {
+	return OPENVPN_PROFILE_DIR + '/' + openvpnProfileName(section) + '.ovpn';
+}
+
+function managedOpenvpnProfile(path) {
+	return String(path || '').indexOf(OPENVPN_PROFILE_DIR + '/') === 0 &&
+		/\/[-A-Za-z0-9_]+\.ovpn$/.test(String(path || ''));
+}
+
+function openvpnProfileNameFromPath(path) {
+	const prefix = OPENVPN_PROFILE_DIR + '/';
+	const filename = String(path || '').indexOf(prefix) === 0 ? String(path || '').slice(prefix.length) : '';
+	return /^[-A-Za-z0-9_]+\.ovpn$/.test(filename) ? filename.slice(0, -5) : '';
+}
+
+function normalizeOpenvpnProfile(value) {
+	return String(value || '').replace(/\r\n?/g, '\n').trim() + '\n';
+}
+
+function validateOpenvpnProfile(value) {
+	const profile = String(value || '').replace(/\r\n?/g, '\n').trim();
+	if (!profile)
+		return _('Paste or choose an OpenVPN profile first.');
+	if (profile.indexOf('\0') !== -1)
+		return _('The OpenVPN profile contains an invalid NUL character.');
+	if (profile.length > OPENVPN_PROFILE_MAX)
+		return _('The OpenVPN profile is too large (maximum %d KiB).').format(Math.floor(OPENVPN_PROFILE_MAX / 1024));
+	/* A profile can be a client, server or provider bundle.  Do not try to
+	 * rewrite directives here: OpenVPN's own parser remains the source of
+	 * truth, while this check catches an accidental empty/text upload. */
+	if (!/(^|\n)\s*(client|server|remote|dev|proto)\b/im.test(profile))
+		return _('The file does not look like an OpenVPN profile.');
+	return null;
+}
+
+function storeOpenvpnProfile(name, profile) {
+	const temporary = '/tmp/freenetic-openvpn-' + name + '.ovpn';
+	return fs.write(temporary, normalizeOpenvpnProfile(profile), 384 /* 0600 */)
+		.then(() => fs.exec_direct(OPENVPN_PROFILE_HELPER, [ 'install', name ], 'json'))
+		.then(result => {
+			if (!result || result.ok !== true)
+				throw new Error(result && result.error || _('Unable to install the OpenVPN profile.'));
+			return result;
+		});
+}
+
+function removeOpenvpnProfile(name) {
+	if (!name)
+		return Promise.resolve({ ok: true });
+	return fs.exec_direct(OPENVPN_PROFILE_HELPER, [ 'remove', name ], 'json').then(result => {
+		if (!result || result.ok !== true)
+			throw new Error(result && result.error || _('Unable to remove the OpenVPN profile.'));
+		return result;
+	});
 }
 
 function getFeedStatus() {
@@ -454,6 +526,7 @@ return view.extend({
 				]),
 				E('div', { class: 'fn-oc-head-actions' }, [
 					E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openImportDialog() }, _('Import .conf')),
+					E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openOpenvpnImportDialog() }, _('Import .ovpn')),
 					E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => this.openForm(null) }, _('Add connection'))
 				])
 			]),
@@ -488,6 +561,23 @@ return view.extend({
 				E('span', { class: 'fn-status-pill ' + (wgReady ? 'fn-status-ok' : 'fn-status-off') }, wgReady ? _('Ready') : _('Unavailable'))
 			]),
 			E('div', { class: 'fn-oc-support-body' }, wgBody)
+		]));
+
+		const ovpnReady = openvpnAvailable(this.packages);
+		const ovpnBody = [ E('span', {}, ovpnReady
+			? _('OpenVPN netifd protocol is ready.')
+			: _('Install an OpenVPN package to create or start an OpenVPN tunnel.')) ];
+		if (!ovpnReady)
+			ovpnBody.push(E('a', { href: L.url('admin/system/applications'), class: 'fn-oc-support-link' }, _('Open Applications')));
+		cards.push(E('section', { class: 'fn-oc-support-card fn-oc-support-card-openvpn' }, [
+			E('div', { class: 'fn-oc-support-head' }, [
+				E('div', { class: 'fn-oc-support-title' }, [
+					E('h3', {}, _('OpenVPN')),
+					E('p', {}, _('Profile-based VPN protocol with broad provider support'))
+				]),
+				E('span', { class: 'fn-status-pill ' + (ovpnReady ? 'fn-status-ok' : 'fn-status-off') }, ovpnReady ? _('Ready') : _('Unavailable'))
+			]),
+			E('div', { class: 'fn-oc-support-body' }, ovpnBody)
 		]));
 
 		let feedText = awgInstalled
@@ -533,10 +623,22 @@ return view.extend({
 	getConnections() {
 		return uci.sections('network', 'interface').filter(section => {
 			const proto = String(section.proto || '').toLowerCase();
-			return proto === WG_PROTO || proto === AWG_PROTO;
+			return proto === WG_PROTO || proto === AWG_PROTO || proto === OVPN_PROTO;
 		}).map(section => {
 			const name = sectionName(section);
 			const protocol = String(section.proto || '').toLowerCase();
+			if (protocol === OVPN_PROTO) {
+				const profilePath = section.config || '';
+				return {
+					section: name,
+					name: section.freenetic_name || section.description || name,
+					protocol: OVPN_PROTO,
+					enabled: section.disabled !== '1',
+					profilePath: profilePath,
+					managedProfile: section.freenetic_profile === '1' || managedOpenvpnProfile(profilePath),
+					status: this.interfaceStatus(name)
+				};
+			}
 			const peers = peerSectionsFor(name).map(peer => ({
 				section: sectionName(peer),
 				description: peer.description || '',
@@ -597,7 +699,54 @@ return view.extend({
 		connections.forEach(connection => this.listNode.appendChild(this.renderConnection(connection)));
 	},
 
+	renderOpenvpnConnection(connection) {
+		const status = connection.status;
+		const up = !!(status && status.up);
+		const disabled = !connection.enabled;
+		const statusClass = disabled ? 'fn-status-off' : (up ? 'fn-status-ok' : 'fn-status-off');
+		const statusText = disabled ? _('Disabled') : (up ? _('Connected') : _('Not connected'));
+		const statusPill = E('span', { class: 'fn-status-pill ' + statusClass }, statusText);
+		const toggle = E('input', { type: 'checkbox', class: 'fn-switch-input' });
+		toggle.checked = connection.enabled;
+		const toggleLabel = E('label', { class: 'fn-switch fn-oc-switch' }, [ toggle, E('span', { class: 'fn-switch-slider' }) ]);
+		toggle.addEventListener('change', () => this.toggleConnection(connection, toggle));
+
+		const device = status && (status.l3_device || status.device || status.device_name);
+		const profileName = connection.profilePath ? connection.profilePath.split('/').pop() : _('Profile not set');
+		const info = [
+			[ _('Protocol'), 'OpenVPN' ],
+			[ _('Interface'), connection.section ],
+			[ _('Tunnel device'), device || '–' ],
+			[ _('Profile'), profileName ],
+			[ _('Profile storage'), connection.managedProfile ? _('Freenetic managed') : _('External file') ]
+		];
+		const grid = E('div', { class: 'fn-info-grid fn-oc-info-grid' }, info.map(item => E('div', { class: 'fn-info-item' }, [
+			E('div', { class: 'fn-info-label' }, item[0]),
+			E('div', { class: 'fn-info-value fn-oc-break-value' }, item[1])
+		])));
+
+		const edit = E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openForm(connection) }, _('Edit'));
+		const exportButton = E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.exportOpenvpnConnection(connection) }, _('Export'));
+		const remove = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-danger', click: () => this.deleteConnection(connection) }, _('Delete'));
+
+		return E('article', { class: 'fn-card fn-oc-card fn-oc-openvpn-card' }, [
+			E('div', { class: 'fn-card-head fn-oc-card-head' }, [
+				svgIcon('M4 7h16M7 4v3M17 4v3M6 11h4M6 15h7M4 20h16', 20),
+				E('div', { class: 'fn-oc-card-title' }, [ E('h3', {}, connection.name), E('span', { class: 'fn-oc-protocol' }, _('OpenVPN profile')) ]),
+				toggleLabel,
+				statusPill
+			]),
+			E('div', { class: 'fn-card-body' }, [
+				grid,
+				E('p', { class: 'fn-oc-profile-note' }, _('The profile is passed to the native OpenVPN netifd protocol. Provider directives and inline certificates stay unchanged.')),
+				E('div', { class: 'fn-pf-actions fn-oc-actions' }, [ edit, exportButton, remove ])
+			])
+		]);
+	},
+
 	renderConnection(connection) {
+		if (connection.protocol === OVPN_PROTO)
+			return this.renderOpenvpnConnection(connection);
 		const status = connection.status;
 		const up = !!(status && status.up);
 		const disabled = !connection.enabled;
@@ -663,7 +812,56 @@ return view.extend({
 		]);
 	},
 
+	openAddConnection() {
+		if (this.modalOpen)
+			ui.hideModal();
+		const protocol = E('select', { class: 'fn-input' }, [
+			E('option', { value: WG_PROTO }, _('WireGuard')),
+			E('option', { value: AWG_PROTO }, _('AmneziaWG')),
+			E('option', { value: OVPN_PROTO }, _('OpenVPN'))
+		]);
+		const cancel = E('button', { type: 'button', class: 'fn-settings-btn', click: () => { ui.hideModal(); this.modalOpen = false; } }, _('Cancel'));
+		const next = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => {
+			const selected = protocol.value;
+			ui.hideModal();
+			this.modalOpen = false;
+			if (selected === OVPN_PROTO)
+				this.openOpenvpnForm(null);
+			else
+				this.openForm({
+					section: null,
+					name: _('New VPN connection'),
+					protocol: selected,
+					enabled: true,
+					privateKey: '',
+					publicKey: '',
+					addresses: [],
+					dns: [],
+					listenPort: '',
+					mtu: '1420',
+					fwmark: '',
+					nohostroute: false,
+					awg: {},
+					peers: []
+				});
+		} }, _('Continue'));
+
+		ui.showModal(_('Add connection'), [
+			E('p', { class: 'fn-oc-modal-description' }, _('Choose the protocol for the new native OpenWrt connection. You can import a provider profile instead.')),
+			E('div', { class: 'fn-settings-field' }, [ E('label', {}, _('Protocol')), protocol ]),
+			E('div', { class: 'fn-pf-actions fn-oc-modal-actions' }, [ cancel, next ])
+		]);
+		this.modalOpen = true;
+		const modal = document.querySelector('#modal_overlay .modal');
+		if (modal)
+			modal.classList.add('fn-oc-chooser-modal');
+	},
+
 	openForm(connection) {
+		if (!connection)
+			return this.openAddConnection();
+		if (connection.protocol === OVPN_PROTO)
+			return this.openOpenvpnForm(connection);
 		if (this.modalOpen)
 			ui.hideModal();
 		connection = connection || {
@@ -817,6 +1015,76 @@ return view.extend({
 			modal.classList.add('fn-oc-modal');
 	},
 
+	openOpenvpnForm(connection) {
+		if (this.modalOpen)
+			ui.hideModal();
+		connection = connection || {
+			section: null,
+			name: _('New OpenVPN connection'),
+			protocol: OVPN_PROTO,
+			enabled: true,
+			profilePath: '',
+			profile: ''
+		};
+
+		const nameInput = E('input', { type: 'text', class: 'fn-input', value: connection.name || '', placeholder: _('VPN connection') });
+		const enabledInput = E('input', { type: 'checkbox' });
+		enabledInput.checked = connection.enabled !== false;
+		const profileInput = E('textarea', { class: 'fn-input fn-oc-profile-text', rows: '18', placeholder: _('Paste the complete .ovpn profile, including inline certificates when possible…'), autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false' });
+		profileInput.value = connection.profile || '';
+		const profileStatus = E('span', { class: 'fn-oc-field-hint' }, connection.profilePath ? _('Loading profile…') : _('Stored on the router with mode 0600.'));
+		if (connection.profilePath) {
+			fs.read(connection.profilePath).then(value => {
+				if (!profileInput.value)
+					profileInput.value = value || '';
+				dom_content(profileStatus, connection.managedProfile ? _('Stored on the router with mode 0600.') : _('External profile file; saving creates a Freenetic-managed copy.'));
+			}).catch(() => dom_content(profileStatus, _('The profile could not be read. Paste it again or choose a local file.')));
+		}
+
+		const fileInput = E('input', { type: 'file', class: 'fn-oc-file-input', accept: '.ovpn,.conf,text/plain' });
+		const choose = E('button', { type: 'button', class: 'fn-settings-btn fn-oc-small-btn', click: () => fileInput.click() }, _('Choose .ovpn file'));
+		fileInput.addEventListener('change', () => {
+			const file = fileInput.files && fileInput.files[0];
+			if (!file)
+				return;
+			const reader = new FileReader();
+			reader.onload = event => {
+				profileInput.value = event.target.result || '';
+				dom_content(profileStatus, _('Local profile loaded. It will be copied to the router when saved.'));
+			};
+			reader.readAsText(file);
+		});
+
+		const save = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => this.saveOpenvpnConnection({
+			section: connection.section,
+			name: nameInput.value.trim(),
+			enabled: enabledInput.checked,
+			profilePath: connection.profilePath || '',
+			managedProfile: !!connection.managedProfile,
+			profile: profileInput.value
+		}, save) }, connection.section ? _('Save') : _('Add connection'));
+		const cancel = E('button', { type: 'button', class: 'fn-settings-btn', click: () => { ui.hideModal(); this.modalOpen = false; } }, _('Cancel'));
+		const enabledField = E('label', { class: 'fn-oc-enable' }, [ enabledInput, E('span', {}, _('Connection enabled')) ]);
+
+		ui.showModal(connection.section ? _('Edit OpenVPN connection') : _('Add OpenVPN connection'), [
+			E('p', { class: 'fn-oc-modal-description' }, _('Use a complete OpenVPN client or server profile. The native OpenVPN netifd protocol keeps provider directives, inline certificates and routing options intact.')),
+			E('div', { class: 'fn-oc-form-grid' }, [
+				E('div', { class: 'fn-settings-field fn-oc-wide-field' }, [ E('label', {}, _('Connection name')), nameInput ]),
+				E('div', { class: 'fn-settings-field fn-oc-wide-field' }, [ E('label', {}, _('OpenVPN profile')), profileInput, profileStatus, E('div', { class: 'fn-oc-key-actions' }, [ choose, fileInput ]) ])
+			]),
+			enabledField,
+			E('div', { class: 'fn-oc-compat-note fn-oc-profile-warning' }, [
+				E('strong', {}, _('Profile files and secrets')),
+				E('span', {}, _('Profiles are stored only on this router. Relative certificate or auth-file paths must already exist beside the profile; inline blocks are recommended for imports.'))
+			]),
+			E('div', { class: 'fn-pf-actions fn-oc-modal-actions' }, [ cancel, save ])
+		]);
+		this.modalOpen = true;
+		const modal = document.querySelector('#modal_overlay .modal');
+		if (modal)
+			modal.classList.add('fn-oc-openvpn-modal');
+	},
+
 	renderFormPeers() {
 		if (!this.formPeerNode)
 			return;
@@ -943,6 +1211,63 @@ return view.extend({
 			uci.unset(config, section, option);
 	},
 
+	validateOpenvpnConnection(fields) {
+		if (!fields.name)
+			return _('Enter a connection name.');
+		return validateOpenvpnProfile(fields.profile);
+	},
+
+	saveOpenvpnConnection(fields, button) {
+		const error = this.validateOpenvpnConnection(fields);
+		if (error) {
+			notify(error, 'warning');
+			return Promise.resolve(false);
+		}
+		if (!openvpnAvailable(this.packages)) {
+			notify(_('Install an OpenVPN package from Applications before saving a tunnel.'), 'warning');
+			return Promise.resolve(false);
+		}
+
+		button.disabled = true;
+		dom_content(button, _('Saving…'));
+		let section;
+		let profileName;
+		let profilePath;
+		let oldManagedName = '';
+		return uci.load('network').then(() => {
+			section = fields.section || uci.add('network', 'interface');
+			profileName = openvpnProfileName(section);
+			profilePath = openvpnProfilePath(section);
+			oldManagedName = fields.managedProfile ? openvpnProfileNameFromPath(fields.profilePath) : '';
+			return storeOpenvpnProfile(profileName, fields.profile);
+		}).then(() => {
+			uci.set('network', section, 'proto', OVPN_PROTO);
+			if (fields.enabled)
+				uci.unset('network', section, 'disabled');
+			else
+				uci.set('network', section, 'disabled', '1');
+			uci.set('network', section, 'freenetic_name', fields.name);
+			uci.set('network', section, 'config', profilePath);
+			uci.set('network', section, 'freenetic_profile', '1');
+			return uci.save();
+		}).then(() => applyChanges()).then(() => {
+			const cleanup = oldManagedName && oldManagedName !== profileName
+				? removeOpenvpnProfile(oldManagedName).catch(() => null)
+				: Promise.resolve();
+			return cleanup;
+		}).then(() => {
+			ui.hideModal();
+			this.modalOpen = false;
+			notify(_('OpenVPN connection saved.'), 'info');
+			return this.refresh();
+		}).catch(err => {
+			notify(_('Failed to save OpenVPN connection: %s').format(err.message || err), 'danger');
+			button.disabled = false;
+			dom_content(button, fields.section ? _('Save') : _('Add connection'));
+			return false;
+		});
+	},
+
 	saveConnection(fields, button) {
 		const error = this.validateConnection(fields);
 		if (error) {
@@ -1038,13 +1363,21 @@ return view.extend({
 	},
 
 	deleteConnection(connection) {
-		if (!window.confirm(_('Delete connection "%s" and all its peers?').format(connection.name)))
+		const question = connection.protocol === OVPN_PROTO
+			? _('Delete OpenVPN connection "%s" and its managed profile?').format(connection.name)
+			: _('Delete connection "%s" and all its peers?').format(connection.name);
+		if (!window.confirm(question))
 			return;
 		return uci.load('network').then(() => {
-			peerSectionsFor(connection.section).forEach(peer => uci.remove('network', sectionName(peer)));
+			if (connection.protocol !== OVPN_PROTO)
+				peerSectionsFor(connection.section).forEach(peer => uci.remove('network', sectionName(peer)));
 			uci.remove('network', connection.section);
 			return uci.save();
 		}).then(() => applyChanges()).then(() => {
+			if (connection.protocol === OVPN_PROTO && connection.managedProfile)
+				return removeOpenvpnProfile(openvpnProfileNameFromPath(connection.profilePath)).catch(() => null);
+			return null;
+		}).then(() => {
 			notify(_('Connection deleted.'), 'info');
 			return this.refresh();
 		}).catch(err => notify(_('Failed to delete connection: %s').format(err.message || err), 'danger'));
@@ -1066,6 +1399,26 @@ return view.extend({
 		link.click();
 		document.body.removeChild(link);
 		URL.revokeObjectURL(url);
+	},
+
+	exportOpenvpnConnection(connection) {
+		if (!connection.profilePath) {
+			notify(_('This OpenVPN connection has no profile to export.'), 'warning');
+			return;
+		}
+		if (!window.confirm(_('The exported OpenVPN profile may contain private keys and passwords. Continue?')))
+			return;
+		return fs.read(connection.profilePath).then(profile => {
+			const blob = new Blob([ profile || '' ], { type: 'application/x-openvpn-profile' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = (connection.section || 'openvpn') + '.ovpn';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+		}).catch(err => notify(_('Failed to export OpenVPN profile: %s').format(err.message || err), 'danger'));
 	},
 
 	/* Never downgrade an AWG config implicitly.  The same guard is used for an
@@ -1118,6 +1471,46 @@ return view.extend({
 		const modal = document.querySelector('#modal_overlay .modal');
 		if (modal)
 			modal.classList.add('fn-oc-compat-modal');
+	},
+
+	openOpenvpnImportDialog() {
+		const fileInput = E('input', { type: 'file', class: 'fn-oc-file-input', accept: '.ovpn,.conf,text/plain' });
+		const textInput = E('textarea', { class: 'fn-input fn-oc-import-text', placeholder: _('Paste an OpenVPN .ovpn profile here…'), rows: '16', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false' });
+		const fileName = E('span', { class: 'fn-oc-file-name' }, _('No file selected'));
+		fileInput.addEventListener('change', () => {
+			const file = fileInput.files && fileInput.files[0];
+			if (!file)
+				return;
+			dom_content(fileName, file.name);
+			const reader = new FileReader();
+			reader.onload = event => { textInput.value = event.target.result || ''; };
+			reader.readAsText(file);
+		});
+		const choose = E('button', { type: 'button', class: 'fn-settings-btn', click: () => fileInput.click() }, _('Choose file'));
+		const cancel = E('button', { type: 'button', class: 'fn-settings-btn', click: () => { ui.hideModal(); this.modalOpen = false; } }, _('Cancel'));
+		const importButton = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => {
+			const error = validateOpenvpnProfile(textInput.value);
+			if (error) {
+				notify(error, 'warning');
+				return;
+			}
+			const file = fileInput.files && fileInput.files[0];
+			const name = file ? file.name.replace(/\.(ovpn|conf)$/i, '') : _('Imported OpenVPN connection');
+			ui.hideModal();
+			this.modalOpen = false;
+			this.openOpenvpnForm({ section: null, name: name, protocol: OVPN_PROTO, enabled: true, profile: textInput.value, profilePath: '' });
+		} }, _('Import profile'));
+
+		ui.showModal(_('Import OpenVPN profile'), [
+			E('p', { class: 'fn-oc-modal-description' }, _('Import a complete .ovpn profile. Inline certificates and keys are preserved; external files must already be present on the router.')),
+			E('div', { class: 'fn-oc-import-file' }, [ choose, fileName, fileInput ]),
+			textInput,
+			E('div', { class: 'fn-pf-actions fn-oc-modal-actions' }, [ cancel, importButton ])
+		]);
+		this.modalOpen = true;
+		const modal = document.querySelector('#modal_overlay .modal');
+		if (modal)
+			modal.classList.add('fn-oc-import-modal');
 	},
 
 	openImportDialog() {

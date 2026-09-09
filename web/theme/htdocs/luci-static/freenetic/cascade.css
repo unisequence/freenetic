@@ -2128,6 +2128,7 @@ body.modal-overlay-active { overflow: hidden; }
 	background: var(--fn-surface-alt);
 }
 .fn-oc-support-card-awg { border-top-color: var(--fn-warning); }
+.fn-oc-support-card-openvpn { border-top-color: #9a7bff; }
 .fn-oc-support-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .fn-oc-support-title { min-width: 0; }
 .fn-oc-support-title h3 { margin: 0; color: var(--fn-text); font-size: 1.1rem; letter-spacing: .01em; text-transform: none; }
@@ -2176,6 +2177,8 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-oc-info-grid { margin-bottom: 20px; }
 .fn-oc-info-grid .fn-info-label { font-size: .95rem; }
 .fn-oc-info-grid .fn-info-value { font-size: 1.05rem; }
+.fn-oc-break-value { overflow-wrap: anywhere; }
+.fn-oc-profile-note { margin: -4px 0 0; color: var(--fn-text-secondary); font: .9rem/1.45 var(--fn-font-text); }
 .fn-oc-awg-badge {
 	display: inline-flex;
 	margin: -8px 0 16px;
@@ -2267,6 +2270,7 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-oc-file-input { display: none; }
 .fn-oc-import-modal { position: relative; width: min(94%, 680px); max-width: 680px; max-height: calc(100vh - 32px); margin: 16px auto; padding: 28px 32px 24px; overflow-y: auto; }
 .fn-oc-import-text { display: block; width: 100%; min-height: 230px; resize: vertical; font: .9rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.fn-oc-profile-text { display: block; width: 100%; min-height: 360px; resize: vertical; font: .85rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 2; }
 .fn-oc-import-file { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 .fn-oc-file-name { color: var(--fn-text-secondary); font-family: var(--fn-font-text); overflow-wrap: anywhere; }
 .fn-oc-compat-modal { position: relative; width: min(94%, 680px); max-width: 680px; max-height: calc(100vh - 32px); margin: 16px auto; padding: 28px 32px 24px; overflow-y: auto; }
@@ -2278,6 +2282,9 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-oc-compat-choice strong { color: var(--fn-text); }
 .fn-oc-compat-choice span { color: var(--fn-text-secondary); font-family: var(--fn-font-text); line-height: 1.35; }
 .fn-oc-compat-choice .fn-settings-btn { width: auto; flex: 0 0 auto; white-space: nowrap; }
+.fn-oc-profile-warning { margin-top: 18px; }
+.fn-oc-chooser-modal { position: relative; width: min(94%, 520px); max-width: 520px; margin: 16px auto; padding: 28px 32px 24px; }
+.fn-oc-openvpn-modal { width: min(94%, 820px); max-width: 820px; }
 
 @media (max-width: 900px) {
 	.fn-oc-title-row { flex-direction: column; }
@@ -2288,7 +2295,7 @@ body.modal-overlay-active { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
-	.fn-oc-head-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.fn-oc-head-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
 	.fn-oc-head-actions .fn-settings-btn { width: 100%; padding: 8px 6px; }
 	.fn-oc-card-head { flex-wrap: wrap; }
 	.fn-oc-card-head .fn-oc-card-title { min-width: calc(100% - 34px); }
@@ -2298,7 +2305,7 @@ body.modal-overlay-active { overflow: hidden; }
 	.fn-oc-peer-ips, .fn-oc-peer-stats { align-self: stretch; text-align: left; }
 	.fn-oc-form-grid, .fn-oc-peer-grid { display: flex; flex-direction: column; gap: 12px; }
 	.fn-oc-awg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-	.fn-oc-modal, .fn-oc-import-modal, .fn-oc-compat-modal { width: calc(100% - 24px); max-height: calc(100vh - 24px); margin: 12px auto; padding: 24px 20px 18px; }
+	.fn-oc-modal, .fn-oc-import-modal, .fn-oc-compat-modal, .fn-oc-chooser-modal, .fn-oc-openvpn-modal { width: calc(100% - 24px); max-height: calc(100vh - 24px); margin: 12px auto; padding: 24px 20px 18px; }
 	.fn-oc-modal-actions { flex-direction: column-reverse; }
 	.fn-oc-modal-actions .fn-settings-btn { width: 100%; }
 	.fn-oc-compat-choice { align-items: stretch; flex-direction: column; }

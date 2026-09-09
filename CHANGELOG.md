@@ -9,6 +9,10 @@ All notable Freenetic changes are documented here.
 - Dashboard summary cards now link directly to their full native views for
   Internet, traffic, Wi‑Fi, network, port and system details, including the
   same in-place SPA navigation on mobile.
+- Other Connections now supports native OpenVPN profiles: import, edit,
+  export, enable/disable and delete are backed by a protected router-side
+  profile file and a regular `proto openvpn` network interface. OpenVPN
+  tunnels are available to Access & Routing Policy alongside WireGuard.
 
 ## [0.2.0-alpha.3] — 2026-09-09
 

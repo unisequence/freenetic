@@ -771,6 +771,147 @@ msgstr "Импортировать .conf"
 msgid "Add connection"
 msgstr "Добавить подключение"
 
+msgid "Import .ovpn"
+msgstr "Импортировать .ovpn"
+
+msgid "OpenVPN"
+msgstr "OpenVPN"
+
+msgid "OpenVPN netifd protocol is ready."
+msgstr "Протокол OpenVPN для netifd готов."
+
+msgid "Install an OpenVPN package to create or start an OpenVPN tunnel."
+msgstr "Установите пакет OpenVPN, чтобы создать или запустить туннель OpenVPN."
+
+msgid "Profile-based VPN protocol with broad provider support"
+msgstr "VPN-протокол на основе профилей с широкой поддержкой провайдеров"
+
+msgid "Add OpenVPN connection"
+msgstr "Добавить подключение OpenVPN"
+
+msgid "Edit OpenVPN connection"
+msgstr "Изменить подключение OpenVPN"
+
+msgid "New OpenVPN connection"
+msgstr "Новое подключение OpenVPN"
+
+msgid "OpenVPN profile"
+msgstr "Профиль OpenVPN"
+
+msgid "Tunnel device"
+msgstr "Устройство туннеля"
+
+msgid "Profile"
+msgstr "Профиль"
+
+msgid "Profile storage"
+msgstr "Хранение профиля"
+
+msgid "Freenetic managed"
+msgstr "Управляется Freenetic"
+
+msgid "External file"
+msgstr "Внешний файл"
+
+msgid "Profile not set"
+msgstr "Профиль не задан"
+
+msgid "The profile is passed to the native OpenVPN netifd protocol. Provider directives and inline certificates stay unchanged."
+msgstr "Профиль передаётся штатному протоколу OpenVPN для netifd. Директивы провайдера и встроенные сертификаты сохраняются без изменений."
+
+msgid "Choose the protocol for the new native OpenWrt connection. You can import a provider profile instead."
+msgstr "Выберите протокол нового штатного подключения OpenWrt. Вместо этого можно импортировать профиль провайдера."
+
+msgid "Paste the complete .ovpn profile, including inline certificates when possible…"
+msgstr "Вставьте полный профиль .ovpn, по возможности вместе со встроенными сертификатами…"
+
+msgid "Loading profile…"
+msgstr "Загрузка профиля…"
+
+msgid "Stored on the router with mode 0600."
+msgstr "Хранится на роутере с правами 0600."
+
+msgid "External profile file; saving creates a Freenetic-managed copy."
+msgstr "Внешний файл профиля; при сохранении создаётся копия под управлением Freenetic."
+
+msgid "The profile could not be read. Paste it again or choose a local file."
+msgstr "Не удалось прочитать профиль. Вставьте его заново или выберите локальный файл."
+
+msgid "Choose .ovpn file"
+msgstr "Выбрать файл .ovpn"
+
+msgid "Local profile loaded. It will be copied to the router when saved."
+msgstr "Локальный профиль загружен. При сохранении он будет скопирован на роутер."
+
+msgid "Use a complete OpenVPN client or server profile. The native OpenVPN netifd protocol keeps provider directives, inline certificates and routing options intact."
+msgstr "Используйте полный профиль клиента или сервера OpenVPN. Штатный протокол OpenVPN для netifd сохраняет директивы провайдера, встроенные сертификаты и параметры маршрутизации."
+
+msgid "Profile files and secrets"
+msgstr "Файлы профилей и секреты"
+
+msgid "Profiles are stored only on this router. Relative certificate or auth-file paths must already exist beside the profile; inline blocks are recommended for imports."
+msgstr "Профили хранятся только на этом роутере. Относительные пути к сертификатам и auth-файлам должны уже существовать рядом с профилем; для импорта рекомендуется использовать встроенные блоки."
+
+msgid "Paste or choose an OpenVPN profile first."
+msgstr "Сначала вставьте или выберите профиль OpenVPN."
+
+msgid "The OpenVPN profile contains an invalid NUL character."
+msgstr "Профиль OpenVPN содержит недопустимый нулевой символ."
+
+#, javascript-format
+msgid "The OpenVPN profile is too large (maximum %d KiB)."
+msgstr "Профиль OpenVPN слишком большой (максимум %d КиБ)."
+
+msgid "The file does not look like an OpenVPN profile."
+msgstr "Файл не похож на профиль OpenVPN."
+
+msgid "Unable to install the OpenVPN profile."
+msgstr "Не удалось установить профиль OpenVPN."
+
+msgid "Unable to remove the OpenVPN profile."
+msgstr "Не удалось удалить профиль OpenVPN."
+
+msgid "Continue"
+msgstr "Продолжить"
+
+msgid "Imported OpenVPN connection"
+msgstr "Импортированное подключение OpenVPN"
+
+msgid "Install an OpenVPN package from Applications before saving a tunnel."
+msgstr "Перед сохранением туннеля установите пакет OpenVPN в разделе «Приложения»."
+
+msgid "OpenVPN connection saved."
+msgstr "Подключение OpenVPN сохранено."
+
+#, javascript-format
+msgid "Failed to save OpenVPN connection: %s"
+msgstr "Не удалось сохранить подключение OpenVPN: %s"
+
+msgid "Delete OpenVPN connection \"%s\" and its managed profile?"
+msgstr "Удалить подключение OpenVPN «%s» и его управляемый профиль?"
+
+msgid "This OpenVPN connection has no profile to export."
+msgstr "У этого подключения OpenVPN нет профиля для экспорта."
+
+msgid "The exported OpenVPN profile may contain private keys and passwords. Continue?"
+msgstr "Экспортируемый профиль OpenVPN может содержать приватные ключи и пароли. Продолжить?"
+
+#, javascript-format
+msgid "Failed to export OpenVPN profile: %s"
+msgstr "Не удалось экспортировать профиль OpenVPN: %s"
+
+msgid "Import profile"
+msgstr "Импортировать профиль"
+
+msgid "Import OpenVPN profile"
+msgstr "Импорт профиля OpenVPN"
+
+msgid "Paste an OpenVPN .ovpn profile here…"
+msgstr "Вставьте сюда профиль OpenVPN .ovpn…"
+
+msgid "Import a complete .ovpn profile. Inline certificates and keys are preserved; external files must already be present on the router."
+msgstr "Импортируйте полный профиль .ovpn. Встроенные сертификаты и ключи сохраняются; внешние файлы должны уже находиться на роутере."
+
 msgid "Native OpenWrt kernel protocol is ready."
 msgstr "Штатный протокол ядра OpenWrt готов."
 
@@ -1269,6 +1410,12 @@ msgstr "Выберите подключение WireGuard"
 
 msgid "No WireGuard connections configured"
 msgstr "Подключения WireGuard не настроены"
+
+msgid "Select a VPN connection"
+msgstr "Выберите VPN-подключение"
+
+msgid "No VPN connections configured"
+msgstr "VPN-подключения не настроены"
 
 msgid "Only IPv4 traffic from this segment uses the selected tunnel."
 msgstr "Только IPv4-трафик этого сегмента использует выбранный туннель."
@@ -2449,6 +2596,12 @@ msgstr "Не удалось сохранить настройки IPv6: %s"
 # Access & Routing Policy
 msgid "Install Policy-based routing and configure a WireGuard connection first."
 msgstr "Сначала установите маршрутизацию по политикам и настройте подключение WireGuard."
+
+msgid "Install Policy-based routing and configure a VPN connection first."
+msgstr "Сначала установите маршрутизацию по политикам и настройте VPN-подключение."
+
+msgid "Direct and Block Internet work without extra packages. Install the advanced “Policy-based routing” package from Applications to route a segment through a VPN tunnel."
+msgstr "Прямое подключение и блокировка интернета работают без дополнительных пакетов. Установите расширенный пакет «Маршрутизация по политикам» в разделе «Приложения», чтобы направлять сегмент через VPN-туннель."
 
 msgid "A non-Freenetic firewall rule already uses this device exception name."
 msgstr "Это имя исключения устройства уже используется сторонним правилом межсетевого экрана."

@@ -28,6 +28,7 @@
 				"/usr/libexec/package-manager-call list-installed": [ "exec" ],
 				"/usr/libexec/freenetic-package-status *": [ "exec" ],
 				"/usr/libexec/freenetic-awg-feed status": [ "exec" ],
+				"/etc/openvpn/freenetic/*": [ "read" ],
 				"/usr/share/ddns/default": [ "list" ],
 				"/usr/share/ddns/default/*": [ "read" ],
 				"/usr/share/ddns/custom": [ "list" ],
@@ -47,6 +48,7 @@
 				"system": [ "validate_firmware_image" ]
 			},
 			"file": {
+				"/tmp/freenetic-openvpn-*": [ "write" ],
 				"/sbin/ifup": [ "exec" ],
 				"/sbin/sysupgrade --test /tmp/firmware.bin": [ "exec" ],
 				"/sbin/sysupgrade /tmp/firmware.bin": [ "exec" ],
@@ -58,6 +60,8 @@
 				"/usr/libexec/package-manager-call install *": [ "exec" ],
 				"/usr/libexec/package-manager-call remove *": [ "exec" ],
 				"/usr/libexec/freenetic-awg-feed install": [ "exec" ],
+				"/usr/libexec/freenetic-openvpn-profile install *": [ "exec" ],
+				"/usr/libexec/freenetic-openvpn-profile remove *": [ "exec" ],
 				"/usr/libexec/freenetic-network-restart": [ "exec" ],
 				"/usr/libexec/freenetic-pbr-restart": [ "exec" ],
 				"/usr/lib/ddns/dynamic_dns_lucihelper.sh": [ "exec" ]

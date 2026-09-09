@@ -118,7 +118,9 @@ $SSH_CMD "$ROUTER" '
              /usr/share/rpcd/acl.d/luci-app-freenetic.json \
              /usr/libexec/freenetic-backup-call /usr/libexec/freenetic-clear-luci-cache \
              /usr/libexec/freenetic-diagnostics-call /usr/libexec/freenetic-awg-feed \
-             /usr/libexec/freenetic-package-status /usr/libexec/freenetic-network-restart \
+             /etc/openvpn/freenetic /usr/libexec/freenetic-openvpn-profile \
+             /usr/libexec/freenetic-package-status \
+             /usr/libexec/freenetic-network-restart \
              /usr/libexec/freenetic-pbr-restart; do
         grep -qxF "$p" /etc/sysupgrade.conf || echo "$p" >> /etc/sysupgrade.conf
     done

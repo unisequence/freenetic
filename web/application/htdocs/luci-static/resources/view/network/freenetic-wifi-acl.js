@@ -147,7 +147,16 @@ function isManagedSection(section, scope) {
 
 function isVpnInterface(section) {
 	const proto = String(section && section.proto || '').toLowerCase();
-	return proto === 'wireguard' || proto === 'amneziawg';
+	return proto === 'wireguard' || proto === 'amneziawg' || proto === 'openvpn';
+}
+
+function vpnProtocolLabel(section) {
+	const proto = String(section && section.proto || '').toLowerCase();
+	if (proto === 'amneziawg')
+		return 'AmneziaWG';
+	if (proto === 'openvpn')
+		return 'OpenVPN';
+	return 'WireGuard';
 }
 
 function findZoneForNetwork(firewall, network) {
@@ -557,7 +566,7 @@ return view.extend({
 			}, _('Open Applications'));
 			this.policyNoticeNode.className = 'fn-oc-notice fn-oc-notice-warning fn-wifi-policy-notice';
 			this.policyNoticeNode.appendChild(E('strong', {}, _('VPN routing is not installed')));
-			this.policyNoticeNode.appendChild(E('span', {}, _('Direct and Block Internet work without extra packages. Install the advanced “Policy-based routing” package from Applications to route a segment through WireGuard.')));
+			this.policyNoticeNode.appendChild(E('span', {}, _('Direct and Block Internet work without extra packages. Install the advanced “Policy-based routing” package from Applications to route a segment through a VPN tunnel.')));
 			this.policyNoticeNode.appendChild(link);
 		}
 		else {
@@ -598,12 +607,11 @@ return view.extend({
 		modeSelect.value = current.mode === 'vpn' && vpnByName[current.vpnInterface] ? 'vpn' : current.mode;
 
 		const vpnSelect = E('select', { class: 'fn-input' }, [
-			E('option', { value: '' }, vpnInterfaces.length ? _('Select a WireGuard connection') : _('No WireGuard connections configured'))
+			E('option', { value: '' }, vpnInterfaces.length ? _('Select a VPN connection') : _('No VPN connections configured'))
 		]);
 		vpnInterfaces.forEach(section => {
 			const ifaceName = sectionName(section);
-			const proto = String(section.proto || '').toLowerCase() === 'amneziawg' ? 'AmneziaWG' : 'WireGuard';
-			vpnSelect.appendChild(E('option', { value: ifaceName }, (section.label || ifaceName) + ' · ' + proto));
+			vpnSelect.appendChild(E('option', { value: ifaceName }, (section.label || section.freenetic_name || ifaceName) + ' · ' + vpnProtocolLabel(section)));
 		});
 		vpnSelect.value = vpnByName[current.vpnInterface] ? current.vpnInterface : (vpnInterfaces[0] && sectionName(vpnInterfaces[0]) || '');
 		const vpnField = E('div', { class: 'fn-settings-field fn-wifi-policy-vpn-field' }, [ E('label', {}, _('VPN connection')), vpnSelect ]);
@@ -617,7 +625,7 @@ return view.extend({
 			status.appendChild(document.createTextNode(policyModeLabel(mode)));
 			vpnField.hidden = mode !== 'vpn';
 			if (mode === 'vpn')
-				hint.textContent = this.pbrAvailable && vpnInterfaces.length ? _('Only IPv4 traffic from this segment uses the selected tunnel.') : _('Install Policy-based routing and configure a WireGuard connection first.');
+				hint.textContent = this.pbrAvailable && vpnInterfaces.length ? _('Only IPv4 traffic from this segment uses the selected tunnel.') : _('Install Policy-based routing and configure a VPN connection first.');
 			else if (mode === 'block')
 				hint.textContent = _('Internet forwarding is rejected for this segment; access to the router remains available.');
 			else
@@ -684,12 +692,11 @@ return view.extend({
 		modeSelect.value = current.mode;
 
 		const vpnSelect = E('select', { class: 'fn-input' }, [
-			E('option', { value: '' }, vpnInterfaces.length ? _('Select a WireGuard connection') : _('No WireGuard connections configured'))
+			E('option', { value: '' }, vpnInterfaces.length ? _('Select a VPN connection') : _('No VPN connections configured'))
 		]);
 		vpnInterfaces.forEach(section => {
 			const ifaceName = sectionName(section);
-			const proto = String(section.proto || '').toLowerCase() === 'amneziawg' ? 'AmneziaWG' : 'WireGuard';
-			vpnSelect.appendChild(E('option', { value: ifaceName }, (section.label || section.freenetic_name || ifaceName) + ' · ' + proto));
+			vpnSelect.appendChild(E('option', { value: ifaceName }, (section.label || section.freenetic_name || ifaceName) + ' · ' + vpnProtocolLabel(section)));
 		});
 		vpnSelect.value = vpnByName[current.vpnInterface] ? current.vpnInterface : (vpnInterfaces[0] && sectionName(vpnInterfaces[0]) || '');
 		const vpnField = E('div', { class: 'fn-settings-field fn-wifi-policy-vpn-field' }, [ E('label', {}, _('VPN connection')), vpnSelect ]);
@@ -703,7 +710,7 @@ return view.extend({
 			status.appendChild(document.createTextNode(deviceModeLabel(mode)));
 			vpnField.hidden = mode !== 'vpn';
 			if (mode === 'vpn')
-				hint.textContent = this.pbrAvailable && vpnInterfaces.length ? _('This device is matched by its MAC address; only its IPv4 traffic uses the selected tunnel.') : _('Install Policy-based routing and configure a WireGuard connection first.');
+				hint.textContent = this.pbrAvailable && vpnInterfaces.length ? _('This device is matched by its MAC address; only its IPv4 traffic uses the selected tunnel.') : _('Install Policy-based routing and configure a VPN connection first.');
 			else if (mode === 'block')
 				hint.textContent = _('Internet forwarding is rejected for this device; access to the router remains available.');
 			else if (mode === 'direct')
@@ -835,7 +842,7 @@ return view.extend({
 			return Promise.resolve();
 		}
 		if (opts.mode === 'vpn' && (!opts.pbrAvailable || !opts.vpnInterface)) {
-			notify(_('Install Policy-based routing and configure a WireGuard connection first.'), 'warning');
+			notify(_('Install Policy-based routing and configure a VPN connection first.'), 'warning');
 			return Promise.resolve();
 		}
 		if (opts.mode === 'block' && (!opts.zone || !opts.wanZone)) {
@@ -924,7 +931,7 @@ return view.extend({
 
 	saveDevicePolicy(mac, opts, saveButton) {
 		if (opts.mode === 'vpn' && (!opts.pbrAvailable || !opts.vpnInterface)) {
-			notify(_('Install Policy-based routing and configure a WireGuard connection first.'), 'warning');
+			notify(_('Install Policy-based routing and configure a VPN connection first.'), 'warning');
 			return Promise.resolve();
 		}
 		if (opts.mode === 'block' && (!opts.network || !opts.zone || !opts.wanZone)) {

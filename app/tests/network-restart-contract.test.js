@@ -23,6 +23,7 @@ assert.ok(fs.statSync(helperPath).mode & 0o111, 'network restart helper must be 
 assert.match(helper, /\/etc\/init\.d\/network restart/, 'helper must restart the OpenWrt network service');
 assert.match(helper, /pidof netifd/, 'helper must wait for netifd to return');
 assert.match(apps, /restartNetifdOnInstall:\s*true/, 'WireGuard install must request a netifd restart');
+assert.match(apps, /id: 'openvpn',[\s\S]*restartNetifdOnInstall:\s*true/, 'OpenVPN install must request a netifd restart');
 assert.match(apps, /freenetic-network-restart/, 'Applications must call the network restart helper');
 assert.match(connections, /freenetic-network-restart/, 'AWG installation must call the network restart helper');
 assert.ok(acl.write.file['/usr/libexec/freenetic-network-restart'],
