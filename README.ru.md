@@ -62,8 +62,8 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 - Access & Routing Policy для целой сети или отдельного устройства:
   Direct (WAN), VPN через WireGuard/AmneziaWG и Block Internet
 
-Не готово: IntelliQoS, Mobile/DSL/Wireless ISP-подключения, анализатор
-трафика приложений и перекрёстные ссылки между карточками.
+Не готово: IntelliQoS, Mobile/DSL/Wireless ISP-подключения и анализатор
+трафика приложений.
 
 ## Дальше по плану
 

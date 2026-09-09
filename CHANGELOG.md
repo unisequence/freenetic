@@ -4,6 +4,12 @@ All notable Freenetic changes are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Dashboard summary cards now link directly to their full native views for
+  Internet, traffic, Wi‑Fi, network, port and system details, including the
+  same in-place SPA navigation on mobile.
+
 ## [0.2.0-alpha.3] — 2026-09-09
 
 ### Added

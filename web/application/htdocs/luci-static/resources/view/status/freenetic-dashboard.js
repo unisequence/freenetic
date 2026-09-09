@@ -101,6 +101,31 @@ const dom_content = uiHelper.content;
 const notify = uiHelper.notify;
 const applyChanges = uiHelper.applyChanges;
 
+/* Dashboard cards are summaries, not dead ends. Keep the action in the
+ * header so live controls inside each card (Wi-Fi toggles, QR buttons and
+ * update controls) retain their own click targets while the card still has a
+ * clear path to its full settings view. The theme navigation layer upgrades
+ * these same-origin links to in-place SPA transitions. */
+function cardAction(path, title) {
+	const label = _('Details');
+	return E('a', {
+		class: 'fn-card-link',
+		href: L.url.apply(L, path),
+		title: label + ': ' + title,
+		'aria-label': label + ': ' + title
+	}, [
+		E('span', { class: 'fn-card-link-text' }, label),
+		E('span', { class: 'fn-card-link-arrow', 'aria-hidden': 'true' }, '→')
+	]);
+}
+
+function cardHead(iconPath, title, path) {
+	const children = [ svgIcon(iconPath, 20), E('h3', {}, title) ];
+	if (path)
+		children.push(cardAction(path, title));
+	return E('div', { class: 'fn-card-head' }, children);
+}
+
 /* Self-contained rx/tx sparkline, driven by our own polling below —
  * no luci-bwc/rrd dependency, starts empty and fills in over ~2 minutes. */
 function renderSparkline() {
@@ -578,10 +603,7 @@ return view.extend({
 			: [ E('div', { class: 'fn-info-empty' }, _('No WAN interface configured.')) ];
 
 		return E('div', { class: 'fn-card' }, [
-			E('div', { class: 'fn-card-head' }, [
-				svgIcon('M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2ZM2 12h20M12 2c2.5 2.7 4 6.2 4 10s-1.5 7.3-4 10c-2.5-2.7-4-6.2-4-10s1.5-7.3 4-10Z', 20),
-				E('h3', {}, _('Internet'))
-			]),
+			cardHead('M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2ZM2 12h20M12 2c2.5 2.7 4 6.2 4 10s-1.5 7.3-4 10c-2.5-2.7-4-6.2-4-10s1.5-7.3 4-10Z', _('Internet'), [ 'admin', 'network', 'internet' ]),
 			E('div', { class: 'fn-card-body fn-conn-list' }, blocks)
 		]);
 	},
@@ -772,10 +794,7 @@ return view.extend({
 		this.buildNetworksBody(wireless, ports, netConfig, dhcpConfig, leases, guestInfo);
 
 		return E('div', { class: 'fn-card' }, [
-			E('div', { class: 'fn-card-head' }, [
-				svgIcon('M12 20h.01M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 14 0', 20),
-				E('h3', {}, _('My Networks & Wi-Fi'))
-			]),
+			cardHead('M12 20h.01M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 14 0', _('My Networks & Wi-Fi'), [ 'admin', 'network', 'home_network' ]),
 			body
 		]);
 	},
@@ -1181,10 +1200,7 @@ return view.extend({
 		});
 
 		return E('div', { class: 'fn-card' }, [
-			E('div', { class: 'fn-card-head' }, [
-				svgIcon('M4 9h16v10H4zM8 9V6a4 4 0 0 1 8 0v3', 20),
-				E('h3', {}, _('Network Ports'))
-			]),
+			cardHead('M4 9h16v10H4zM8 9V6a4 4 0 0 1 8 0v3', _('Network Ports'), [ 'admin', 'network', 'home_network' ]),
 			E('div', { class: 'fn-card-body' }, [ row ])
 		]);
 	},
@@ -1245,10 +1261,7 @@ return view.extend({
 		this.activeRadio = radios[0];
 
 		return E('div', { class: 'fn-card' }, [
-			E('div', { class: 'fn-card-head' }, [
-				svgIcon('M3 3v18h18M7 16v-4M11 16V8M15 16v-7M19 16v-2', 20),
-				E('h3', {}, _('Wi-Fi Monitor'))
-			]),
+			cardHead('M3 3v18h18M7 16v-4M11 16V8M15 16v-7M19 16v-2', _('Wi-Fi Monitor'), [ 'admin', 'status', 'wifimonitor' ]),
 			E('div', { class: 'fn-card-body' }, [ tabs, chart ])
 		]);
 	},
@@ -1300,10 +1313,7 @@ return view.extend({
 		this.trafficLegend = legend;
 
 		return E('div', { class: 'fn-card' }, [
-			E('div', { class: 'fn-card-head' }, [
-				svgIcon('M3 17l6-6 4 4 8-8M21 3v6h-6', 20),
-				E('h3', {}, _('Traffic Monitor'))
-			]),
+			cardHead('M3 17l6-6 4 4 8-8M21 3v6h-6', _('Traffic Monitor'), [ 'admin', 'status', 'traffic' ]),
 			E('div', { class: 'fn-card-body fn-traffic-body' }, [
 				E('div', { class: 'fn-donut-wrap' }, [ donut, E('div', { class: 'fn-donut-hole' }) ]),
 				legend
@@ -1566,10 +1576,7 @@ return view.extend({
 		]);
 
 		return E('div', { class: 'fn-card fn-system-card' }, [
-			E('div', { class: 'fn-card-head' }, [
-				svgIcon('M9 3h6v4H9zM4 9h16v10H4zM9 21v-2h6v2', 20),
-				E('h3', {}, _('About System'))
-			]),
+			cardHead('M9 3h6v4H9zM4 9h16v10H4zM9 21v-2h6v2', _('About System'), [ 'admin', 'system', 'system' ]),
 			body
 		]);
 	},

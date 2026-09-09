@@ -1775,6 +1775,33 @@ body.modal-overlay-active { overflow: hidden; }
 	letter-spacing: .03em;
 }
 .fn-card-head .fn-icon { color: var(--fn-accent); }
+.fn-card-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	flex: 0 0 auto;
+	padding: 3px 0;
+	color: var(--fn-accent);
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: 0;
+	text-decoration: none;
+	white-space: nowrap;
+}
+.fn-card-link:hover { color: var(--fn-accent-hover); text-decoration: underline; }
+.fn-card-link:focus-visible {
+	outline: 2px solid var(--fn-accent);
+	outline-offset: 3px;
+	border-radius: var(--fn-radius-sm);
+}
+.fn-card-link-arrow {
+	display: inline-block;
+	font-size: 1.25em;
+	line-height: 1;
+	transition: transform .15s ease;
+}
+.fn-card-link:hover .fn-card-link-arrow { transform: translate(2px, -1px); }
 .fn-collapse-head { cursor: pointer; user-select: none; }
 .fn-collapse-head:hover { background: var(--fn-surface-alt); }
 .fn-collapse-head:focus-visible {

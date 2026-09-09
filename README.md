@@ -62,8 +62,8 @@ hardware right now:
 - Access & Routing Policy for whole network segments or individual devices:
   Direct (WAN), WireGuard/AmneziaWG VPN and Block Internet modes
 
-Not built yet: IntelliQoS, Mobile/DSL/Wireless ISP connection types, the
-application traffic analyzer, and cross-links between cards.
+Not built yet: IntelliQoS, Mobile/DSL/Wireless ISP connection types, and the
+application traffic analyzer.
 
 ## Roadmap
 

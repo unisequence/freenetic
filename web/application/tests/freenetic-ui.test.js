@@ -119,6 +119,22 @@ const uiHelper = new Function('baseclass', 'ui', 'uci', 'document', 'E', 'setTim
 			`${relativeView} must not carry private copies of shared UI helpers`);
 	}
 
+	const dashboard = fs.readFileSync(path.join(resourcesPath, 'view', 'status',
+		'freenetic-dashboard.js'), 'utf8');
+	assert.match(dashboard, /function cardAction\(/,
+		'dashboard cards must expose a shared details action');
+	for (const route of [
+		'admin/network/internet',
+		'admin/network/home_network',
+		'admin/status/traffic',
+		'admin/status/wifimonitor',
+		'admin/system/system'
+	]) {
+		const pattern = route.split('/').map(part => "['\"]" + part + "['\"]").join('\\s*,\\s*');
+		assert.match(dashboard, new RegExp(pattern),
+			`dashboard card link must target ${route}`);
+	}
+
 	console.log('shared UI helpers: ok');
 })().catch(error => {
 	console.error(error);

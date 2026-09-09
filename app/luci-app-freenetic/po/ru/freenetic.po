@@ -1434,6 +1434,9 @@ msgstr "Обновить"
 msgid "Edit"
 msgstr "Изменить"
 
+msgid "Details"
+msgstr "Подробнее"
+
 msgid "Delete"
 msgstr "Удалить"
 
