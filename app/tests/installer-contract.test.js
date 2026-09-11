@@ -20,6 +20,9 @@ for (const marker of [
 	"FNC_BIN=\"fnc-${ASSET_VERSION}-${target_suffix}\"",
 	"sha256sum",
 	"apk add --allow-untrusted",
+	"link_runtime_library",
+	"LD_LIBRARY_PATH=\"/usr/lib/freenetic:/lib:/usr/lib",
+	"/usr/lib/freenetic/fnc.bin",
 	"/usr/bin/fnc",
 	"fnc show version"
 ]) {

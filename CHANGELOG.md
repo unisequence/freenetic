@@ -11,7 +11,10 @@ which they became user-visible.
 - A pinned one-shot `install.sh` for supported apk-based routers. It checks
   target, ABI, CPU, RAM and free overlay space, verifies all five release
   assets by SHA-256, installs the four LuCI APKs and places the matching
-  `fnc` binary at `/usr/bin/fnc`.
+  `fnc` launcher at `/usr/bin/fnc`.
+- The installer handles compatible OpenWrt library SONAME differences for
+  `fnc` through private aliases under `/usr/lib/freenetic`, without changing
+  the router's system libraries.
 
 ## [0.2.0] — 2026-09-11
 
