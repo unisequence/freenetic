@@ -1,6 +1,8 @@
 # Changelog
 
-All notable Freenetic changes are documented here.
+All notable Freenetic changes are documented here. The project follows
+release tags; small implementation commits are grouped by the release in
+which they became user-visible.
 
 ## [Unreleased]
 
@@ -30,6 +32,70 @@ No changes yet.
   with at least two CPU cores, 128 MiB RAM and the target-specific free-space
   reserve. The same check is available as `app/check-router.sh`, and `fnc` is
   cross-compiled for both supported ABIs.
+- The four noarch Freenetic APKs are staged into the normal `mipsel_24kc`
+  feed as well as the primary Filogic feed, with a generated package index
+  for each target path.
+- Release guards refuse a dirty worktree and validate that every APK
+  advertised by each local index exists next to that index.
+
+### Improved
+
+- The release is now split into independently assembled
+  `luci-theme-freenetic` and `luci-app-freenetic` packages, with browser
+  sources under `web/`, OpenWrt integration under `app/`, backend helpers,
+  menu overrides and explicit rpcd ACLs.
+- Applications has package capability preflight, Recommended/Advanced/
+  Installed/All views, USB/modem/tethering/peripheral bundles and clear
+  handling for unavailable kernel modules. Network protocol installation
+  refreshes netifd and reports a reboot fallback when a live restart is not
+  possible.
+- Other Connections separates WireGuard and AmneziaWG readiness, supports
+  optional signed AWG feeds constrained to the exact firmware release,
+  target and kernel, and gives the user an explicit fallback when AWG-only
+  settings cannot be supported.
+- Native Russian translations were completed across the Freenetic views;
+  language changes persist without leaving a false `Unsaved Changes` state.
+- Dashboard, Internet/WAN, Traffic Monitor, Routing, Port Forwarding,
+  Applications and System received desktop/mobile layout polish, clearer
+  labels, status pills, cross-links and improved diagnostics presentation.
+- The final release is self-contained for its UI fonts: Roboto is served as
+  subsetted Latin/Cyrillic WOFF2, while the pixel font remains scoped to the
+  brand/login treatment. Login transitions, model hierarchy and settings
+  controls were tuned for the real interface.
+
+### Fixed and hardened
+
+- Guest UCI sections created by Freenetic are marked and only those sections
+  are removed later; user- or package-owned guest configuration is preserved.
+- Wi-Fi saves no longer force a fake regulatory country. The UI exposes the
+  actual `iwinfo`/UCI country list and writes a change only when the user
+  explicitly selects one.
+- Freenetic-only menu entries disappear under another LuCI theme, while
+  System and Firewall delegate to their stock views. LuCI menu-cache cleanup
+  makes a theme switch take effect immediately.
+- Applications now declares and grants the package-manager dependency it
+  actually calls, and CLI builds no longer depend on a personal absolute
+  OpenWrt path.
+- Initial dashboard metrics no longer show a stale high CPU sample while the
+  first live measurement is loading. Duplicate diagnostics status output and
+  misleading labels were removed.
+- Login and navigation dialogs, settings drawers, tabs, QR dialogs and
+  mobile layouts received keyboard/focus, accessibility and reduced-motion
+  fixes.
+
+### Verification
+
+- `make check` passes static layout, JavaScript, shell, JSON, contract/unit
+  and policy tests, plus CLI cross-compilation for both aarch64/Filogic and
+  mipsel/MT7621 when the corresponding toolchains are available.
+- `make release` builds the theme, application and both Russian translation
+  APKs, regenerates the primary feed, stages the MT7621 feed and validates
+  both indexes.
+- `app/check-router.sh` passes on the BT RB300 test router; the current
+  source was deployed and smoke-tested with the Russian interface enabled.
+- The release tree contains 29 commits after `v0.1.0`, touching 112 files:
+  17,382 added lines and 1,640 removed lines (net +15,742, including UI,
+  translations, tests, helpers and packaging metadata).
 
 ## [0.2.0-alpha.3] — 2026-09-09
 
@@ -150,6 +216,69 @@ more cohesive router interface while keeping OpenWrt and LuCI compatibility.
 
 ## [0.2.0-alpha.1] — 2026-09-06
 
-- Initial alpha release of the split `luci-theme-freenetic` and
-  `luci-app-freenetic` packages with the Freenetic web interface, diagnostics
-  and OpenWrt integration.
+The first alpha established the package and UI architecture used by all later
+releases.
+
+### Added
+
+- Split source and package layers: browser code lives under `web/`, OpenWrt
+  package integration under `app/`, and the two independently installable
+  packages are `luci-theme-freenetic` and `luci-app-freenetic`.
+- Native Diagnostics view and privileged router helpers for WAN addressing,
+  gateway/DNS state, bounded ping/traceroute and backup operations.
+- Shared RPC/network/UI helpers, explicit LuCI menu ownership and rpcd ACLs,
+  with contract tests for the privileged browser calls.
+- Build/deploy Makefiles, CI quality workflow, package-boundary tests and a
+  documented development layout.
+- Self-hosted, subsetted UI fonts with proper licenses and Russian coverage;
+  the previous experimental pixel body font was removed and WOFF2 references
+  were corrected.
+- Initial responsive mobile shell: compact settings panel, mobile drawer,
+  login-screen polish, status pills and persistent dismissal of the password
+  warning.
+
+### Improved
+
+- CLI build configuration, route/config command handling and REPL behavior
+  were made compatible with the new package layout.
+- Freenetic can be switched off in favor of a stock LuCI theme without
+  leaving the Freenetic shell or stale page markup behind.
+
+### Verification
+
+- Added JavaScript UI, raw-ubus, guest-firewall, diagnostics and accessibility
+  tests alongside the shell/package contract checks.
+
+## [0.1.0] — 2026-09-01
+
+The initial public Freenetic foundation: a clean-room Keenetic-style layer on
+top of vanilla OpenWrt for the Tenbay WR3000K / MediaTek MT7981 development
+device.
+
+### Added
+
+- `fnc`, a C CLI in the spirit of `ndmc`, linked directly against
+  `libubus`, `libuci` and `libubox` with no new runtime dependencies. It
+  includes a custom REPL/line editor, sectioned help, `show` commands for
+  version/system/interfaces/IP/running config, interface context actions,
+  ping/traceroute, reboot and static route add/remove/show commands.
+- `luci-theme-freenetic`, a from-scratch switchable LuCI theme with the
+  Freenetic/Keenetic-style shell, login screen, navigation, settings and
+  responsive card layout.
+- Dashboard, Traffic Monitor and Wi-Fi Monitor views.
+- Multi-WAN Internet view and WAN status presentation.
+- My Networks & Wi-Fi with Home/Guest networks, separate subnet, DHCP,
+  firewall isolation and Client List integration.
+- Port Forwarding and Firewall network-rule views.
+- System management for firmware download/flash, configuration and package
+  backup, and bootloader partition dumps.
+- Applications catalog built on OpenWrt's `apk` package manager.
+- UCI/ubus/rpcd integration, theme ACLs, LuCI menu entries, QR support and
+  the first real-hardware deployment path.
+
+### Compatibility notes
+
+- Freenetic is not a fork of KeeneticOS, is not binary-compatible with NDM,
+  and does not use proprietary Keenetic code.
+- At this stage the project targeted the MT7981 development router only;
+  broader hardware checks and the MT7621 feed were added later.
