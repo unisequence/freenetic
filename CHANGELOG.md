@@ -93,7 +93,8 @@ No changes yet.
   both indexes.
 - `app/check-router.sh` passes on the BT RB300 test router; the current
   source was deployed and smoke-tested with the Russian interface enabled.
-- The release tree contains 29 commits after `v0.1.0`, touching 112 files:
+- The `v0.2.0` release history contains 29 commits after `v0.1.0`, touching
+  112 files:
   17,382 added lines and 1,640 removed lines (net +15,742, including UI,
   translations, tests, helpers and packaging metadata).
 
