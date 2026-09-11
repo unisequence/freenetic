@@ -89,6 +89,11 @@ No changes yet.
 - The Client List, Dashboard and Traffic Monitor tolerate non-string MAC
   values from router ubus responses instead of failing the whole page during
   rendering.
+- Client List desktop rows now use one shared grid, keeping headings aligned
+  with values and action buttons; sidebar flex containment and the compact
+  mobile rail no longer clip navigation icons or leave stray text fragments.
+- Translation APKs now follow the matching UI source revision, so a release
+  always contains one coherent version across all four LuCI packages.
 - The pinned one-shot `install.sh` checks target, ABI, CPU, RAM and free
   overlay space, verifies all five release assets by SHA-256, installs the
   four LuCI APKs and places the matching `fnc` launcher at `/usr/bin/fnc`.
@@ -107,8 +112,8 @@ No changes yet.
   both indexes.
 - `app/check-router.sh` passes on the BT RB300 test router; the current
   source was deployed and smoke-tested with the Russian interface enabled.
-- The `v0.2.0` release history contains 36 commits after `v0.1.0`, touching
-  114 files: 17,920 added lines and 1,663 removed lines (net +16,257,
+- The `v0.2.0` release history contains 40 commits after `v0.1.0`, touching
+  114 files: 17,987 added lines and 1,642 removed lines (net +16,345,
   including UI, translations, tests, helpers, packaging metadata and the
   release installer).
 
