@@ -94,8 +94,12 @@ const navigationSource = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs
 	'luci-static', 'resources', 'menu-freenetic.js'), 'utf8');
 assert.match(navigationSource, /'system\/system', 'system\/diagnostics'/,
 	'diagnostics must stay inside the Management sidebar group');
-assert.match(navigationSource, /'system\/package-manager', 'system\/applications'/,
-	'Software and the Freenetic application catalog must stay inside Services');
+assert.match(navigationSource, /'system\/diagnostics', 'system\/package-manager',\s*'system\/applications'/,
+	'Software and the Freenetic application catalog must stay inside Management');
+assert.match(navigationSource, /title: 'Services', icon: 'services', paths: \[\]/,
+	'Services must be reserved for dynamically discovered service packages');
+assert.match(navigationSource, /'system\/package-manager': 'OpenWrt Packages'/,
+	'the stock package manager must have an explicit OpenWrt fallback label');
 assert.match(navigationSource, /entry\.section\.name !== 'services' && entry\.section\.name !== 'vpn'/,
 	'all stock and third-party service namespaces must be collected dynamically');
 assert.match(navigationSource, /'network\/diagnostics'/,

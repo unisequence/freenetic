@@ -134,6 +134,9 @@ msgstr "Система"
 msgid "Diagnostics"
 msgstr "Диагностика"
 
+msgid "OpenWrt Packages"
+msgstr "Пакеты OpenWrt"
+
 msgid "Applications"
 msgstr "Приложения"
 

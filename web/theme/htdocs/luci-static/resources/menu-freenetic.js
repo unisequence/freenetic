@@ -32,17 +32,22 @@ var SIDEBAR_GROUPS = [
 	{ title: 'Network Rules', icon: 'netrules', paths: [
 		'network/port_forwarding', 'network/firewall', 'network/routes'
 	] },
-	// Freenetic's service/package home. Stock Software and the curated
-	// Applications catalog live here too, while third-party entries below
+	// Third-party service packages own their menu paths; entries below
 	// admin/services (mihomo, zapret, https-dns-proxy, etc.) are discovered
 	// from the active LuCI menu tree at runtime.
-	{ title: 'Services', icon: 'services', paths: [
-		'system/package-manager', 'system/applications'
-	] },
+	{ title: 'Services', icon: 'services', paths: [] },
 	{ title: 'Management', icon: 'system', paths: [
-		'system/system', 'system/diagnostics'
+		'system/system', 'system/diagnostics', 'system/package-manager',
+		'system/applications'
 	] }
 ];
+
+/* The stock package manager remains available as a deliberately plain
+   OpenWrt fallback. Give it a stable, explicit label in Freenetic's sidebar
+   without changing the underlying LuCI route or the stock page itself. */
+var SIDEBAR_ENTRY_TITLES = {
+	'system/package-manager': 'OpenWrt Packages'
+};
 
 function icon(name) {
 	// E() uses document.createElement() for every tag, which can't produce
@@ -291,8 +296,11 @@ return baseclass.extend({
 			const sub = E('ul', { 'class': 'fn-nav-sub', 'id': subId });
 			group.entries.forEach(e => {
 				const isChildActive = e.section.name === L.env.requestpath[1] && e.child.name === L.env.requestpath[2];
+				const entryPath = e.section.name + '/' + e.child.name;
 				sub.appendChild(E('li', { 'class': isChildActive ? 'fn-active' : '' }, [
-					E('a', { 'href': L.url(mode.name, e.section.name, e.child.name) }, [ _(e.child.title) ])
+					E('a', { 'href': L.url(mode.name, e.section.name, e.child.name) }, [
+						_(SIDEBAR_ENTRY_TITLES[entryPath] || e.child.title)
+					])
 				]));
 			});
 			li.appendChild(sub);
