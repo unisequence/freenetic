@@ -303,6 +303,8 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 #fn-scroll {
 	flex: 1 1 auto;
 	min-height: 0;
+	min-width: 0;
+	width: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
 }
@@ -557,6 +559,8 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 #fn-body {
 	flex: 1 1 auto;
 	display: flex;
+	min-width: 0;
+	width: 100%;
 }
 
 #fn-sidebar {
@@ -566,6 +570,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	height: calc(100vh - var(--fn-topbar-h));
 	width: var(--fn-sidebar-w);
 	flex: 0 0 auto;
+	min-width: 0;
 	background: var(--fn-sidebar-bg);
 	border-right: 1px solid var(--fn-sidebar-border);
 	display: flex;
@@ -598,9 +603,12 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	margin: 0;
 	padding: 8px;
 	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+	overflow-x: hidden;
 }
 
-.fn-nav-item { margin-bottom: 2px; }
+.fn-nav-item { min-width: 0; max-width: 100%; margin-bottom: 2px; }
 
 .fn-nav-head {
 	display: flex;
@@ -614,11 +622,19 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	letter-spacing: .015em;
 	white-space: nowrap;
 	overflow: hidden;
+	min-width: 0;
+	max-width: 100%;
+	width: 100%;
 }
 .fn-nav-head:hover { background: var(--fn-sidebar-hover-bg); text-decoration: none; }
 .fn-icon { flex: 0 0 auto; display: inline-flex; color: var(--fn-sidebar-text-secondary); }
 .fn-icon svg { display: block; }
-.fn-nav-label { text-overflow: ellipsis; overflow: hidden; }
+.fn-nav-label {
+	min-width: 0;
+	flex: 1 1 auto;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
 
 /* "My Networks & Wi-Fi" is the only long top-level label.  Give it two
    balanced lines in the expanded sidebar instead of truncating the name;
@@ -651,6 +667,9 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	margin: 2px 0 6px 0;
 	padding: 0 0 0 40px;
 	display: none;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
 }
 .fn-nav-item.fn-open > .fn-nav-sub { display: block; }
 .fn-nav-sub > li > a {
@@ -660,6 +679,10 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	color: var(--fn-sidebar-text-secondary);
 	font-size: 1.2rem;
 	letter-spacing: .03em;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .fn-nav-sub > li > a:hover { background: var(--fn-sidebar-hover-bg); text-decoration: none; color: var(--fn-sidebar-text); }
 .fn-nav-sub > li.fn-active > a { background: var(--fn-sidebar-active-bg); }
@@ -699,6 +722,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
+	overflow-x: hidden;
 }
 
 #tabmenu:empty { display: none; }
@@ -730,6 +754,8 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	flex: 1 1 auto;
 	padding: 24px 40px 40px;
 	width: 100%;
+	min-width: 0;
+	max-width: 100%;
 }
 
 
@@ -1983,14 +2009,20 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-client-section-blocked { border-left-color: var(--fn-danger); }
 .fn-table-row {
 	display: grid;
-	grid-template-columns: 1.3fr 1.5fr 1fr 1.3fr auto;
+	grid-template-columns: minmax(10rem, 1.3fr) minmax(11rem, 1.5fr)
+		minmax(9rem, 1fr) minmax(11rem, 1.3fr) max-content;
 	gap: 12px;
 	padding: 10px 4px;
 	border-bottom: 1px solid var(--fn-border);
 	font-size: 1.0625rem;
 	align-items: center;
+	min-width: 0;
 }
 .fn-table-row:last-child { border-bottom: none; }
+.fn-table-row > * {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
 .fn-table-head {
 	font-size: 0.9375rem;
 	text-transform: uppercase;
@@ -1999,10 +2031,49 @@ body.modal-overlay-active { overflow: hidden; }
 	font-weight: 600;
 }
 .fn-table-sub { font-size: 1rem; color: var(--fn-text-secondary); margin-top: 1px; }
-.fn-table-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.fn-table-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: flex-end;
+	min-width: 0;
+}
 .fn-table-actions .fn-settings-btn { display: inline-block; width: auto; padding: 5px 12px; font-size: 1rem; }
 .fn-settings-btn-danger { border-color: var(--fn-danger); color: var(--fn-danger); }
 .fn-settings-btn-danger:hover { background: var(--fn-danger-soft); }
+
+/* Client sections contain a header row and data rows with different action
+   widths.  A grid on each row would size those tracks independently, so the
+   column headings drift away from the values as soon as a row has two
+   buttons.  Let one shared grid own all rows on desktop; display:contents
+   keeps the existing row markup and lets the action column use its widest
+   button group consistently. */
+@media (min-width: 1101px) {
+	.fn-client-table {
+		display: grid;
+		grid-template-columns: minmax(10rem, 1.3fr) minmax(11rem, 1.5fr)
+			minmax(9rem, 1fr) minmax(11rem, 1.3fr) max-content;
+	}
+	.fn-client-table > .fn-table-row { display: contents; }
+	.fn-client-table > .fn-table-row > * {
+		padding: 10px 4px;
+		border-bottom: 1px solid var(--fn-border);
+		align-self: center;
+	}
+	.fn-client-table > .fn-table-row.fn-table-head > * { padding-top: 10px; padding-bottom: 10px; }
+	.fn-client-table > .fn-table-row:last-of-type > * { border-bottom: none; }
+	.fn-client-table > .fn-info-empty { grid-column: 1 / -1; }
+}
+
+@media (max-width: 1100px) {
+	/* Give the client card two readable value columns before a narrow tablet or
+	   phone would have to squeeze five desktop tracks into the content area. */
+	.fn-client-table > .fn-table-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+	.fn-client-table > .fn-table-row.fn-table-head { display: none; }
+}
 
 /* Port Forwarding: Keenetic-style page, tabs, empty states and rule modal */
 .fn-pf-page { width: 100%; }
@@ -3621,7 +3692,9 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 }
 
 @media (max-width: 640px) {
-	:root { --fn-sidebar-w-collapsed: 56px; }
+	/* The icon tile plus the rail's horizontal padding needs 60px.  A 56px
+	   rail clips the tile and leaves only a sliver of the active item visible. */
+	:root { --fn-sidebar-w-collapsed: 60px; }
 	#fn-topbar { padding: 0 10px; }
 	.fn-brand-model { display: none; }
 	#maincontent.container { padding: 12px 10px 20px; }

@@ -153,9 +153,9 @@ return view.extend({
 		this.hosts = data[4];
 		this.blocks = data[5];
 
-		this.unregTable = E('div', { class: 'fn-table' });
-		this.regTable = E('div', { class: 'fn-table' });
-		this.blockedTable = E('div', { class: 'fn-table' });
+		this.unregTable = E('div', { class: 'fn-table fn-client-table' });
+		this.regTable = E('div', { class: 'fn-table fn-client-table' });
+		this.blockedTable = E('div', { class: 'fn-table fn-client-table' });
 		this.fillTables();
 
 		poll.add(L.bind(this.refresh, this), 5);
