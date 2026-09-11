@@ -27,6 +27,11 @@ PKG_SRC_VERSION:=$(if $(DUMP),x,$(strip $(shell \
 		echo 0; \
 	fi)))
 
+# Keep the translation APK on the same revision as the application APK.  LuCI's
+# default PO revision only changes when a catalog is edited, which would let a
+# release contain two different asset versions after a JavaScript-only fix.
+PKG_PO_VERSION:=$(PKG_SRC_VERSION)
+
 # Keep browser sources readable and preserve CSS cascade layers.
 LUCI_MINIFY_CSS:=0
 LUCI_MINIFY_JS:=0
