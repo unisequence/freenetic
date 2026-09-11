@@ -168,6 +168,19 @@ apk add --allow-untrusted \
 	"$TMP_DIR/$APP_RU_APK" ||
 	fail "apk package installation failed"
 
+# LuCI caches the resolved menu tree, including depends.uci results. An APK
+# upgrade can leave a previous tree in /tmp, making only the ungated groups
+# visible until the cache is removed.
+if [ -x /usr/libexec/freenetic-clear-luci-cache ]; then
+	/usr/libexec/freenetic-clear-luci-cache || fail "cannot clear LuCI cache"
+else
+	rm -f /tmp/luci-indexcache*
+	rm -rf /tmp/luci-modulecache
+fi
+if [ -x /etc/init.d/rpcd ]; then
+	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+fi
+
 FNC_HOME=/usr/lib/freenetic
 FNC_STAGED_DIR="$TMP_DIR/fnc-stage"
 mkdir -p "$FNC_STAGED_DIR" "$FNC_HOME" || fail "cannot create fnc directory"

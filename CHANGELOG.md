@@ -15,6 +15,8 @@ which they became user-visible.
 - The installer handles compatible OpenWrt library SONAME differences for
   `fnc` through private aliases under `/usr/lib/freenetic`, without changing
   the router's system libraries.
+- The installer clears LuCI's resolved menu/module caches and reloads rpcd
+  after an APK upgrade, so all Freenetic sidebar groups reappear immediately.
 
 ## [0.2.0] — 2026-09-11
 

@@ -24,6 +24,8 @@ for (const marker of [
 	"LD_LIBRARY_PATH=\"/usr/lib/freenetic:/lib:/usr/lib",
 	"/usr/lib/freenetic/fnc.bin",
 	"/usr/bin/fnc",
+	"/tmp/luci-indexcache*",
+	"/etc/init.d/rpcd",
 	"fnc show version"
 ]) {
 	assert(installer.includes(marker), `installer is missing: ${marker}`);
