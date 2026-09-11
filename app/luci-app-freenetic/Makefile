@@ -16,6 +16,7 @@ PKG_LICENSE:=Apache-2.0
 # version. The legacy path keeps development builds versioned before the
 # directory split is committed.
 FREENETIC_ROOT:=$(abspath $(CURDIR)/../..)
+include $(FREENETIC_ROOT)/app/freenetic-preflight.mk
 PKG_SRC_VERSION:=$(if $(DUMP),x,$(strip $(shell \
 	set -- $$(git -C "$(FREENETIC_ROOT)" log -1 --format="%ct %h" -- app/luci-app-freenetic web/application luci-theme-freenetic 2>/dev/null); \
 	if [ -n "$$1" ]; then \
@@ -29,6 +30,10 @@ PKG_SRC_VERSION:=$(if $(DUMP),x,$(strip $(shell \
 # Keep browser sources readable and preserve CSS cascade layers.
 LUCI_MINIFY_CSS:=0
 LUCI_MINIFY_JS:=0
+
+define Package/luci-app-freenetic/preinst
+$(FREENETIC_PACKAGE_PREINST)
+endef
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

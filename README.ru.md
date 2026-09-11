@@ -16,6 +16,27 @@ KeeneticOS/NDM — отдельный слой, который воспроиз�
 Текущая аппаратная база разработки — BT RB300, прошитый чистым upstream
 OpenWrt: mainline U-Boot, без проприетарных компонентов.
 
+## Поддерживаемое железо
+
+Релизные APK намеренно ограничены двумя проверенными семействами MediaTek:
+
+| OpenWrt target | CPU ABI | Минимальный профиль |
+|---|---|---|
+| `mediatek/filogic` | `aarch64` | 2 ядра, 128 MiB RAM, 32 MiB свободного overlay |
+| `ramips/mt7621` | `mipsel_24kc` | 2 ядра, 128 MiB RAM, 16 MiB свободного overlay |
+
+Остальные target'ы блокируются pre-install-проверкой пакета. Перед
+тестовым деплоем ту же read-only проверку по SSH можно запустить отдельно:
+
+```sh
+app/check-router.sh root@192.168.1.1
+```
+
+Пороги для конкретной среды можно увеличить переменными
+`FREENETIC_MIN_RAM_MIB`, `FREENETIC_MIN_CPU_CORES`,
+`FREENETIC_MIN_OVERLAY_MIB_FILOGIC` и
+`FREENETIC_MIN_OVERLAY_MIB_MT7621`.
+
 | | |
 |---|---|
 | ![Логин](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |
@@ -97,8 +118,9 @@ OpenWrt и также запускаются в CI:
 make check-static
 ```
 
-Полный локальный набор, включая кросс-сборку CLI, запускается при наличии
-buildroot OpenWrt рядом с репозиторием (либо с явным путём):
+Полный локальный набор, включая кросс-сборку CLI для Filogic и MT7621 при
+наличии обоих toolchain'ов, запускается при наличии buildroot OpenWrt рядом
+с репозиторием (либо с явным путём):
 
 ```sh
 make check OPENWRT_DIR=/путь/к/openwrt

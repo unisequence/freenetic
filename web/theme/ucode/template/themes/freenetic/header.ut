@@ -96,7 +96,8 @@
 				<div id="fn-main">
 					<div id="tabmenu"></div>
 
-					<div id="maincontent" class="container">
+					<main id="maincontent" class="container" tabindex="-1">
+						<h1 id="fn-page-title" class="fn-sr-only">{{ dispatched?.title ? _(dispatched.title) : 'Freenetic' }}</h1>
 						{% if (getuid() == 0 && getspnam('root')?.pwdp === ''): %}
 							<div class="alert-message warning fn-toast" id="fn-password-toast">
 								<button type="button" class="fn-toast-close" aria-label="{{ _('Close') }}" onclick="var t=this.closest('.fn-toast');t.classList.add('fn-toast-closing');setTimeout(function(){ t.remove(); }, 180)">

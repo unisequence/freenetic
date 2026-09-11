@@ -70,7 +70,8 @@ return baseclass.extend({
 				E('option', { value: themes[name], selected: themes[name] == curMedia ? true : null }, name)));
 
 		const cliLink = E('a', {
-			class: 'fn-settings-link', id: 'fn-settings-cli', href: '#', target: '_blank', hidden: true
+			class: 'fn-settings-link', id: 'fn-settings-cli', href: '#', target: '_blank',
+			rel: 'noopener noreferrer', hidden: true
 		}, _('Command Line'));
 
 		panelMount.appendChild(E('div', { class: 'fn-settings-top' }, [
@@ -114,6 +115,7 @@ return baseclass.extend({
 			const open = shell.classList.contains('fn-settings-open');
 			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 			panelMount.setAttribute('aria-hidden', open ? 'false' : 'true');
+			panelMount.inert = !open;
 		};
 		const closeSettings = () => {
 			if (!shell.classList.contains('fn-settings-open'))
@@ -227,7 +229,14 @@ return baseclass.extend({
 		});
 
 		fs.stat('/usr/bin/ttyd').then(() => {
-			cliLink.href = location.protocol + '//' + location.hostname + ':7681/';
+			/* Preserve the active host and scheme (including an IPv6 literal)
+			   instead of reconstructing a URL from hostname. */
+			const terminalUrl = new URL(window.location.href);
+			terminalUrl.port = '7681';
+			terminalUrl.pathname = '/';
+			terminalUrl.search = '';
+			terminalUrl.hash = '';
+			cliLink.href = terminalUrl.toString();
 			cliLink.hidden = false;
 		}).catch(() => {});
 	}

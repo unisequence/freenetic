@@ -4,6 +4,10 @@ All notable Freenetic changes are documented here.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.2.0] — 2026-09-11
+
 ### Added
 
 - Other Connections now includes native L2TP/IPsec and route-based
@@ -21,6 +25,11 @@ All notable Freenetic changes are documented here.
   export, enable/disable and delete are backed by a protected router-side
   profile file and a regular `proto openvpn` network interface. OpenVPN
   tunnels are available to Access & Routing Policy alongside WireGuard.
+- Release packages now run a hardware preflight and accept only
+  `mediatek/filogic` (`aarch64`) and `ramips/mt7621` (`mipsel_24kc`) routers
+  with at least two CPU cores, 128 MiB RAM and the target-specific free-space
+  reserve. The same check is available as `app/check-router.sh`, and `fnc` is
+  cross-compiled for both supported ABIs.
 
 ## [0.2.0-alpha.3] — 2026-09-09
 
@@ -74,17 +83,23 @@ All notable Freenetic changes are documented here.
 
 ### Compatibility notes
 
-- This is an alpha release. Existing OpenWrt UCI, ubus, rpcd, netifd,
-  firewall4 and apk configuration remains unchanged.
+- Existing OpenWrt UCI, ubus, rpcd, netifd, firewall4 and apk configuration
+  remains unchanged.
 - AWG support remains optional and is only offered when matching firmware
   packages are available for the device's exact release and target.
+- Other OpenWrt targets are intentionally rejected by the package pre-install
+  guard; the release is scoped to the two MediaTek profiles above.
 
 ### Verification
 
-- `make check-static` passes, including JavaScript, shell, JSON, policy and
-  unit checks.
-- The release was deployed and smoke-tested on the BT RB300 test router
-  (`192.168.1.1`) with the Russian interface enabled.
+- `make check` passes, including JavaScript, shell, JSON, policy, unit checks
+  and CLI cross-compilation for both aarch64 and mipsel.
+- `make check-package` builds the theme, application and both Russian
+  translation APKs; the package metadata includes the hardware pre-install
+  guard.
+- `app/check-router.sh` passes on the BT RB300 test router
+  (`192.168.1.1`), and the current source was deployed and smoke-tested with
+  the Russian interface enabled.
 
 ## [0.2.0-alpha.2] — 2026-09-08
 

@@ -10,7 +10,12 @@ THEME_PACKAGE_DIR="$APP_DIR/luci-theme-freenetic"
 APPLICATION_PACKAGE_DIR="$APP_DIR/luci-app-freenetic"
 THEME_WEB_DIR="$PROJECT_DIR/web/theme"
 APPLICATION_WEB_DIR="$PROJECT_DIR/web/application"
-RU_PO_FILE="$APPLICATION_PACKAGE_DIR/po/ru/freenetic.po"
+APPLICATION_RU_PO_FILE="$APPLICATION_PACKAGE_DIR/po/ru/freenetic.po"
+THEME_RU_PO_FILE="$THEME_PACKAGE_DIR/po/ru/freenetic-theme.po"
+
+# Abort before touching the router when its target, architecture or resources
+# are outside the supported Freenetic profiles.
+FREENETIC_ROUTER="$ROUTER" FREENETIC_SSH_CMD="$SSH_CMD" "$APP_DIR/check-router.sh"
 
 # A normal OpenWrt package build turns PO catalogs into LMO files through
 # luci-base's host tool.  Development deployments should expose the same
@@ -23,16 +28,20 @@ fi
 if [ -z "$PO2LMO_BIN" ] && [ -x "$PROJECT_DIR/../openwrt-upstream/staging_dir/hostpkg/bin/po2lmo" ]; then
     PO2LMO_BIN="$PROJECT_DIR/../openwrt-upstream/staging_dir/hostpkg/bin/po2lmo"
 fi
-RU_LMO_FILE=""
+APPLICATION_RU_LMO_FILE=""
+THEME_RU_LMO_FILE=""
 cleanup_translation() {
-    if [ -n "$RU_LMO_FILE" ]; then
-        rm -f "$RU_LMO_FILE"
-    fi
+    [ -z "$APPLICATION_RU_LMO_FILE" ] || rm -f "$APPLICATION_RU_LMO_FILE"
+    [ -z "$THEME_RU_LMO_FILE" ] || rm -f "$THEME_RU_LMO_FILE"
 }
 trap cleanup_translation EXIT INT TERM
-if [ -f "$RU_PO_FILE" ] && [ -n "$PO2LMO_BIN" ]; then
-    RU_LMO_FILE="$(mktemp "${TMPDIR:-/tmp}/freenetic-ru.XXXXXX.lmo")"
-    "$PO2LMO_BIN" "$RU_PO_FILE" "$RU_LMO_FILE"
+if [ -f "$APPLICATION_RU_PO_FILE" ] && [ -n "$PO2LMO_BIN" ]; then
+    APPLICATION_RU_LMO_FILE="$(mktemp "${TMPDIR:-/tmp}/freenetic-app-ru.XXXXXX.lmo")"
+    "$PO2LMO_BIN" "$APPLICATION_RU_PO_FILE" "$APPLICATION_RU_LMO_FILE"
+fi
+if [ -f "$THEME_RU_PO_FILE" ] && [ -n "$PO2LMO_BIN" ]; then
+    THEME_RU_LMO_FILE="$(mktemp "${TMPDIR:-/tmp}/freenetic-theme-ru.XXXXXX.lmo")"
+    "$PO2LMO_BIN" "$THEME_RU_PO_FILE" "$THEME_RU_LMO_FILE"
 fi
 
 # Both the /tmp staging dir and the on-router destination dirs are wiped
@@ -113,6 +122,7 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/view/system/freenetic-system.js \
              /www/cgi-bin/freenetic-events \
              /usr/lib/lua/luci/i18n/freenetic.ru.lmo \
+             /usr/lib/lua/luci/i18n/freenetic-theme.ru.lmo \
              /usr/share/luci/menu.d/zz-luci-freenetic.json \
              /usr/share/rpcd/acl.d/luci-theme-freenetic.json \
              /usr/share/rpcd/acl.d/luci-app-freenetic.json \
@@ -127,11 +137,16 @@ $SSH_CMD "$ROUTER" '
         grep -qxF "$p" /etc/sysupgrade.conf || echo "$p" >> /etc/sysupgrade.conf
     done
 '
-if [ -n "$RU_LMO_FILE" ]; then
+if [ -n "$APPLICATION_RU_LMO_FILE" ] || [ -n "$THEME_RU_LMO_FILE" ]; then
     $SSH_CMD "$ROUTER" 'mkdir -p /usr/lib/lua/luci/i18n'
-    $SSH_CMD "$ROUTER" 'cat > /usr/lib/lua/luci/i18n/freenetic.ru.lmo' < "$RU_LMO_FILE"
+    if [ -n "$APPLICATION_RU_LMO_FILE" ]; then
+        $SSH_CMD "$ROUTER" 'cat > /usr/lib/lua/luci/i18n/freenetic.ru.lmo' < "$APPLICATION_RU_LMO_FILE"
+    fi
+    if [ -n "$THEME_RU_LMO_FILE" ]; then
+        $SSH_CMD "$ROUTER" 'cat > /usr/lib/lua/luci/i18n/freenetic-theme.ru.lmo' < "$THEME_RU_LMO_FILE"
+    fi
     $SSH_CMD "$ROUTER" "uci -q set luci.languages.ru='Русский'; uci -q commit luci"
-elif [ -f "$RU_PO_FILE" ]; then
+elif [ -f "$APPLICATION_RU_PO_FILE" ] || [ -f "$THEME_RU_PO_FILE" ]; then
     echo "Warning: po2lmo was not found; Russian translations will be included by the OpenWrt package build."
 fi
 echo "Deployed. Hard-refresh the LuCI page (Ctrl+Shift+R)."

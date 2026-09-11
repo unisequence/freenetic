@@ -5,7 +5,10 @@
 			"uci": [ "luci" ]
 		},
 		"write": {
-			"uci": [ "luci" ]
+			"uci": [ "luci" ],
+			"file": {
+				"/usr/libexec/freenetic-clear-luci-cache": [ "exec" ]
+			}
 		}
 	}
 }

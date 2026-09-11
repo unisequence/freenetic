@@ -67,19 +67,27 @@ return view.extend({
 		this.table = E('div', { class: 'fn-table' });
 		this.editingSection = null;
 		this.modalOpen = false;
+		this.familyTabs = {};
+		this.familyOrder = [ 'ipv4', 'ipv6' ];
 
 		this.fillTable();
 
-		const ipv4Tab = E('button', { type: 'button', class: 'fn-tab fn-active', role: 'tab', 'aria-selected': 'true', click: () => this.setFamily('ipv4', ipv4Tab, ipv6Tab) }, _('IPv4'));
-		const ipv6Tab = E('button', { type: 'button', class: 'fn-tab', role: 'tab', 'aria-selected': 'false', click: () => this.setFamily('ipv6', ipv6Tab, ipv4Tab) }, _('IPv6'));
+		const ipv4Tab = this.makeFamilyTab('ipv4', _('IPv4'));
+		const ipv6Tab = this.makeFamilyTab('ipv6', _('IPv6'));
 		this.rulesTitle = E('h2', { class: 'fn-pf-section-title' }, _('Port Forwarding Rules'));
 		this.upnpTable = E('div', { class: 'fn-pf-empty' }, _('No open ports'));
+		this.rulesPanel = E('section', {
+			id: 'fn-pf-rules',
+			class: 'fn-pf-section',
+			role: 'tabpanel',
+			'aria-labelledby': 'fn-pf-tab-ipv4'
+		}, [ this.rulesTitle, this.table ]);
 
 		return E('div', { class: 'fn-pf-page' }, [
 			E('h1', { class: 'fn-pf-title' }, _('Port Forwarding')),
 			E('p', { class: 'fn-pf-description' }, _('Here, you can allow access to services on your network from the Internet using both the IPv4 (port forwarding) and IPv6 (pinholing) protocols. When the setting is enabled, the firewall will permit incoming service traffic to reach a local destination. You can also monitor the rules automatically created via UPnP.')),
-			E('div', { class: 'fn-tabs fn-pf-tabs', role: 'tablist' }, [ ipv4Tab, ipv6Tab ]),
-			E('section', { class: 'fn-pf-section' }, [ this.rulesTitle, this.table ]),
+			E('div', { class: 'fn-tabs fn-pf-tabs', role: 'tablist', 'aria-label': _('IP protocol') }, [ ipv4Tab, ipv6Tab ]),
+			this.rulesPanel,
 			E('section', { class: 'fn-pf-section fn-pf-upnp-section' }, [
 				E('h2', { class: 'fn-pf-section-title' }, _('UPnP Port Forwarding Table')),
 				this.upnpTable
@@ -95,13 +103,56 @@ return view.extend({
 		}, this));
 	},
 
-	setFamily(family, activeTab, inactiveTab) {
+	makeFamilyTab(family, label) {
+		const button = E('button', {
+			type: 'button',
+			class: 'fn-tab' + (family === this.activeFamily ? ' fn-active' : ''),
+			role: 'tab',
+			id: 'fn-pf-tab-' + family,
+			'aria-controls': 'fn-pf-rules',
+			'aria-selected': family === this.activeFamily ? 'true' : 'false',
+			tabindex: family === this.activeFamily ? '0' : '-1',
+			click: () => this.setFamily(family),
+			keydown: event => this.handleFamilyTabKeydown(event, family)
+		}, label);
+		this.familyTabs[family] = button;
+		return button;
+	},
+
+	handleFamilyTabKeydown(event, currentFamily) {
+		let index = this.familyOrder.indexOf(currentFamily);
+		if (index < 0)
+			return;
+
+		if (event.key === 'ArrowRight' || event.key === 'ArrowDown')
+			index = (index + 1) % this.familyOrder.length;
+		else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+			index = (index + this.familyOrder.length - 1) % this.familyOrder.length;
+		else if (event.key === 'Home')
+			index = 0;
+		else if (event.key === 'End')
+			index = this.familyOrder.length - 1;
+		else
+			return;
+
+		event.preventDefault();
+		this.setFamily(this.familyOrder[index], true);
+	},
+
+	setFamily(family, focusTab) {
+		if (!this.familyTabs[family])
+			return;
 		this.activeFamily = family;
-		activeTab.classList.add('fn-active');
-		activeTab.setAttribute('aria-selected', 'true');
-		inactiveTab.classList.remove('fn-active');
-		inactiveTab.setAttribute('aria-selected', 'false');
+		Object.keys(this.familyTabs).forEach(key => {
+			const active = key === family;
+			this.familyTabs[key].classList.toggle('fn-active', active);
+			this.familyTabs[key].setAttribute('aria-selected', active ? 'true' : 'false');
+			this.familyTabs[key].tabIndex = active ? 0 : -1;
+		});
+		this.rulesPanel.setAttribute('aria-labelledby', 'fn-pf-tab-' + family);
 		this.fillTable();
+		if (focusTab)
+			this.familyTabs[family].focus();
 	},
 
 	getRules() {

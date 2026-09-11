@@ -215,6 +215,23 @@ return baseclass.extend({
 		const currentTitle = document.title || '';
 		const baseTitle = currentTitle.split('|')[0].trim();
 		document.title = baseTitle + (baseTitle ? ' | ' : '') + _(route.title);
+
+		const pageTitle = document.querySelector('#fn-page-title');
+		if (pageTitle)
+			pageTitle.textContent = _(route.title);
+	},
+
+	focusMain() {
+		const main = document.querySelector('#maincontent');
+		if (!main || typeof main.focus !== 'function')
+			return;
+
+		try {
+			main.focus({ preventScroll: true });
+		}
+		catch (e) {
+			main.focus();
+		}
 	},
 
 	closeMobileSidebar() {
@@ -338,6 +355,7 @@ return baseclass.extend({
 			this.syncSidebar(route.key);
 			if (ui.changes && typeof ui.changes.init === 'function')
 				ui.changes.init();
+			this.focusMain();
 			return true;
 		}).catch(err => {
 			if (token !== this.navigationToken)
@@ -350,6 +368,7 @@ return baseclass.extend({
 				E('pre', {}, String(message))
 			]));
 			this.syncSidebar(route.key);
+			this.focusMain();
 			return false;
 		}).finally(() => {
 			if (window.__freeneticSpaConstructingView)

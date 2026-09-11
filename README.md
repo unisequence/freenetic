@@ -17,6 +17,27 @@ UCI/ubus/rpcd underneath.
 Current development hardware is a BT RB300, flashed with plain upstream
 OpenWrt — mainline U-Boot, no proprietary components.
 
+## Supported hardware
+
+The release APKs are deliberately limited to two tested MediaTek families:
+
+| OpenWrt target | CPU ABI | Minimum profile |
+|---|---|---|
+| `mediatek/filogic` | `aarch64` | 2 cores, 128 MiB RAM, 32 MiB free overlay |
+| `ramips/mt7621` | `mipsel_24kc` | 2 cores, 128 MiB RAM, 16 MiB free overlay |
+
+Other targets are rejected by the package pre-install guard. Before a
+development deployment, run the same read-only check over SSH:
+
+```sh
+app/check-router.sh root@192.168.1.1
+```
+
+The thresholds can be raised for a particular environment with
+`FREENETIC_MIN_RAM_MIB`, `FREENETIC_MIN_CPU_CORES`,
+`FREENETIC_MIN_OVERLAY_MIB_FILOGIC` and
+`FREENETIC_MIN_OVERLAY_MIB_MT7621`.
+
 | | |
 |---|---|
 | ![Login](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |
@@ -98,8 +119,9 @@ CI:
 make check-static
 ```
 
-Run the complete local suite, including CLI cross-compilation, with an OpenWrt
-buildroot available next to this repository (or pass its path explicitly):
+Run the complete local suite, including CLI cross-compilation for Filogic and
+MT7621 when both toolchains are present, with an OpenWrt buildroot available
+next to this repository (or pass its path explicitly):
 
 ```sh
 make check OPENWRT_DIR=/path/to/openwrt

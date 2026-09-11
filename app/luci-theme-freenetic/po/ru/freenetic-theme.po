@@ -1,0 +1,232 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-theme-freenetic\n"
+"Report-Msgid-Bugs-To: https://github.com/unisequence/freenetic/issues\n"
+"POT-Creation-Date: 2026-09-10 00:00+0000\n"
+"PO-Revision-Date: 2026-09-10 00:00+0000\n"
+"Last-Translator: Freenetic contributors\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+# Theme shell and settings
+msgid "auto"
+msgstr "авто"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Automatic"
+msgstr "Автоматически"
+
+msgid "Light"
+msgstr "Светлая"
+
+msgid "Dark"
+msgstr "Тёмная"
+
+msgid "Command Line"
+msgstr "Командная строка"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Appearance"
+msgstr "Оформление"
+
+msgid "Interface"
+msgstr "Интерфейс"
+
+msgid "System Log"
+msgstr "Системный журнал"
+
+msgid "Support Center"
+msgstr "Центр поддержки"
+
+msgid "Reboot"
+msgstr "Перезагрузить"
+
+msgid "Log out"
+msgstr "Выйти"
+
+msgid "Switch interface style?"
+msgstr "Сменить стиль интерфейса?"
+
+#, javascript-format
+msgid "This replaces the Freenetic interface with %s for everyone using this router's web UI, not just this browser. You can switch back the same way from the new interface's own system settings page."
+msgstr "Это заменит интерфейс Freenetic на %s для всех пользователей веб-интерфейса роутера, а не только в этом браузере. Вернуться обратно можно через системные настройки нового интерфейса."
+
+msgid "This changes the interface style for everyone using this router's web UI, not just this browser."
+msgstr "Это изменит стиль интерфейса для всех пользователей веб-интерфейса роутера, а не только в этом браузере."
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Switch"
+msgstr "Переключить"
+
+msgid "Expand menu"
+msgstr "Развернуть меню"
+
+msgid "Collapse menu"
+msgstr "Свернуть меню"
+
+msgid "Close menu"
+msgstr "Закрыть меню"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Discard unsaved changes and leave this page?"
+msgstr "Отменить несохранённые изменения и покинуть страницу?"
+
+#, javascript-format
+msgid "Failed to save language: %s"
+msgstr "Не удалось сохранить язык: %s"
+
+msgid "Loading view…"
+msgstr "Загрузка страницы…"
+
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+msgid "Unable to load this page"
+msgstr "Не удалось загрузить эту страницу"
+
+# Navigation labels are resolved dynamically from the LuCI menu.
+msgid "Status"
+msgstr "Состояние"
+
+msgid "Internet"
+msgstr "Интернет"
+
+msgid "My Networks & Wi-Fi"
+msgstr "Мои сети и Wi‑Fi"
+
+msgid "Network Rules"
+msgstr "Правила сети"
+
+msgid "Services"
+msgstr "Сервисы"
+
+msgid "Management"
+msgstr "Управление"
+
+msgid "More"
+msgstr "Ещё"
+
+msgid "Dashboard"
+msgstr "Панель управления"
+
+msgid "Client List"
+msgstr "Список клиентов"
+
+msgid "Traffic Monitor"
+msgstr "Монитор трафика"
+
+msgid "Wi-Fi Monitor"
+msgstr "Монитор Wi‑Fi"
+
+msgid "Other Connections"
+msgstr "Другие подключения"
+
+msgid "Dynamic DNS"
+msgstr "Динамический DNS"
+
+msgid "Home Network"
+msgstr "Домашняя сеть"
+
+msgid "Guest Network"
+msgstr "Гостевая сеть"
+
+msgid "Access & Routing Policy"
+msgstr "Политика доступа и маршрутизации"
+
+msgid "Port Forwarding"
+msgstr "Перенаправление портов"
+
+msgid "Firewall"
+msgstr "Межсетевой экран"
+
+msgid "Routing"
+msgstr "Маршрутизация"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Diagnostics"
+msgstr "Диагностика"
+
+msgid "Applications"
+msgstr "Приложения"
+
+# Login and recovery notices
+msgid "Sign in to the web configurator"
+msgstr "Войти в веб-конфигуратор"
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Show password"
+msgstr "Показать пароль"
+
+msgid "Hide password"
+msgstr "Скрыть пароль"
+
+msgid "Log in"
+msgstr "Войти"
+
+msgid "Invalid username and/or password! Please try again."
+msgstr "Неверное имя пользователя и/или пароль! Попробуйте ещё раз."
+
+msgid "Can't sign in"
+msgstr "Не удаётся войти"
+
+msgid "Can't sign in?"
+msgstr "Не удаётся войти?"
+
+#, javascript-format
+msgid "The default username is %s."
+msgstr "Имя пользователя по умолчанию: %s."
+
+msgid "If you forgot the password, press and hold the Reset button on the device for 10 seconds to restore factory defaults. This will erase your configuration."
+msgstr "Если вы забыли пароль, нажмите и удерживайте кнопку Reset на устройстве 10 секунд для восстановления заводских настроек. Конфигурация будет удалена."
+
+msgid "No password set!"
+msgstr "Пароль не задан!"
+
+msgid "There is no password set on this router. Please configure a root password to protect the web interface."
+msgstr "На этом роутере не задан пароль. Настройте пароль root, чтобы защитить веб-интерфейс."
+
+msgid "Go to password configuration..."
+msgstr "Перейти к настройке пароля…"
+
+msgid "Don't ask again"
+msgstr "Больше не спрашивать"
+
+msgid "System running in recovery (initramfs) mode."
+msgstr "Система работает в режиме восстановления (initramfs)."
+
+msgid "No changes to settings will be stored and are lost after rebooting. This mode should only be used to install a firmware upgrade"
+msgstr "Изменения настроек не сохраняются и будут потеряны после перезагрузки. Этот режим следует использовать только для установки обновления прошивки"
+
+msgid "Go to firmware upgrade..."
+msgstr "Перейти к обновлению прошивки…"
+
+msgid "JavaScript required!"
+msgstr "Требуется JavaScript!"
+
+msgid "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr "Включите JavaScript в браузере, иначе LuCI не будет работать корректно."
+
+msgid "Other management options"
+msgstr "Другие варианты управления"
+
+msgid "Switch color theme"
+msgstr "Переключить цветовую тему"

@@ -771,14 +771,14 @@ msgstr "%s установлено, но сетевой сервис не уда�
 msgid "Manage additional VPN and tunnel connections through the OpenWrt network stack."
 msgstr "Управляйте дополнительными VPN-подключениями и туннелями через сетевой стек OpenWrt."
 
-msgid "Import .conf"
-msgstr "Импортировать .conf"
-
 msgid "Add connection"
 msgstr "Добавить подключение"
 
-msgid "Import .ovpn"
-msgstr "Импортировать .ovpn"
+msgid "Add WireGuard connection"
+msgstr "Добавить WireGuard"
+
+msgid "Import configuration"
+msgstr "Импортировать конфигурацию"
 
 msgid "OpenVPN"
 msgstr "OpenVPN"
@@ -794,6 +794,9 @@ msgstr "VPN-протокол на основе профилей с широко�
 
 msgid "Add OpenVPN connection"
 msgstr "Добавить подключение OpenVPN"
+
+msgid "Add AmneziaWG connection"
+msgstr "Добавить AmneziaWG"
 
 msgid "Edit OpenVPN connection"
 msgstr "Изменить подключение OpenVPN"
@@ -1867,6 +1870,13 @@ msgstr "На этом роутере не задан пароль. Настро�
 
 msgid "Go to password configuration..."
 msgstr "Перейти к настройке пароля…"
+
+# IPsec details
+msgid "Native strongSwan configuration"
+msgstr "Штатная конфигурация strongSwan"
+
+msgid "The IPsec service did not restart."
+msgstr "Служба IPsec не перезапустилась."
 
 msgid "Don't ask again"
 msgstr "Больше не спрашивать"
@@ -3051,7 +3061,16 @@ msgid "Startup configuration"
 msgstr "Начальная конфигурация"
 
 msgid "Factory partition"
-msgstr "Заводской раздел"
+msgstr "Раздел заводских данных (factory)"
+
+msgid "BL2 bootloader stage: initializes memory and starts the FIP."
+msgstr "Этап BL2 загрузчика: инициализирует память и запускает FIP."
+
+msgid "Factory data partition for device-specific data. Do not modify it."
+msgstr "Раздел заводских данных устройства. Не изменяйте его."
+
+msgid "bl31+uboot.fip: the BL31 and U-Boot components used to start the system."
+msgstr "bl31+uboot.fip: компоненты BL31 и U-Boot, необходимые для запуска системы."
 
 # Route operation summaries use count-only messages so Russian wording does
 # not inherit the English plural suffix passed by the old UI.

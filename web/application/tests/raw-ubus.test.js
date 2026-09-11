@@ -5,7 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const resourcesPath = path.join(__dirname, '..', 'htdocs', 'luci-static', 'resources');
-const modulePath = path.join(resourcesPath, 'freenetic-rpc.js');
+const themeResourcesPath = path.join(__dirname, '..', '..', 'theme', 'htdocs', 'luci-static', 'resources');
+const modulePath = path.join(themeResourcesPath, 'freenetic-rpc.js');
 const source = fs.readFileSync(modulePath, 'utf8');
 const requests = [];
 const responses = [
@@ -17,12 +18,12 @@ const responses = [
 
 const fetchMock = (url, options) => {
 	requests.push({ url, options });
-	return Promise.resolve({ json: () => Promise.resolve(responses.shift()) });
+	return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(responses.shift()) });
 };
 const rpc = new Function('baseclass', 'fetch', 'L', source)(
 	{ extend: value => value },
 	fetchMock,
-	{ url: value => '/cgi-bin/luci/' + value, env: { sessionid: 'test-session' } }
+	{ url: value => '/cgi-bin/luci/' + value, env: { sessionid: 'test-session', scriptname: '/cgi-bin/luci' } }
 );
 
 (async () => {

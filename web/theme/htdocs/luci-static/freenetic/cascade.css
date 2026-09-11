@@ -67,8 +67,13 @@
 /* ---------- design tokens ---------- */
 
 :root {
-	--fn-accent: #0097dc;
-	--fn-accent-hover: #0f1011;
+	/* Accent foregrounds are dark enough for text on a light surface. Keep the
+	 * brighter brand blue separately for charts and decorative marks. */
+	--fn-accent: #0074a8;
+	--fn-accent-hover: #005f86;
+	--fn-accent-brand: #0097dc;
+	--fn-accent-action: #0074a8;
+	--fn-accent-action-hover: #005f86;
 	--fn-accent-soft: #ecf5fa;
 	--fn-accent-contrast: #ffffff;
 	--fn-bg: #f2f4f5;
@@ -82,11 +87,11 @@
 	--fn-text-disabled: #949b9f;
 	--fn-text-on-accent: #ffffff;
 
-	--fn-danger: #ff6d54;
+	--fn-danger: #c83d2c;
 	--fn-danger-soft: #fff0ed;
-	--fn-warning: #d98c14;
+	--fn-warning: #9a5f00;
 	--fn-warning-soft: #fbf1de;
-	--fn-success: #0097dc;
+	--fn-success: #0074a8;
 	--fn-success-soft: #ecf5fa;
 	--fn-status-ok: #2e7d32;
 	--fn-status-ok-soft: #e8f5e9;
@@ -140,9 +145,17 @@
 	--fn-text-secondary: #949b9f;
 	--fn-text-disabled: #6f737b;
 
+	/* On the dark surface the brand tone meets text contrast; action fills
+	 * retain the darker shared token so their white labels stay legible. */
 	--fn-accent: #0097dc;
 	--fn-accent-hover: #86a2c6;
+	--fn-accent-brand: #0097dc;
+	--fn-accent-action: #0074a8;
+	--fn-accent-action-hover: #005f86;
 	--fn-accent-soft: #33455e;
+	--fn-danger: #ff846f;
+	--fn-warning: #f0ad3d;
+	--fn-success: #0097dc;
 	--fn-danger-soft: #3a2320;
 	--fn-warning-soft: #382d17;
 	--fn-success-soft: #1a2b3c;
@@ -187,7 +200,7 @@ html, body {
    file was computed against that phantom 14px root all along. */
 body {
 	font-family: var(--fn-font);
-	font-size: 0.875rem;
+	font-size: 1rem;
 	line-height: 1.5;
 	letter-spacing: .020em;
 }
@@ -197,7 +210,29 @@ a:hover { color: var(--fn-accent-hover); text-decoration: underline; }
 
 h1, h2, h3, h4, h5 { font-family: var(--fn-font); font-weight: 700; margin: 0 0 .5em; color: var(--fn-text); letter-spacing: .02em; }
 h2 { font-size: 1.25rem; }
-h3 { font-size: 0.75rem; }
+h3 { font-size: 1rem; }
+
+/* Do not rely on browser defaults for non-form controls: navigation, tabs
+ * and icon-only buttons all need the same visible keyboard focus. */
+a:focus-visible,
+button:focus-visible,
+[role="tab"]:focus-visible,
+[tabindex]:focus-visible {
+	outline: 3px solid var(--fn-accent);
+	outline-offset: 2px;
+}
+
+.fn-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
 
 hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 
@@ -367,11 +402,16 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	transition: width .15s ease;
+	visibility: hidden;
+	pointer-events: none;
+	transition: width .15s ease, visibility 0s linear .15s;
 }
 #fn-shell.fn-settings-open #fn-settings-panel {
 	width: 280px;
 	border-left: 1px solid var(--fn-border);
+	visibility: visible;
+	pointer-events: auto;
+	transition: width .15s ease;
 }
 
 .fn-settings-top,
@@ -435,11 +475,11 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 .fn-settings-btn:hover { background: var(--fn-surface-alt); text-decoration: none; }
 .fn-settings-btn:disabled { opacity: .45; cursor: not-allowed; }
 .fn-settings-btn-primary {
-	background: var(--fn-accent);
-	border-color: var(--fn-accent);
+	background: var(--fn-accent-action);
+	border-color: var(--fn-accent-action);
 	color: var(--fn-text-on-accent);
 }
-.fn-settings-btn-primary:hover { background: var(--fn-accent-hover); }
+.fn-settings-btn-primary:hover { background: var(--fn-accent-action-hover); }
 
 @media (max-width: 960px) {
 	#fn-settings-panel {
@@ -852,7 +892,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 	border-radius: var(--fn-radius-sm);
 	background: var(--fn-surface);
 	color: var(--fn-text);
-	font-size: 0.8125rem;
+	font-size: 0.875rem;
 	font-weight: 500;
 	cursor: pointer;
 	line-height: 1.4;
@@ -868,14 +908,14 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 }
 
 .btn.important, .cbi-button-positive, .cbi-button-save, .cbi-button-apply, .cbi-button-add {
-	background: var(--fn-accent);
-	border-color: var(--fn-accent);
+	background: var(--fn-accent-action);
+	border-color: var(--fn-accent-action);
 	color: var(--fn-text-on-accent);
 }
 .btn.important:hover, .cbi-button-positive:hover, .cbi-button-save:hover,
 .cbi-button-apply:hover, .cbi-button-add:hover {
-	background: var(--fn-accent-hover);
-	border-color: var(--fn-accent-hover);
+	background: var(--fn-accent-action-hover);
+	border-color: var(--fn-accent-action-hover);
 	color: var(--fn-text-on-accent);
 }
 
@@ -964,7 +1004,7 @@ hr { border: none; border-top: 1px solid var(--fn-border); margin: 1em 0; }
 .cbi-value-description {
 	flex-basis: 100%;
 	color: var(--fn-text-secondary);
-	font-size: 0.75rem;
+	font-size: 0.875rem;
 	margin-top: 4px;
 }
 
@@ -1471,13 +1511,13 @@ body.modal-overlay-active { overflow: hidden; }
 	margin-top: 6px;
 	border: none;
 	border-radius: var(--fn-radius);
-	background: var(--fn-accent);
+	background: var(--fn-accent-action);
 	color: var(--fn-text-on-accent);
-	font-size: 0.875rem;
+	font-size: 1rem;
 	font-weight: 600;
 	cursor: pointer;
 }
-.fn-login-submit:hover { background: var(--fn-accent-hover); }
+.fn-login-submit:hover { background: var(--fn-accent-action-hover); }
 
 .fn-lang-field { margin-top: 16px; margin-bottom: 0; }
 .fn-lang-field select {
@@ -1504,7 +1544,7 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-login-banner {
 	position: relative;
 	flex: 1 1 50%;
-	background: var(--fn-accent);
+	background: var(--fn-accent-action);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1614,6 +1654,18 @@ body.modal-overlay-active { overflow: hidden; }
 	color: var(--fn-text);
 	font-size: 1.0625rem;
 }
+.fn-interface-field { margin-bottom: 0; }
+.fn-interface-field select {
+	width: 100%;
+	padding: 9px 30px 9px 12px;
+	font-size: 1.125rem;
+}
+.fn-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
+}
 .fn-dialog-close {
 	margin-top: 6px;
 	padding: 8px 18px;
@@ -1625,6 +1677,19 @@ body.modal-overlay-active { overflow: hidden; }
 	font-size: 1.0625rem;
 	cursor: pointer;
 }
+.fn-dialog-actions .fn-dialog-close { margin-top: 0; }
+.fn-dialog-submit {
+	padding: 8px 18px;
+	border: 1px solid var(--fn-accent-action);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-accent-action);
+	color: var(--fn-text-on-accent);
+	font-family: var(--fn-font-system);
+	font-size: 1.0625rem;
+	cursor: pointer;
+}
+.fn-dialog-close:hover { background: var(--fn-surface-alt); }
+.fn-dialog-submit:hover { background: var(--fn-accent-action-hover); }
 
 @media (max-width: 760px) {
 	.fn-login-page {
@@ -1839,7 +1904,7 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-spark { width: 100%; height: 90px; }
 .fn-spark-svg { width: 100%; height: 100%; display: block; }
 .fn-spark-area { fill: var(--fn-accent-soft); stroke: none; }
-.fn-spark-line-rx { fill: none; stroke: var(--fn-accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.fn-spark-line-rx { fill: none; stroke: var(--fn-accent-brand); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
 .fn-spark-line-tx { fill: none; stroke: var(--fn-text-secondary); stroke-width: 1.5; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
 
 .fn-spark-legend {
@@ -1856,7 +1921,7 @@ body.modal-overlay-active { overflow: hidden; }
 	margin-right: 5px;
 	vertical-align: middle;
 }
-.fn-legend-rx { background: var(--fn-accent); }
+.fn-legend-rx { background: var(--fn-accent-brand); }
 .fn-legend-tx { background: var(--fn-text-secondary); }
 
 .fn-info-grid {
@@ -1914,7 +1979,7 @@ body.modal-overlay-active { overflow: hidden; }
 	margin-bottom: 20px;
 }
 .fn-client-section:last-child { margin-bottom: 0; }
-.fn-client-section-registered { border-left-color: var(--fn-accent); }
+.fn-client-section-registered { border-left-color: var(--fn-accent-brand); }
 .fn-client-section-blocked { border-left-color: var(--fn-danger); }
 .fn-table-row {
 	display: grid;
@@ -2101,50 +2166,48 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-pf-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .fn-pf-modal-actions .fn-settings-btn { width: auto; }
 
-/* Other Connections: native WireGuard/AmneziaWG manager.  The layout keeps
-   the status cards scannable on desktop and turns every peer into a compact
-   labelled block on phones. */
-.fn-oc-title-row {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 20px;
-}
-.fn-oc-head-actions { display: flex; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; }
-.fn-oc-head-actions .fn-settings-btn { width: auto; white-space: nowrap; }
+/* Other Connections follows the native LuCI rhythm: every protocol has an
+   introduction followed by one full-width status/action panel. */
 .fn-oc-page .fn-pf-description { max-width: 980px; }
 .fn-oc-support-grid {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 16px;
-	margin: 0 0 20px;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 28px;
+	margin: 0 0 28px;
 }
 .fn-oc-support-card {
 	min-width: 0;
-	padding: 16px 18px 14px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+.fn-oc-support-panel {
+	min-width: 0;
+	margin-top: 12px;
 	border: 1px solid var(--fn-border-strong);
 	border-top: 3px solid var(--fn-accent);
 	border-radius: var(--fn-radius);
 	background: var(--fn-surface-alt);
 }
-.fn-oc-support-card-awg { border-top-color: var(--fn-warning); }
-.fn-oc-support-card-openvpn { border-top-color: #9a7bff; }
+.fn-oc-support-card-awg .fn-oc-support-panel { border-top-color: var(--fn-warning); }
+.fn-oc-support-card-openvpn .fn-oc-support-panel { border-top-color: #9a7bff; }
 .fn-oc-support-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .fn-oc-support-title { min-width: 0; }
-.fn-oc-support-title h3 { margin: 0; color: var(--fn-text); font-size: 1.1rem; letter-spacing: .01em; text-transform: none; }
+.fn-oc-support-title h2 { margin: 0; color: var(--fn-text); font-size: 1.1rem; letter-spacing: .01em; text-transform: none; }
 .fn-oc-support-title p { margin: 4px 0 0; color: var(--fn-text-secondary); font: .9rem/1.35 var(--fn-font-text); }
 .fn-oc-support-body {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 10px 14px;
-	margin-top: 16px;
-	padding-top: 12px;
-	border-top: 1px solid var(--fn-border);
+	min-height: 72px;
+	margin: 0;
+	padding: 14px 18px;
 	font-family: var(--fn-font-text);
 }
-.fn-oc-support-body > span { flex: 1 1 240px; color: var(--fn-text-secondary); line-height: 1.4; }
-.fn-oc-support-link { color: var(--fn-accent); white-space: nowrap; }
+.fn-oc-support-body > span { flex: 1 1 280px; color: var(--fn-text-secondary); line-height: 1.4; text-align: left; }
+.fn-oc-support-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .fn-oc-support-action { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 1rem; }
 .fn-oc-notice {
 	display: flex;
@@ -2295,16 +2358,14 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-oc-diagnostics-output { display: block; max-height: 230px; margin: 0; padding: 12px 14px; overflow: auto; border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius-sm); background: var(--fn-surface-alt); color: var(--fn-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; font: .82rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
 
 @media (max-width: 900px) {
-	.fn-oc-title-row { flex-direction: column; }
-	.fn-oc-head-actions { width: 100%; }
-	.fn-oc-head-actions .fn-settings-btn { flex: 1 1 0; }
-	.fn-oc-support-grid { grid-template-columns: minmax(0, 1fr); }
 	.fn-oc-connections { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 640px) {
-	.fn-oc-head-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
-	.fn-oc-head-actions .fn-settings-btn { width: 100%; padding: 8px 6px; }
+	.fn-oc-support-head { flex-wrap: wrap; gap: 8px 12px; }
+	.fn-oc-support-body { min-height: 64px; padding: 12px 14px; }
+	.fn-oc-support-actions { width: 100%; flex-direction: column; margin-left: 0; }
+	.fn-oc-support-actions .fn-settings-btn { width: 100%; }
 	.fn-oc-card-head { flex-wrap: wrap; }
 	.fn-oc-card-head .fn-oc-card-title { min-width: calc(100% - 34px); }
 	.fn-oc-card-head .fn-oc-switch { margin-left: auto; }
@@ -2562,10 +2623,10 @@ body.modal-overlay-active { overflow: hidden; }
 	margin-top: 0;
 	border-top: 0;
 }
-.fn-info-group-system::before { background: var(--fn-accent); }
+.fn-info-group-system::before { background: var(--fn-accent-brand); }
 .fn-info-group-updates::before { background: var(--fn-warning); }
 .fn-info-group-freenetic { color: var(--fn-accent); }
-.fn-info-group-freenetic::before { background: var(--fn-accent); }
+.fn-info-group-freenetic::before { background: var(--fn-accent-brand); }
 .fn-info-group-device::before { background: var(--fn-text-secondary); }
 
 .fn-meter-wrap { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; }
@@ -2577,7 +2638,7 @@ body.modal-overlay-active { overflow: hidden; }
 	background: var(--fn-border);
 	overflow: hidden;
 }
-.fn-meter-fill { height: 100%; width: 0; background: var(--fn-accent); transition: width .3s ease; }
+.fn-meter-fill { height: 100%; width: 0; background: var(--fn-accent-brand); transition: width .3s ease; }
 .fn-meter-value { flex: 0 0 auto; font-size: 1.3rem; color: var(--fn-text); white-space: nowrap; }
 
 .fn-wifi-list { display: flex; flex-direction: column; gap: 4px; }
@@ -2644,13 +2705,13 @@ body.modal-overlay-active { overflow: hidden; }
 	justify-content: center;
 }
 .fn-qr-close:hover { background: var(--fn-border); color: var(--fn-text); }
-.fn-qr-desc { color: var(--fn-text-secondary); font-size: 0.8125rem; margin: 10px 0 20px; }
+.fn-qr-desc { color: var(--fn-text-secondary); font-size: 0.875rem; margin: 10px 0 20px; }
 .fn-qr-body { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
 .fn-qr-canvas-wrap { background: #fff; padding: 12px; border-radius: var(--fn-radius); flex: 0 0 auto; line-height: 0; }
 .fn-qr-canvas-wrap canvas { display: block; width: 160px; height: 160px; }
 .fn-qr-fields { flex: 1 1 180px; min-width: 160px; display: flex; flex-direction: column; gap: 16px; }
-.fn-qr-field-label { font-size: 0.75rem; color: var(--fn-text-secondary); margin-bottom: 2px; }
-.fn-qr-field-value { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; word-break: break-word; }
+.fn-qr-field-label { font-size: 0.8125rem; color: var(--fn-text-secondary); margin-bottom: 2px; }
+.fn-qr-field-value { display: flex; align-items: center; gap: 8px; font-size: 1rem; word-break: break-word; }
 .fn-qr-copy { border: none; background: none; cursor: pointer; color: var(--fn-text-secondary); padding: 2px; display: flex; flex: 0 0 auto; }
 .fn-qr-copy:hover { color: var(--fn-accent); }
 
@@ -2831,7 +2892,7 @@ body.modal-overlay-active { overflow: hidden; }
 	box-shadow: var(--fn-shadow-1);
 	transition: transform .15s ease;
 }
-.fn-switch-input:checked + .fn-switch-slider { background: var(--fn-accent); }
+.fn-switch-input:checked + .fn-switch-slider { background: var(--fn-accent-action); }
 .fn-switch-input:checked + .fn-switch-slider::before { transform: translateX(16px); }
 
 /* Themed checkbox/radio inputs, everywhere in the theme (the .fn-switch-input
@@ -2857,8 +2918,8 @@ input[type="checkbox"]:hover:not(:disabled),
 input[type="radio"]:hover:not(:disabled) { border-color: var(--fn-accent); }
 input[type="checkbox"]:checked,
 input[type="radio"]:checked {
-	background: var(--fn-accent);
-	border-color: var(--fn-accent);
+	background: var(--fn-accent-action);
+	border-color: var(--fn-accent-action);
 }
 input[type="checkbox"]:checked::after {
 	content: "";
@@ -2976,7 +3037,7 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 	cursor: pointer;
 }
 .fn-mn-checkbox-row input[type="checkbox"] { margin-top: 3px; }
-.fn-mn-hint { font-size: 0.75rem; color: var(--fn-text-secondary); margin-top: 2px; }
+.fn-mn-hint { font-size: 0.8125rem; color: var(--fn-text-secondary); margin-top: 2px; }
 
 .fn-mn-details-toggle {
 	display: inline-block;
@@ -3140,7 +3201,7 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 	letter-spacing: .03em;
 }
 .fn-apps-desc {
-	font-size: 0.75rem;
+	font-size: 0.875rem;
 	color: var(--fn-text-secondary);
 	margin-top: 2px;
 	overflow-wrap: anywhere;
@@ -3668,4 +3729,15 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 	.fn-pf-range-dash { display: none; }
 	.fn-pf-modal-actions { flex-direction: column-reverse; }
 	.fn-pf-modal-actions .fn-settings-btn { width: 100%; }
+}
+
+/* Keep every interaction usable for people who explicitly request less
+ * motion, including components added after the original login-only rule. */
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: .01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: .01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

@@ -4,8 +4,39 @@
 -#}
 
 {%
+	import { glob, unlink } from 'fs';
+
 	const boardinfo = ubus.call('system', 'board');
 	const model = replace(boardinfo.model ?? boardinfo.hostname ?? '?', / \(.*\)$/, '');
+	const themes = uci.get_all('luci', 'themes') || {};
+	const currentinterface = uci.get('luci', 'main', 'mediaurlbase') ?? '/luci-static/freenetic';
+	const wantinterface = http.formvalue('_interface');
+
+	/* The login page is rendered before an authenticated LuCI session exists,
+	   so apply the interface switch here instead of relying on the post-login
+	   settings drawer.  Only paths registered in luci.themes are accepted. */
+	if (wantinterface) {
+		let targetinterface = null;
+
+		for (let name, path in themes)
+			if (substr(name, 0, 1) != '.' && path == wantinterface) {
+				targetinterface = path;
+				break;
+			}
+
+		if (targetinterface && targetinterface != currentinterface) {
+			uci.set('luci', 'main', 'mediaurlbase', targetinterface);
+			uci.commit('luci');
+
+			/* The dispatcher caches menu visibility by menu-file hash, not by
+			   luci.main.mediaurlbase.  Remove it before the redirected request
+			   so Freenetic-only entries appear/disappear immediately. */
+			for (let path in glob('/tmp/luci-indexcache*'))
+				unlink(path);
+
+			http.redirect(dispatcher.build_url('admin/status/overview'));
+		}
+	}
 
 	// Same mechanism as System > Language and Style (luci.main.lang / luci.languages),
 	// applied directly here since this page renders before a session exists.
@@ -107,7 +138,7 @@
 	</div>
 </div>
 
-<div id="fn-cant-signin-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-cant-signin-title" hidden>
+<div id="fn-cant-signin-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-cant-signin-title" tabindex="-1" hidden>
 	<div class="fn-dialog-box">
 		<h3 id="fn-cant-signin-title">{{ _("Can't sign in?") }}</h3>
 		<p>{{ sprintf(_('The default username is %s.'), '<code>root</code>') }}</p>
@@ -116,7 +147,30 @@
 	</div>
 </div>
 
-<div id="fn-support-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-support-title" hidden>
+<div id="fn-interface-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-interface-title" aria-describedby="fn-interface-scope-note" tabindex="-1" hidden>
+	<div class="fn-dialog-box">
+		<h3 id="fn-interface-title">{{ _('Switch interface style?') }}</h3>
+		<form method="post" id="fn-interface-form">
+			<p id="fn-interface-scope-note" class="fn-interface-scope-note">{{ _("This changes the interface style for everyone using this router's web UI, not just this browser.") }}</p>
+			<div class="fn-field fn-interface-field">
+				<label class="fn-login-label" for="fn-interface-select">{{ _('Interface') }}</label>
+				<select name="_interface" id="fn-interface-select">
+					{% for (let name, path in themes): %}
+					{% if (substr(name, 0, 1) != '.'): %}
+					<option value="{{ entityencode(path, true) }}" {{ path == currentinterface ? 'selected' : '' }}>{{ entityencode(name, true) }}</option>
+					{% endif %}
+					{% endfor %}
+				</select>
+			</div>
+			<div class="fn-dialog-actions">
+				<button type="button" class="fn-dialog-close">{{ _('Cancel') }}</button>
+				<button type="submit" class="fn-dialog-submit">{{ _('Switch') }}</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div id="fn-support-dialog" class="fn-dialog" role="dialog" aria-modal="true" aria-labelledby="fn-support-title" tabindex="-1" hidden>
 	<div class="fn-dialog-box">
 		<h3 id="fn-support-title">{{ _('Support Center') }}</h3>
 		<p><a href="https://forum.openwrt.org/" target="_blank" rel="noreferrer">forum.openwrt.org</a></p>
@@ -146,7 +200,37 @@
 			window.freeneticSetTheme(isDark ? 'light' : 'dark');
 		});
 
-		function wire(openIds, dlgId) {
+		function dialogFocusable(dlg) {
+			return Array.prototype.slice.call(dlg.querySelectorAll(
+				'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			)).filter(function(element) {
+				return !element.disabled && !element.hidden && element.getAttribute('aria-hidden') !== 'true';
+			});
+		}
+
+		function trapDialogFocus(ev, dlg) {
+			if (ev.key !== 'Tab')
+				return;
+
+			var focusable = dialogFocusable(dlg);
+			if (!focusable.length) {
+				ev.preventDefault();
+				dlg.focus();
+				return;
+			}
+
+			var first = focusable[0];
+			var last = focusable[focusable.length - 1];
+			if (ev.shiftKey && document.activeElement === first) {
+				ev.preventDefault();
+				last.focus();
+			} else if (!ev.shiftKey && document.activeElement === last) {
+				ev.preventDefault();
+				first.focus();
+			}
+		}
+
+		function wire(openIds, dlgId, initialSelector) {
 			var dlg = document.querySelector(dlgId);
 			var opener = null;
 			var close = dlg.querySelector('.fn-dialog-close');
@@ -157,13 +241,18 @@
 					ev.preventDefault();
 					opener = ev.currentTarget;
 					dlg.hidden = false;
-					close.focus();
+					window.setTimeout(function() {
+						var initial = dlg.querySelector(initialSelector) || dialogFocusable(dlg)[0];
+						if (initial)
+							initial.focus();
+					}, 0);
 				});
 			});
 
 			function hide() {
 				dlg.hidden = true;
-				if (opener) opener.focus();
+				if (opener && document.contains(opener))
+					opener.focus();
 			}
 
 			close.addEventListener('click', hide);
@@ -174,11 +263,14 @@
 				if (ev.key === 'Escape') {
 					ev.preventDefault();
 					hide();
+				} else {
+					trapDialogFocus(ev, dlg);
 				}
 			});
 		}
-		wire('#fn-cant-signin', '#fn-cant-signin-dialog');
-		wire(['#fn-support-center', '#fn-more-options'], '#fn-support-dialog');
+		wire('#fn-cant-signin', '#fn-cant-signin-dialog', '.fn-dialog-close');
+		wire('#fn-more-options', '#fn-interface-dialog', '#fn-interface-select');
+		wire('#fn-support-center', '#fn-support-dialog', '.fn-dialog-close');
 	})();
 </script>
 

@@ -324,6 +324,7 @@ return view.extend({
 		this.table = E('div', { class: 'fn-table' });
 		this.activeTable = E('div', { class: 'fn-table' });
 		this.tabButtons = {};
+		this.tabOrder = [ 'ipv4', 'ipv6', 'dns' ];
 		this.editingSection = null;
 		this.editingDnsIndex = null;
 		this.routeModalOpen = false;
@@ -386,19 +387,27 @@ return view.extend({
 		this.fillTable();
 		this.fillActiveTable();
 
+		this.routePanel = E('section', {
+			id: 'fn-route-panel',
+			role: 'tabpanel',
+			'aria-labelledby': 'fn-route-tab-ipv4'
+		}, [
+			E('div', { class: 'fn-route-user-head' }, [
+				this.userRoutesTitle,
+				E('div', { class: 'fn-route-head-actions' }, [ addButton, importButton, saveButton, deleteButton, importInput ])
+			]),
+			this.importPanel,
+			this.formPanel,
+			this.table
+		]);
+
 		return E('div', { class: 'fn-dash' }, [
 			E('div', { class: 'fn-card', style: 'grid-column: 1 / -1' }, [
 				E('div', { class: 'fn-card-head' }, [ E('h3', {}, _('Routing')) ]),
 				E('div', { class: 'fn-card-body' }, [
 					E('p', { class: 'fn-info-empty fn-route-intro' }, _('User routes take priority over dynamically learned routes. Configure access to IP addresses and networks through a selected gateway or network interface.')),
 					tabs,
-					E('div', { class: 'fn-route-user-head' }, [
-						this.userRoutesTitle,
-						E('div', { class: 'fn-route-head-actions' }, [ addButton, importButton, saveButton, deleteButton, importInput ])
-					]),
-					this.importPanel,
-					this.formPanel,
-					this.table
+					this.routePanel
 				])
 			]),
 			E('div', { class: 'fn-card', style: 'grid-column: 1 / -1' }, [
@@ -416,8 +425,12 @@ return view.extend({
 			type: 'button',
 			class: 'fn-tab',
 			role: 'tab',
+			id: 'fn-route-tab-' + family,
+			'aria-controls': 'fn-route-panel',
 			'aria-selected': family === this.activeFamily ? 'true' : 'false',
-			click: () => this.setFamily(family)
+			tabindex: family === this.activeFamily ? '0' : '-1',
+			click: () => this.setFamily(family),
+			keydown: event => this.handleTabKeydown(event, family)
 		}, label);
 		this.tabButtons[family] = button;
 		if (family === this.activeFamily)
@@ -425,14 +438,38 @@ return view.extend({
 		return button;
 	},
 
-	setFamily(family) {
+	handleTabKeydown(event, currentFamily) {
+		let index = this.tabOrder.indexOf(currentFamily);
+		if (index < 0)
+			return;
+
+		if (event.key === 'ArrowRight' || event.key === 'ArrowDown')
+			index = (index + 1) % this.tabOrder.length;
+		else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+			index = (index + this.tabOrder.length - 1) % this.tabOrder.length;
+		else if (event.key === 'Home')
+			index = 0;
+		else if (event.key === 'End')
+			index = this.tabOrder.length - 1;
+		else
+			return;
+
+		event.preventDefault();
+		this.setFamily(this.tabOrder[index], true);
+	},
+
+	setFamily(family, focusTab) {
+		if (!this.tabButtons[family])
+			return;
 		this.activeFamily = family;
 		this.selectedRoutes = {};
 		Object.keys(this.tabButtons).forEach(key => {
 			const active = key === family;
 			this.tabButtons[key].classList.toggle('fn-active', active);
 			this.tabButtons[key].setAttribute('aria-selected', active ? 'true' : 'false');
+			this.tabButtons[key].tabIndex = active ? 0 : -1;
 		});
+		this.routePanel.setAttribute('aria-labelledby', 'fn-route-tab-' + family);
 		dom_content(this.addButton, family === 'dns' ? _('Add DNS route') : _('Add route'));
 		dom_content(this.userRoutesTitle, family === 'dns' ? _('DNS routes') : _('User routes'));
 		this.closeImportDialog();
@@ -440,6 +477,8 @@ return view.extend({
 		this.closeForm();
 		this.fillTable();
 		this.fillActiveTable();
+		if (focusTab)
+			this.tabButtons[family].focus();
 	},
 
 	selectionKey(family, value) {

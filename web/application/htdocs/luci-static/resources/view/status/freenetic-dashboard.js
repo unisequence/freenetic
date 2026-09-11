@@ -65,6 +65,34 @@ function wifiQrPayload(ssid, key, isOpen) {
 		(isOpen ? '' : 'P:' + esc(key || '') + ';') + ';';
 }
 
+function dialogFocusable(root) {
+	return Array.from(root.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+		.filter(element => !element.disabled && !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+}
+
+function trapDialogFocus(event, dialog) {
+	if (event.key !== 'Tab' || !dialog)
+		return;
+
+	const focusable = dialogFocusable(dialog);
+	if (!focusable.length) {
+		event.preventDefault();
+		dialog.focus();
+		return;
+	}
+
+	const first = focusable[0];
+	const last = focusable[focusable.length - 1];
+	if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+		event.preventDefault();
+		last.focus();
+	}
+	else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+		event.preventDefault();
+		first.focus();
+	}
+}
+
 function fmtBps(bytesPerSec) {
 	const bits = (bytesPerSec || 0) * 8;
 	if (bits >= 1000000)
@@ -924,7 +952,7 @@ return view.extend({
 					const bandLabel = radio.band === '5g' ? '5 GHz' : '2.4 GHz';
 					const qrBtn = E('button', {
 						type: 'button', class: 'fn-icon-btn fn-wifi-qr', 'aria-label': _('Wi-Fi QR code'),
-						click: () => this.showQrDialog(ssid, bandLabel, iface.key, iface.encryption)
+						click: event => this.showQrDialog(ssid, bandLabel, iface.key, iface.encryption, event.currentTarget)
 					}, qrGlyph(16));
 
 					list.appendChild(E('div', { class: 'fn-wifi-row' }, [
@@ -1080,18 +1108,25 @@ return view.extend({
 			});
 	},
 
-	showQrDialog(ssid, bandLabel, key, encryption) {
+	showQrDialog(ssid, bandLabel, key, encryption, opener) {
 		const isOpen = !encryption || encryption === 'none';
+		this.qrOpener = opener || document.activeElement;
 
 		if (!this.qrOverlay) {
 			this.qrOverlay = E('div', {
 				class: 'fn-qr-overlay',
+				'aria-hidden': 'true',
 				click: (ev) => { if (ev.target === this.qrOverlay) this.hideQrDialog(); }
 			});
+			this.qrOverlay.inert = true;
 			document.body.appendChild(this.qrOverlay);
 			this.qrKeydownHandler = (ev) => {
-				if (ev.key === 'Escape' && this.qrOverlay.classList.contains('fn-qr-open'))
+				if (!this.qrOverlay || !this.qrOverlay.classList.contains('fn-qr-open'))
+					return;
+				if (ev.key === 'Escape')
 					this.hideQrDialog();
+				else
+					trapDialogFocus(ev, this.qrDialog);
 			};
 			document.addEventListener('keydown', this.qrKeydownHandler);
 		}
@@ -1117,10 +1152,16 @@ return view.extend({
 		}
 
 		dom_empty(this.qrOverlay);
-		this.qrOverlay.appendChild(E('div', { class: 'fn-qr-box' }, [
+		this.qrDialog = E('div', {
+			class: 'fn-qr-box',
+			role: 'dialog',
+			tabindex: '-1',
+			'aria-modal': 'true',
+			'aria-labelledby': 'fn-qr-dialog-title'
+		}, [
 			E('div', { class: 'fn-qr-head' }, [
 				E('div', {}, [
-					E('h3', { class: 'fn-qr-title' }, _('Wireless network information')),
+					E('h3', { id: 'fn-qr-dialog-title', class: 'fn-qr-title' }, _('Wireless network information')),
 					E('div', { class: 'fn-qr-subtitle' }, _('"%s" in the %s band').format(ssid, bandLabel))
 				]),
 				E('button', {
@@ -1133,22 +1174,36 @@ return view.extend({
 				E('div', { class: 'fn-qr-canvas-wrap' }, [ canvas ]),
 				E('div', { class: 'fn-qr-fields' }, fields)
 			])
-		]));
+		]);
+		this.qrOverlay.appendChild(this.qrDialog);
 
 		qrcode.renderToCanvas(canvas, wifiQrPayload(ssid, key, isOpen), 4);
+		this.qrOverlay.inert = false;
+		this.qrOverlay.setAttribute('aria-hidden', 'false');
 
 		requestAnimationFrame(() => {
-			if (this.qrOverlay)
+			if (this.qrOverlay) {
 				this.qrOverlay.classList.add('fn-qr-open');
+				const close = this.qrOverlay.querySelector('.fn-qr-close');
+				(close || this.qrDialog).focus();
+			}
 		});
 	},
 
-	hideQrDialog() {
-		if (this.qrOverlay)
+	hideQrDialog(restoreFocus) {
+		if (this.qrOverlay) {
 			this.qrOverlay.classList.remove('fn-qr-open');
+			this.qrOverlay.setAttribute('aria-hidden', 'true');
+			this.qrOverlay.inert = true;
+		}
+		const opener = this.qrOpener;
+		this.qrOpener = null;
+		if (restoreFocus !== false && opener && document.contains(opener) && typeof opener.focus === 'function')
+			requestAnimationFrame(() => opener.focus());
 	},
 
 	destroy() {
+		this.hideQrDialog(false);
 		if (this.streamFallbackTimer) {
 			clearTimeout(this.streamFallbackTimer);
 			this.streamFallbackTimer = null;
@@ -1160,6 +1215,7 @@ return view.extend({
 		if (this.qrOverlay) {
 			this.qrOverlay.remove();
 			this.qrOverlay = null;
+			this.qrDialog = null;
 		}
 		if (Array.isArray(this.fallbackPollers)) {
 			this.fallbackPollers.forEach(fn => poll.remove(fn));

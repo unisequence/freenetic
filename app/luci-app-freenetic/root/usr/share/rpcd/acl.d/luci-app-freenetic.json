@@ -55,7 +55,6 @@
 				"/sbin/sysupgrade /tmp/firmware.bin": [ "exec" ],
 				"/tmp/firmware.bin": [ "write" ],
 				"/usr/libexec/freenetic-backup-call": [ "exec" ],
-				"/usr/libexec/freenetic-clear-luci-cache": [ "exec" ],
 				"/usr/libexec/freenetic-diagnostics-call ping *": [ "exec" ],
 				"/usr/libexec/freenetic-diagnostics-call traceroute *": [ "exec" ],
 				"/usr/libexec/package-manager-call install *": [ "exec" ],

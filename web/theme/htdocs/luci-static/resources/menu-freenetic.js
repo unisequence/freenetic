@@ -198,16 +198,15 @@ return baseclass.extend({
 		});
 
 		const groups = SIDEBAR_GROUPS.map(g => ({ title: g.title, icon: g.icon, entries: [] }));
-		// Dev-only catch-all for stock OpenWrt pages with no Keenetic-style home
-		// yet assigned in SIDEBAR_GROUPS. Kept separate from Management so it's
-		// obviously provisional — remove this group once every page has a real
-		// home and SIDEBAR_GROUPS covers the full menu tree.
-		groups.push({ title: 'Unsorted', icon: 'unsorted', entries: [] });
+		// Keep stock pages that do not yet have a dedicated Freenetic group in
+		// a normal, discoverable catch-all instead of making them look like a
+		// development leftover.
+		groups.push({ title: 'More', icon: 'unsorted', entries: [] });
 		const assigned = {};
 
 		// Stock pages fully superseded by a Keenetic-style page elsewhere
 		// (e.g. Wi-Fi editing now lives on Home/Guest Network) — hidden
-		// outright instead of falling into Unsorted.
+		// outright instead of falling into More.
 		['network/wireless', 'network/dhcp', 'network/dns', 'network/diagnostics']
 			.forEach(p => { assigned[p] = true; });
 
@@ -220,7 +219,7 @@ return baseclass.extend({
 			});
 		});
 
-		// anything with no explicit home falls into Unsorted
+		// Anything with no explicit home falls into More.
 		const catchAll = groups[groups.length - 1];
 		Object.keys(byPath).forEach(p => {
 			if (!assigned[p])

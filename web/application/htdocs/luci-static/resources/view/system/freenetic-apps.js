@@ -279,7 +279,9 @@ return view.extend({
 				id: 'fn-app-tab-' + filter.id,
 				'aria-controls': 'fn-apps-catalog',
 				'aria-selected': filter.id === this.activeFilter ? 'true' : 'false',
-				click: () => this.selectFilter(filter.id)
+				tabindex: filter.id === this.activeFilter ? '0' : '-1',
+				click: () => this.selectFilter(filter.id),
+				keydown: event => this.handleTabKeydown(event, filter.id)
 			}, filter.label);
 			this.appTabs[filter.id] = button;
 			tabList.appendChild(button);
@@ -288,7 +290,28 @@ return view.extend({
 		return tabList;
 	},
 
-	selectFilter(filter) {
+	handleTabKeydown(event, currentFilter) {
+		const filters = APP_FILTERS.map(filter => filter.id);
+		let index = filters.indexOf(currentFilter);
+		if (index < 0)
+			return;
+
+		if (event.key === 'ArrowRight' || event.key === 'ArrowDown')
+			index = (index + 1) % filters.length;
+		else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+			index = (index + filters.length - 1) % filters.length;
+		else if (event.key === 'Home')
+			index = 0;
+		else if (event.key === 'End')
+			index = filters.length - 1;
+		else
+			return;
+
+		event.preventDefault();
+		this.selectFilter(filters[index], true);
+	},
+
+	selectFilter(filter, focusTab) {
 		if (!APP_FILTERS.some(item => item.id === filter))
 			return;
 		this.activeFilter = filter;
@@ -296,10 +319,11 @@ return view.extend({
 		Object.keys(this.appTabs).forEach(id => {
 			this.appTabs[id].classList.toggle('fn-apps-tab-active', id === filter);
 			this.appTabs[id].setAttribute('aria-selected', id === filter ? 'true' : 'false');
+			this.appTabs[id].tabIndex = id === filter ? 0 : -1;
 		});
 		this.renderCatalog();
 		const active = this.appTabs[filter];
-		if (active && typeof active.focus === 'function')
+		if (focusTab && active && typeof active.focus === 'function')
 			active.focus();
 	},
 

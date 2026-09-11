@@ -1,5 +1,5 @@
 {% if (!blank_page): %}
-					</div>
+					</main>
 				</div>
 				<aside id="fn-settings-panel"></aside>
 			</div>

@@ -42,6 +42,16 @@ assert.ok(!fs.existsSync(path.join(applicationWeb, 'htdocs', 'luci-static', 'fre
 assert.ok(!fs.existsSync(path.join(applicationWeb, 'ucode')),
 	'application must not ship theme templates');
 
+const themeRpc = path.join(themeWeb, 'htdocs', 'luci-static', 'resources', 'freenetic-rpc.js');
+const applicationRpc = path.join(applicationWeb, 'htdocs', 'luci-static', 'resources', 'freenetic-rpc.js');
+const themeCacheHelper = path.join(themePackage, 'root', 'usr', 'libexec', 'freenetic-clear-luci-cache');
+const applicationCacheHelper = path.join(applicationPackage, 'root', 'usr', 'libexec', 'freenetic-clear-luci-cache');
+assert.ok(fs.existsSync(themeRpc), 'theme must ship its direct runtime RPC helper');
+assert.ok(!fs.existsSync(applicationRpc), 'application must not duplicate the theme RPC helper');
+assert.ok(fs.existsSync(themeCacheHelper), 'theme must ship the cache helper used by its settings drawer');
+assert.ok(fs.statSync(themeCacheHelper).mode & 0o111, 'theme cache helper must be executable');
+assert.ok(!fs.existsSync(applicationCacheHelper), 'application must not duplicate the theme cache helper');
+
 const themeFiles = installPaths(themePackage, themeWeb, true);
 const applicationFiles = installPaths(applicationPackage, applicationWeb, false);
 const collisions = themeFiles.filter(filename => applicationFiles.includes(filename));
@@ -49,6 +59,24 @@ assert.deepEqual(collisions, [], 'theme and application packages must not own th
 
 const themeMakefile = fs.readFileSync(path.join(themePackage, 'Makefile'), 'utf8');
 const applicationMakefile = fs.readFileSync(path.join(applicationPackage, 'Makefile'), 'utf8');
+const preflightMakefile = fs.readFileSync(path.join(root, 'app', 'freenetic-preflight.mk'), 'utf8');
+const deployScript = fs.readFileSync(path.join(root, 'app', 'deploy.sh'), 'utf8');
+const routerPreflightPath = path.join(root, 'app', 'check-router.sh');
+const routerPreflight = fs.readFileSync(routerPreflightPath, 'utf8');
+assert.ok(fs.statSync(routerPreflightPath).mode & 0o111, 'router preflight must be executable');
+assert.match(routerPreflight, /mediatek\/filogic/, 'host preflight must support Filogic');
+assert.match(routerPreflight, /ramips\/mt7621/, 'host preflight must support MT7621');
+assert.match(routerPreflight, /FREENETIC_MIN_OVERLAY_MIB_MT7621/, 'MT7621 threshold must be configurable');
+assert.match(preflightMakefile, /mediatek\/filogic/, 'preflight must support the primary MediaTek target');
+assert.match(preflightMakefile, /ramips\/mt7621/, 'preflight must support MT7621');
+assert.match(preflightMakefile, /min_overlay_kib=32768/, 'Filogic needs the larger overlay reserve');
+assert.match(preflightMakefile, /min_overlay_kib=16384/, 'MT7621 needs its own overlay reserve');
+assert.match(preflightMakefile, /at least 128 MiB RAM/, 'preflight must reject low-memory routers');
+assert.match(deployScript, /check-router\.sh/, 'development deployment must run the hardware preflight');
+assert.match(themeMakefile, /Package\/luci-theme-freenetic\/preinst/, 'theme APK must guard direct installs');
+assert.match(applicationMakefile, /Package\/luci-app-freenetic\/preinst/, 'application APK must guard direct installs');
+assert.match(themeMakefile, /^LUCI_BASENAME:=theme-freenetic$/m,
+	'theme translations must use a package basename distinct from the application');
 assert.doesNotMatch(themeMakefile, /luci-app-package-manager/,
 	'theme must not depend on application services');
 assert.match(applicationMakefile, /LUCI_DEPENDS:=.*\+luci-theme-freenetic/,
@@ -67,12 +95,38 @@ const navigationSource = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs
 assert.match(navigationSource, /'system\/system', 'system\/diagnostics', 'system\/applications'/,
 	'diagnostics must stay inside the Management sidebar group');
 assert.match(navigationSource, /'network\/diagnostics'/,
-	'the stock diagnostics entry must not create a duplicate Unsorted item');
+	'the stock diagnostics entry must not create a duplicate More item');
+assert.match(navigationSource, /title: 'More'/,
+	'the catch-all sidebar group must use a user-facing name');
 
 const themeAclPath = path.join(themePackage, 'root', 'usr', 'share', 'rpcd',
 	'acl.d', 'luci-theme-freenetic.json');
 const themeAcl = JSON.parse(fs.readFileSync(themeAclPath, 'utf8'))['luci-theme-freenetic'];
 assert.deepEqual(themeAcl.read, { uci: [ 'luci' ] });
-assert.deepEqual(themeAcl.write, { uci: [ 'luci' ] });
+assert.deepEqual(themeAcl.write, {
+	uci: [ 'luci' ],
+	file: {
+		'/usr/libexec/freenetic-clear-luci-cache': [ 'exec' ]
+	}
+});
+
+const themeCatalogPath = path.join(themePackage, 'po', 'ru', 'freenetic-theme.po');
+const applicationCatalogPath = path.join(applicationPackage, 'po', 'ru', 'freenetic.po');
+assert.ok(fs.existsSync(themeCatalogPath), 'theme needs its own Russian catalog');
+assert.ok(fs.existsSync(applicationCatalogPath), 'application catalog must remain in place');
+const themeCatalog = fs.readFileSync(themeCatalogPath, 'utf8');
+const catalogIds = new Set([...themeCatalog.matchAll(/^msgid "((?:\\.|[^"])*)"$/gm)]
+	.map(match => match[1].replace(/\\"/g, '"')));
+const themeMessages = new Set();
+for (const filename of walk(themeWeb).filter(filename => /\.(?:js|ut)$/.test(filename))) {
+	const source = fs.readFileSync(filename, 'utf8');
+	for (const pattern of [ /_\(\s*'((?:\\.|[^'\\])*)'\s*\)/g, /_\(\s*"((?:\\.|[^"\\])*)"\s*\)/g ]) {
+		for (const match of source.matchAll(pattern))
+			themeMessages.add(match[1].replace(/\\'/g, "'").replace(/\\"/g, '"'));
+	}
+}
+assert.deepEqual([...themeMessages].filter(message => !catalogIds.has(message)).sort(), [],
+	'theme catalog must cover every static theme translation');
+assert.ok(catalogIds.has('More'), 'theme catalog must translate the dynamic More navigation label');
 
 console.log(`package boundaries: ok (${themeFiles.length} theme files, ${applicationFiles.length} application files)`);

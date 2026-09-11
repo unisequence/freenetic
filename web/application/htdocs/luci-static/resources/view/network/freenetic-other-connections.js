@@ -602,16 +602,9 @@ return view.extend({
 		this.startIpsecPolling();
 
 		return E('div', { class: 'fn-pf-page fn-oc-page' }, [
-			E('div', { class: 'fn-oc-title-row' }, [
-				E('div', {}, [
-					E('h1', { class: 'fn-pf-title' }, _('Other Connections')),
-					E('p', { class: 'fn-pf-description' }, _('Manage additional VPN and tunnel connections through the OpenWrt network stack.'))
-				]),
-				E('div', { class: 'fn-oc-head-actions' }, [
-					E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openImportDialog() }, _('Import .conf')),
-					E('button', { type: 'button', class: 'fn-settings-btn', click: () => this.openOpenvpnImportDialog() }, _('Import .ovpn')),
-					E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => this.openForm(null) }, _('Add connection'))
-				])
+			E('div', {}, [
+				E('h1', { class: 'fn-pf-title' }, _('Other Connections')),
+				E('p', { class: 'fn-pf-description' }, _('Manage additional VPN and tunnel connections through the OpenWrt network stack.'))
 			]),
 			this.supportNode,
 			E('section', { class: 'fn-oc-connections' }, [ this.listNode ])
@@ -627,41 +620,63 @@ return view.extend({
 		const wgReady = wgTools && wgKernel;
 		const awgInstalled = this.awgAvailable();
 		const cards = [];
+		const addSupportCard = (className, title, description, statusText, statusClass, body) => {
+			cards.push(E('section', { class: 'fn-oc-support-card ' + className }, [
+				E('div', { class: 'fn-oc-support-head' }, [
+					E('div', { class: 'fn-oc-support-title' }, [
+						E('h2', {}, title),
+						E('p', {}, description)
+					]),
+					E('span', { class: 'fn-status-pill ' + statusClass }, statusText)
+				]),
+				E('div', { class: 'fn-oc-support-panel' }, [
+					E('div', { class: 'fn-oc-support-body' }, body)
+				])
+			]));
+		};
+		const supportButton = (label, click, primary = false) => E('button', {
+			type: 'button',
+			class: 'fn-settings-btn fn-oc-support-action' + (primary ? ' fn-settings-btn-primary' : ''),
+			click: click
+		}, label);
+		const supportActions = actions => E('div', { class: 'fn-oc-support-actions' }, actions);
+		const applicationAction = () => E('a', {
+			href: L.url('admin/system/applications'),
+			class: 'fn-settings-btn fn-oc-support-action'
+		}, _('Open Applications'));
 		const wgMissing = [];
 		if (!wgTools) wgMissing.push('wireguard-tools');
 		if (!wgKernel) wgMissing.push('kmod-wireguard');
 		const wgBody = [ E('span', {}, wgReady
 			? _('Native OpenWrt kernel protocol is ready.')
 			: _('Required package(s) are missing: %s.').format(wgMissing.join(', '))) ];
-		if (!wgReady)
-			wgBody.push(E('a', { href: L.url('admin/system/applications'), class: 'fn-oc-support-link' }, _('Open Applications')));
-		cards.push(E('section', { class: 'fn-oc-support-card fn-oc-support-card-wireguard' }, [
-			E('div', { class: 'fn-oc-support-head' }, [
-				E('div', { class: 'fn-oc-support-title' }, [
-					E('h3', {}, _('WireGuard')),
-					E('p', {}, _('Standard kernel-based VPN protocol'))
-				]),
-				E('span', { class: 'fn-status-pill ' + (wgReady ? 'fn-status-ok' : 'fn-status-off') }, wgReady ? _('Ready') : _('Unavailable'))
-			]),
-			E('div', { class: 'fn-oc-support-body' }, wgBody)
-		]));
+		if (wgReady)
+			wgBody.push(supportActions([
+				supportButton(_('Add WireGuard connection'), () => this.openNativeForm(WG_PROTO), true),
+				supportButton(_('Import configuration'), () => this.openImportDialog())
+			]));
+		else
+			wgBody.push(supportActions([ applicationAction() ]));
+		addSupportCard('fn-oc-support-card-wireguard', _('WireGuard'),
+			_('Standard kernel-based VPN protocol'),
+			wgReady ? _('Ready') : _('Unavailable'),
+			wgReady ? 'fn-status-ok' : 'fn-status-off', wgBody);
 
 		const ovpnReady = openvpnAvailable(this.packages);
 		const ovpnBody = [ E('span', {}, ovpnReady
 			? _('OpenVPN netifd protocol is ready.')
 			: _('Install an OpenVPN package to create or start an OpenVPN tunnel.')) ];
-		if (!ovpnReady)
-			ovpnBody.push(E('a', { href: L.url('admin/system/applications'), class: 'fn-oc-support-link' }, _('Open Applications')));
-		cards.push(E('section', { class: 'fn-oc-support-card fn-oc-support-card-openvpn' }, [
-			E('div', { class: 'fn-oc-support-head' }, [
-				E('div', { class: 'fn-oc-support-title' }, [
-					E('h3', {}, _('OpenVPN')),
-					E('p', {}, _('Profile-based VPN protocol with broad provider support'))
-				]),
-				E('span', { class: 'fn-status-pill ' + (ovpnReady ? 'fn-status-ok' : 'fn-status-off') }, ovpnReady ? _('Ready') : _('Unavailable'))
-			]),
-			E('div', { class: 'fn-oc-support-body' }, ovpnBody)
-		]));
+		if (ovpnReady)
+			ovpnBody.push(supportActions([
+				supportButton(_('Add OpenVPN connection'), () => this.openOpenvpnForm(null), true),
+				supportButton(_('Import OpenVPN profile'), () => this.openOpenvpnImportDialog())
+			]));
+		else
+			ovpnBody.push(supportActions([ applicationAction() ]));
+		addSupportCard('fn-oc-support-card-openvpn', _('OpenVPN'),
+			_('Profile-based VPN protocol with broad provider support'),
+			ovpnReady ? _('Ready') : _('Unavailable'),
+			ovpnReady ? 'fn-status-ok' : 'fn-status-off', ovpnBody);
 
 		let feedText = awgInstalled
 			? _('AWG parameters are available in the connection editor.')
@@ -674,44 +689,42 @@ return view.extend({
 				feedText += ' ' + _('SNAPSHOT builds may not have a matching kernel package.');
 		}
 		const awgBody = [ E('span', {}, feedText) ];
-		if (!awgInstalled) {
-			const install = E('button', { type: 'button', class: 'fn-settings-btn fn-oc-support-action', click: () => this.installAwg(install) }, _('Connect feed and install'));
-			awgBody.push(install);
+		if (awgInstalled)
+			awgBody.push(supportActions([
+				supportButton(_('Add AmneziaWG connection'), () => this.openNativeForm(AWG_PROTO), true)
+			]));
+		else {
+			const install = supportButton(_('Connect feed and install'), () => this.installAwg(install), true);
+			awgBody.push(supportActions([ install ]));
 		}
-		cards.push(E('section', { class: 'fn-oc-support-card fn-oc-support-card-awg' }, [
-			E('div', { class: 'fn-oc-support-head' }, [
-				E('div', { class: 'fn-oc-support-title' }, [
-					E('h3', {}, _('AmneziaWG')),
-					E('p', {}, _('WireGuard-compatible protocol with AWG obfuscation'))
-				]),
-				E('span', { class: 'fn-status-pill ' + (awgInstalled ? 'fn-status-ok' : 'fn-status-off') }, awgInstalled ? _('Ready') : _('Optional'))
-			]),
-			E('div', { class: 'fn-oc-support-body' }, awgBody)
-		]));
+		addSupportCard('fn-oc-support-card-awg', _('AmneziaWG'),
+			_('WireGuard-compatible protocol with AWG obfuscation'),
+			awgInstalled ? _('Ready') : _('Optional'),
+			awgInstalled ? 'fn-status-ok' : 'fn-status-off', awgBody);
 
-		const addPackageCard = (className, title, description, packages, readyText) => {
+		const addPackageCard = (className, title, description, packages, readyText, actionLabel, action) => {
 			const missing = packages.filter(name => !this.packages[name]);
 			const ready = !missing.length;
 			const body = [ E('span', {}, ready
 				? readyText
 				: _('Required package(s) are missing: %s.').format(missing.join(', '))) ];
-			if (!ready)
-				body.push(E('a', { href: L.url('admin/system/applications'), class: 'fn-oc-support-link' }, _('Open Applications')));
-			cards.push(E('section', { class: 'fn-oc-support-card ' + className }, [
-				E('div', { class: 'fn-oc-support-head' }, [
-					E('div', { class: 'fn-oc-support-title' }, [ E('h3', {}, title), E('p', {}, description) ]),
-					E('span', { class: 'fn-status-pill ' + (ready ? 'fn-status-ok' : 'fn-status-off') }, ready ? _('Ready') : _('Unavailable'))
-				]),
-				E('div', { class: 'fn-oc-support-body' }, body)
-			]));
+			if (ready)
+				body.push(supportActions([ supportButton(actionLabel, action, true) ]));
+			else
+				body.push(supportActions([ applicationAction() ]));
+			addSupportCard(className, title, description,
+				ready ? _('Ready') : _('Unavailable'),
+				ready ? 'fn-status-ok' : 'fn-status-off', body);
 		};
 
 		addPackageCard('fn-oc-support-card-l2tp', _('L2TP/IPsec'),
 			_('Legacy PPP tunnel protected by an IPsec transport connection.'),
-			L2TP_IPSEC_PACKAGES, _('xl2tpd and strongSwan are ready.'));
+			L2TP_IPSEC_PACKAGES, _('xl2tpd and strongSwan are ready.'),
+			_('Add L2TP/IPsec connection'), () => this.openL2tpForm(null));
 		addPackageCard('fn-oc-support-card-ikev2', _('IKEv2/IPsec'),
 			_('Modern IPsec VPN with PSK or EAP-MSCHAPv2 authentication.'),
-			IKEV2_PACKAGES, _('strongSwan and the XFRM interface are ready.'));
+			IKEV2_PACKAGES, _('strongSwan and the XFRM interface are ready.'),
+			_('Add IKEv2/IPsec connection'), () => this.openIkev2Form(null));
 
 		this.supportNode.appendChild(E('div', { class: 'fn-oc-support-grid' }, cards));
 	},
@@ -943,14 +956,8 @@ return view.extend({
 			return;
 		dom_empty(this.listNode);
 		const connections = this.getConnections();
-		if (!connections.length) {
-			this.listNode.appendChild(E('div', { class: 'fn-oc-empty' }, [
-				E('strong', {}, _('No other connections configured')),
-				E('span', {}, _('Add a connection or import a provider configuration file.')),
-				E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', click: () => this.openForm(null) }, _('Add connection'))
-			]));
+		if (!connections.length)
 			return;
-		}
 		connections.forEach(connection => this.listNode.appendChild(this.renderConnection(connection)));
 	},
 
@@ -1202,6 +1209,25 @@ return view.extend({
 		]);
 	},
 
+	openNativeForm(protocol) {
+		return this.openForm({
+			section: null,
+			name: _('New VPN connection'),
+			protocol: protocol,
+			enabled: true,
+			privateKey: '',
+			publicKey: '',
+			addresses: [],
+			dns: [],
+			listenPort: '',
+			mtu: '1420',
+			fwmark: '',
+			nohostroute: false,
+			awg: {},
+			peers: []
+		});
+	},
+
 	openAddConnection() {
 		if (this.modalOpen)
 			ui.hideModal();
@@ -1224,22 +1250,7 @@ return view.extend({
 			else if (selected === IKEV2_PROTO)
 				this.openIkev2Form(null);
 			else
-				this.openForm({
-					section: null,
-					name: _('New VPN connection'),
-					protocol: selected,
-					enabled: true,
-					privateKey: '',
-					publicKey: '',
-					addresses: [],
-					dns: [],
-					listenPort: '',
-					mtu: '1420',
-					fwmark: '',
-					nohostroute: false,
-					awg: {},
-					peers: []
-				});
+				this.openNativeForm(selected);
 		} }, _('Continue'));
 
 		ui.showModal(_('Add connection'), [

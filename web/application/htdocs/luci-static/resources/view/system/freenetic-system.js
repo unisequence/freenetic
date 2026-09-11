@@ -246,7 +246,12 @@ return view.extend({
 		return E('div', { class: 'fn-apps-row' }, [
 			svgIcon(ICON_FILE, 22),
 			E('div', { class: 'fn-apps-info' }, [
-				E('div', { class: 'fn-apps-name' }, name === 'Factory' ? _('Factory partition') : name)
+				E('div', { class: 'fn-apps-name' }, name === 'Factory' ? _('Factory partition') : name),
+				E('div', { class: 'fn-apps-desc' }, {
+					BL2: _('BL2 bootloader stage: initializes memory and starts the FIP.'),
+					Factory: _('Factory data partition for device-specific data. Do not modify it.'),
+					FIP: _('bl31+uboot.fip: the BL31 and U-Boot components used to start the system.')
+				}[name])
 			]),
 			dlBtn
 		]);
