@@ -92,8 +92,12 @@ for (const entry of Object.values(menu))
 
 const navigationSource = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs',
 	'luci-static', 'resources', 'menu-freenetic.js'), 'utf8');
-assert.match(navigationSource, /'system\/system', 'system\/diagnostics', 'system\/applications'/,
+assert.match(navigationSource, /'system\/system', 'system\/diagnostics'/,
 	'diagnostics must stay inside the Management sidebar group');
+assert.match(navigationSource, /'system\/package-manager', 'system\/applications'/,
+	'Software and the Freenetic application catalog must stay inside Services');
+assert.match(navigationSource, /entry\.section\.name !== 'services' && entry\.section\.name !== 'vpn'/,
+	'all stock and third-party service namespaces must be collected dynamically');
 assert.match(navigationSource, /'network\/diagnostics'/,
 	'the stock diagnostics entry must not create a duplicate More item');
 assert.match(navigationSource, /title: 'More'/,
@@ -117,6 +121,8 @@ assert.ok(fs.existsSync(applicationCatalogPath), 'application catalog must remai
 const themeCatalog = fs.readFileSync(themeCatalogPath, 'utf8');
 const catalogIds = new Set([...themeCatalog.matchAll(/^msgid "((?:\\.|[^"])*)"$/gm)]
 	.map(match => match[1].replace(/\\"/g, '"')));
+assert.match(themeCatalog, /msgid "Services"\nmsgstr "Службы"/,
+	'the Services sidebar label must have the requested Russian translation');
 const themeMessages = new Set();
 for (const filename of walk(themeWeb).filter(filename => /\.(?:js|ut)$/.test(filename))) {
 	const source = fs.readFileSync(filename, 'utf8');
@@ -128,5 +134,12 @@ for (const filename of walk(themeWeb).filter(filename => /\.(?:js|ut)$/.test(fil
 assert.deepEqual([...themeMessages].filter(message => !catalogIds.has(message)).sort(), [],
 	'theme catalog must cover every static theme translation');
 assert.ok(catalogIds.has('More'), 'theme catalog must translate the dynamic More navigation label');
+
+const clientsSource = fs.readFileSync(path.join(root, 'web', 'application', 'htdocs',
+	'luci-static', 'resources', 'view', 'status', 'freenetic-clients.js'), 'utf8');
+assert.match(clientsSource, /typeof mac === 'string' \? mac\.trim\(\)\.toUpperCase\(\) : ''/,
+	'Client List must tolerate non-string MAC values from ubus');
+assert.doesNotMatch(clientsSource, /\(mac \|\| ''\)\.toUpperCase\(\)/,
+	'Client List must not call toUpperCase on an unvalidated ubus value');
 
 console.log(`package boundaries: ok (${themeFiles.length} theme files, ${applicationFiles.length} application files)`);

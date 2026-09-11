@@ -89,10 +89,11 @@ hardware right now:
   connections, optional AmneziaWG/AWG configuration import and a signed,
   target-specific package-feed installer for AWG
 - Diagnostics: WAN addressing, gateway/DNS state, bounded ping and traceroute
+- Services: stock Software/package management, the Freenetic Applications
+  catalog and all active LuCI service pages under `admin/services`/`admin/vpn`
+  (including packages such as mihomo, zapret and HTTPS DNS Proxy)
 - Management: System (firmware download/flash, config+package backup,
-  bootloader partition dumps), Applications (an install catalog built
-  on top of `apk`; needs `luci-app-package-manager` installed, which
-  `app/deploy.sh` takes care of), Dynamic DNS (native `ddns-scripts` profiles)
+  bootloader partition dumps), Dynamic DNS (native `ddns-scripts` profiles)
 - Wi-Fi ACL (per-SSID allow/deny lists backed by native OpenWrt
   `macfilter`/`maclist`, with Client List integration)
 - Access & Routing Policy for whole network segments or individual devices:

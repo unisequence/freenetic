@@ -84,7 +84,7 @@ msgid "Network Rules"
 msgstr "Правила сети"
 
 msgid "Services"
-msgstr "Сервисы"
+msgstr "Службы"
 
 msgid "Management"
 msgstr "Управление"

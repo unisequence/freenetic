@@ -6,17 +6,7 @@ which they became user-visible.
 
 ## [Unreleased]
 
-### Added
-
-- A pinned one-shot `install.sh` for supported apk-based routers. It checks
-  target, ABI, CPU, RAM and free overlay space, verifies all five release
-  assets by SHA-256, installs the four LuCI APKs and places the matching
-  `fnc` launcher at `/usr/bin/fnc`.
-- The installer handles compatible OpenWrt library SONAME differences for
-  `fnc` through private aliases under `/usr/lib/freenetic`, without changing
-  the router's system libraries.
-- The installer clears LuCI's resolved menu/module caches and reloads rpcd
-  after an APK upgrade, so all Freenetic sidebar groups reappear immediately.
+No changes yet.
 
 ## [0.2.0] — 2026-09-11
 
@@ -47,6 +37,10 @@ which they became user-visible.
   for each target path.
 - Release guards refuse a dirty worktree and validate that every APK
   advertised by each local index exists next to that index.
+- A dedicated Services / Службы sidebar group collects the stock Software
+  package manager, the Freenetic Applications catalog and every active LuCI
+  page under `admin/services` or `admin/vpn`, so packages such as mihomo,
+  zapret and HTTPS DNS Proxy appear there automatically.
 
 ### Improved
 
@@ -92,6 +86,16 @@ which they became user-visible.
 - Login and navigation dialogs, settings drawers, tabs, QR dialogs and
   mobile layouts received keyboard/focus, accessibility and reduced-motion
   fixes.
+- The Client List, Dashboard and Traffic Monitor tolerate non-string MAC
+  values from router ubus responses instead of failing the whole page during
+  rendering.
+- The pinned one-shot `install.sh` checks target, ABI, CPU, RAM and free
+  overlay space, verifies all five release assets by SHA-256, installs the
+  four LuCI APKs and places the matching `fnc` launcher at `/usr/bin/fnc`.
+- The installer handles compatible OpenWrt library SONAME differences for
+  `fnc` through private aliases under `/usr/lib/freenetic`, without changing
+  the router's system libraries, and clears LuCI's resolved menu/module
+  caches plus reloads rpcd after an APK upgrade.
 
 ### Verification
 

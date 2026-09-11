@@ -10,7 +10,7 @@ reader.
 | --- | --- |
 | 1440 px | Open/close sidebar and settings. The page cards must not reflow unexpectedly and the hidden settings panel must not take focus. |
 | 768 px | Check the compact settings drawer, sidebar backdrop, and all dialogs. No action should be clipped or overlap another control. |
-| 320 px | Check login, dashboard, Wi-Fi QR, Applications, Routing, and Port Forwarding. Text, dialogs, and buttons must remain reachable without horizontal scrolling. |
+| 320 px | Check login, dashboard, Wi-Fi QR, Services/Applications, Routing, and Port Forwarding. Text, dialogs, and buttons must remain reachable without horizontal scrolling. |
 
 For each viewport, check Light, Dark, and Automatic appearance. Confirm primary
 buttons, warning/error text, selected tabs, focus rings, and the login screen
@@ -36,7 +36,8 @@ instant.
 ## Localization and operational checks
 
 1. Switch LuCI to Russian, reload, and check the settings drawer, login page,
-   sidebar group **Ещё**, raw partition descriptions, and the IPsec labels.
+   sidebar groups **Службы** and **Ещё**, raw partition descriptions, and the
+   IPsec labels.
 2. If ttyd is installed, open **Command Line** behind the normal hostname,
    an IPv6 hostname if available, and any reverse-proxy prefix. It must target
    the current origin on port 7681 without copying a stale host/protocol.

@@ -98,8 +98,9 @@ function getWifiStations(wstatus) {
 
 			jobs.push(ubusCall('iwinfo', 'assoclist', { device: iface.ifname }).then(res => {
 				(res.results || []).forEach(st => {
-					if (st.mac)
-						map[st.mac.toUpperCase()] = { band, network, signal: st.signal };
+					const mac = macKey(st.mac);
+					if (mac)
+						map[mac] = { band, network, signal: st.signal };
 				});
 			}).catch(() => {}));
 		});
@@ -112,11 +113,24 @@ function getWifiStations(wstatus) {
    not the manufacturer's burned-in) address — the standard "private MAC"
    signal modern phones/laptops use, same thing Keenetic flags as "(частный)". */
 function isPrivateMac(mac) {
+	if (typeof mac !== 'string' || !mac)
+		return false;
+
 	const first = parseInt(mac.split(':')[0], 16);
 	return !isNaN(first) && (first & 0x02) !== 0;
 }
 
-function macKey(mac) { return (mac || '').toUpperCase(); }
+/* A few LuCI/rpcd combinations return a MAC as a one-item list or wrap it in
+   an object. Never call String.prototype methods on the raw ubus value: an
+   unexpected shape must hide that record, not prevent the whole page from
+   rendering. */
+function macKey(mac) {
+	if (Array.isArray(mac))
+		mac = mac[0];
+	if (mac && typeof mac === 'object')
+		mac = mac.macaddr || mac.mac || mac.address;
+	return typeof mac === 'string' ? mac.trim().toUpperCase() : '';
+}
 
 return view.extend({
 	load() {

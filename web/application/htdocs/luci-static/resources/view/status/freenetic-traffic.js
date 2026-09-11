@@ -36,6 +36,12 @@ function fmtBytes(bytes) {
 	return bytes + ' B';
 }
 
+function upperString(value) {
+	if (Array.isArray(value))
+		value = value[0];
+	return typeof value === 'string' ? value.trim().toUpperCase() : '';
+}
+
 function svgIcon(d, size) {
 	size = size || 18;
 	const span = E('span', { class: 'fn-icon' });
@@ -147,7 +153,7 @@ function connectionLabel(wan) {
 	case 'dhcpv6': return _('IPv6 connection');
 	case 'dhcp':
 	case 'static': return _('Ethernet connection');
-	default: return wan.name ? wan.name.toUpperCase() : _('Connection');
+	default: return upperString(wan.name) || _('Connection');
 	}
 }
 
@@ -362,7 +368,7 @@ return view.extend({
 		updateSparkline(conn.spark, conn.rxHistory, conn.txHistory);
 		dom_content(conn.rxLabel, fmtBps(rxRate));
 		dom_content(conn.txLabel, fmtBps(txRate));
-		if (conn.macEl) dom_content(conn.macEl, dev.macaddr ? dev.macaddr.toUpperCase() : '–');
+		if (conn.macEl) dom_content(conn.macEl, upperString(dev.macaddr) || '–');
 		if (conn.rxTotalEl) dom_content(conn.rxTotalEl, fmtBytes(rxBytes));
 		if (conn.txTotalEl) dom_content(conn.txTotalEl, fmtBytes(txBytes));
 	},
@@ -491,7 +497,8 @@ return view.extend({
 
 		top.forEach((e, i) => {
 			const cls = TRAFFIC_COLORS[e.other ? 5 : i];
-			const label = e.other ? _('Other devices') : (e.ip + (arp[e.ip] ? ' (' + arp[e.ip].toUpperCase() + ')' : ''));
+			const arpMac = upperString(arp[e.ip]);
+			const label = e.other ? _('Other devices') : (e.ip + (arpMac ? ' (' + arpMac + ')' : ''));
 			legend.appendChild(E('div', { class: 'fn-traffic-row' }, [
 				E('span', { class: 'fn-traffic-dot', style: 'background:var(--' + cls + ')' }),
 				E('span', { class: 'fn-traffic-label' }, label),

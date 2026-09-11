@@ -14,13 +14,11 @@ var ICONS = {
 	'default':'M5 5h14v14H5z'
 };
 
-/* Keenetic groups its sidebar by function (Status / Internet / My Networks &
-   Wi-Fi / Network Rules / Management), not by LuCI's own admin/status vs
-   admin/network split — so this maps specific "section/child" dispatch
-   paths into those 5 groups regardless of which stock top-level bucket
-   they live under. Anything not listed here (a stock page with no Keenetic
-   equivalent assigned yet) still shows up, just bucketed into the last
-   group (Management) rather than silently disappearing. */
+/* Keenetic groups its sidebar by function, not by LuCI's own admin/status vs
+   admin/network split — so this maps specific "section/child" dispatch paths
+   into stable groups regardless of which stock top-level bucket they live
+   under. Third-party service packages keep their own menu.d paths; every
+   child below admin/services (and admin/vpn) is collected dynamically. */
 var SIDEBAR_GROUPS = [
 	{ title: 'Status', icon: 'status', paths: [
 		'status/dashboard', 'status/traffic', 'status/wifimonitor'
@@ -34,14 +32,15 @@ var SIDEBAR_GROUPS = [
 	{ title: 'Network Rules', icon: 'netrules', paths: [
 		'network/port_forwarding', 'network/firewall', 'network/routes'
 	] },
-	// Not a Keenetic UX-parity section — a Freenetic-specific home for our
-	// own custom packages (their own LuCI view + menu.d entry), separate
-	// from stock "Applications".
+	// Freenetic's service/package home. Stock Software and the curated
+	// Applications catalog live here too, while third-party entries below
+	// admin/services (mihomo, zapret, https-dns-proxy, etc.) are discovered
+	// from the active LuCI menu tree at runtime.
 	{ title: 'Services', icon: 'services', paths: [
-		'services/https-dns-proxy'
+		'system/package-manager', 'system/applications'
 	] },
 	{ title: 'Management', icon: 'system', paths: [
-		'system/system', 'system/diagnostics', 'system/applications'
+		'system/system', 'system/diagnostics'
 	] }
 ];
 
@@ -217,6 +216,21 @@ return baseclass.extend({
 					assigned[p] = true;
 				}
 			});
+		});
+
+		/* Service packages own their menu paths. Do not maintain a hard-coded
+		 * list here: it would make every new/default package fall into More and
+		 * would require a Freenetic release just to expose its LuCI page. The
+		 * vpn bucket is included because several proxy/VPN packages use it as
+		 * their top-level LuCI namespace instead of admin/services. */
+		const servicesIndex = SIDEBAR_GROUPS.findIndex(g => g.icon === 'services');
+		Object.keys(byPath).forEach(p => {
+			const entry = byPath[p];
+			if (assigned[p] || !entry || (entry.section.name !== 'services' && entry.section.name !== 'vpn'))
+				return;
+
+			groups[servicesIndex].entries.push(entry);
+			assigned[p] = true;
 		});
 
 		// Anything with no explicit home falls into More.

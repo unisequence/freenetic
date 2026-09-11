@@ -87,11 +87,12 @@ Installer сначала проверяет роутер, затем скачи�
   IKEv2/IPsec, импорт конфигураций AmneziaWG/AWG и опциональный установщик
   подписанного feed под конкретную версию/target устройства
 - Диагностика: адреса WAN, шлюз/DNS, ограниченные ping и traceroute
+- Службы / Services: штатное управление пакетами Software, каталог
+  Applications и все активные LuCI-страницы из `admin/services`/`admin/vpn`
+  (включая mihomo, zapret, HTTPS DNS Proxy и другие пакеты)
 - Management: System (скачивание/прошивка образа, бэкап конфигов и
-  списка пакетов, дампы разделов загрузчика), Applications (каталог
-  устанавливаемых компонентов поверх `apk`; нужен установленный
-  `luci-app-package-manager` — `app/deploy.sh` ставит его сам), Dynamic DNS
-  (нативные профили поверх `ddns-scripts`)
+  списка пакетов, дампы разделов загрузчика), Dynamic DNS (нативные профили
+  поверх `ddns-scripts`)
 - Wi-Fi ACL (allow/deny-списки для каждого SSID поверх штатных
   `macfilter`/`maclist`, с добавлением устройств из Client List)
 - Access & Routing Policy для целой сети или отдельного устройства:

@@ -124,6 +124,12 @@ function fmtUptime(seconds) {
 	return '%02d:%02d:%02d'.format(h, m, s);
 }
 
+function upperString(value) {
+	if (Array.isArray(value))
+		value = value[0];
+	return typeof value === 'string' ? value.trim().toUpperCase() : '';
+}
+
 const dom_empty = uiHelper.empty;
 const dom_content = uiHelper.content;
 const notify = uiHelper.notify;
@@ -268,7 +274,7 @@ function connectionLabel(wan) {
 	case 'dhcpv6': return _('IPv6 connection');
 	case 'dhcp':
 	case 'static': return _('Ethernet connection');
-	default: return wan.name ? wan.name.toUpperCase() : _('Connection');
+	default: return upperString(wan.name) || _('Connection');
 	}
 }
 
@@ -493,7 +499,8 @@ function formatWifiMeta(iface, radio, info) {
 		parts.push('802.11' + info.hwmodes_text);
 	if (info && typeof info.txpower === 'number')
 		parts.push(info.txpower + ' dBm');
-	parts.push(iface.encryption && iface.encryption !== 'none' ? iface.encryption.toUpperCase() : _('Open'));
+	const encryption = upperString(iface.encryption);
+	parts.push(encryption && encryption !== 'NONE' ? encryption : _('Open'));
 	return parts.join(', ');
 }
 
@@ -793,7 +800,7 @@ return view.extend({
 		updateSparkline(conn.spark, conn.rxHistory, conn.txHistory);
 		dom_content(conn.rxLabel, fmtBps(rxRate));
 		dom_content(conn.txLabel, fmtBps(txRate));
-		if (conn.macEl) dom_content(conn.macEl, dev.macaddr ? dev.macaddr.toUpperCase() : '–');
+		if (conn.macEl) dom_content(conn.macEl, upperString(dev.macaddr) || '–');
 		if (conn.rxTotalEl) dom_content(conn.rxTotalEl, fmtBytes(rxBytes));
 		if (conn.txTotalEl) dom_content(conn.txTotalEl, fmtBytes(txBytes));
 	},
@@ -898,9 +905,13 @@ return view.extend({
 				const wifiMacs = {};
 				opts.ifaces.forEach(ifc => {
 					const entry = findIfaceEntry(this.wstatus, ifc['.name']);
-					(entry ? entry.stations : []).forEach(st => { if (st.mac) wifiMacs[st.mac.toUpperCase()] = true; });
+					(entry ? entry.stations : []).forEach(st => {
+						const mac = upperString(st.mac);
+						if (mac)
+							wifiMacs[mac] = true;
+					});
 				});
-				wiredCount = leases.filter(l => ipInLan(l.ipaddr, opts.ipInfo) && !wifiMacs[(l.macaddr || '').toUpperCase()]).length;
+				wiredCount = leases.filter(l => ipInLan(l.ipaddr, opts.ipInfo) && !wifiMacs[upperString(l.macaddr)]).length;
 			}
 
 			body.appendChild(E('div', { class: 'fn-net-counts' }, [
@@ -1463,7 +1474,8 @@ return view.extend({
 
 		top.forEach((e, i) => {
 			const cls = TRAFFIC_COLORS[e.other ? 5 : i];
-			const label = e.other ? _('Other devices') : (e.ip + (arp[e.ip] ? ' (' + arp[e.ip].toUpperCase() + ')' : ''));
+			const arpMac = upperString(arp[e.ip]);
+			const label = e.other ? _('Other devices') : (e.ip + (arpMac ? ' (' + arpMac + ')' : ''));
 			legend.appendChild(E('div', { class: 'fn-traffic-row' }, [
 				E('span', { class: 'fn-traffic-dot', style: 'background:var(--' + cls + ')' }),
 				E('span', { class: 'fn-traffic-label' }, label),
