@@ -6,7 +6,12 @@ which they became user-visible.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- A pinned one-shot `install.sh` for supported apk-based routers. It checks
+  target, ABI, CPU, RAM and free overlay space, verifies all five release
+  assets by SHA-256, installs the four LuCI APKs and places the matching
+  `fnc` binary at `/usr/bin/fnc`.
 
 ## [0.2.0] — 2026-09-11
 

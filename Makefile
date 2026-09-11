@@ -33,6 +33,7 @@ check-js:
 	@echo "JavaScript syntax: ok"
 
 check-shell:
+	@sh -n install.sh
 	@find "$(APP_DIR)" -type f \
 		\( -name '*.sh' -o -path '*/root/etc/uci-defaults/*' -o -path '*/root/usr/libexec/*' \) \
 		-print0 | xargs -0 -r -n1 sh -n

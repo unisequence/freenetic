@@ -37,6 +37,20 @@ app/check-router.sh root@192.168.1.1
 `FREENETIC_MIN_OVERLAY_MIB_FILOGIC` и
 `FREENETIC_MIN_OVERLAY_MIB_MT7621`.
 
+## Быстрая установка
+
+На совместимом OpenWrt с `apk` текущий закреплённый релиз можно установить
+одной командой из локальной оболочки:
+
+```sh
+sh <(wget -qO - 'https://raw.githubusercontent.com/unisequence/freenetic/main/install.sh')
+```
+
+Installer сначала проверяет роутер, затем скачивает четыре LuCI APK и
+подходящий бинарник `fnc`, проверяет каждый файл по SHA-256 и ставит `fnc` в
+`/usr/bin/fnc`. Русские пакеты устанавливаются, но текущий язык LuCI сам не
+переключается.
+
 | | |
 |---|---|
 | ![Логин](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |

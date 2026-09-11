@@ -38,6 +38,20 @@ The thresholds can be raised for a particular environment with
 `FREENETIC_MIN_OVERLAY_MIB_FILOGIC` and
 `FREENETIC_MIN_OVERLAY_MIB_MT7621`.
 
+## Quick install
+
+On a supported apk-based OpenWrt router, the current pinned release can be
+installed with one command from a local shell:
+
+```sh
+sh <(wget -qO - 'https://raw.githubusercontent.com/unisequence/freenetic/main/install.sh')
+```
+
+The installer checks the router before changing it, downloads the four LuCI
+APK packages and the matching `fnc` binary, verifies every download by
+SHA-256, and installs `fnc` as `/usr/bin/fnc`. The Russian packages are
+installed but the current LuCI language is not changed automatically.
+
 | | |
 |---|---|
 | ![Login](web/docs/screenshots/login.webp) | ![Dashboard](web/docs/screenshots/dashboard.webp) |
