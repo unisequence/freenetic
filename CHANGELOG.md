@@ -37,10 +37,11 @@ No changes yet.
   for each target path.
 - Release guards refuse a dirty worktree and validate that every APK
   advertised by each local index exists next to that index.
-- A dedicated Services / Службы sidebar group collects the stock Software
-  package manager, the Freenetic Applications catalog and every active LuCI
-  page under `admin/services` or `admin/vpn`, so packages such as mihomo,
-  zapret and HTTPS DNS Proxy appear there automatically.
+- A dedicated Services / Службы sidebar group collects every active LuCI page
+  under `admin/services` or `admin/vpn`, so packages such as mihomo, zapret
+  and HTTPS DNS Proxy appear there automatically. The fallback package
+  manager is labeled OpenWrt Packages, while both it and the Freenetic
+  Applications catalog remain under Management.
 
 ### Improved
 
@@ -112,8 +113,8 @@ No changes yet.
   both indexes.
 - `app/check-router.sh` passes on the BT RB300 test router; the current
   source was deployed and smoke-tested with the Russian interface enabled.
-- The `v0.2.0` release history contains 40 commits after `v0.1.0`, touching
-  114 files: 17,987 added lines and 1,642 removed lines (net +16,345,
+- The `v0.2.0` release history contains 42 commits after `v0.1.0`, touching
+  114 files: 18,009 added lines and 1,645 removed lines (net +16,364,
   including UI, translations, tests, helpers, packaging metadata and the
   release installer).
 

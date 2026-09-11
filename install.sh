@@ -10,7 +10,7 @@ set -eu
 
 RELEASE_TAG="v0.2.0"
 # GitHub normalizes the '~' in the OpenWrt-derived package version to '.'.
-ASSET_VERSION="26.254.65806.8eced6b"
+ASSET_VERSION="26.254.66317.d5bb35a"
 RELEASE_BASE_URL="${FREENETIC_RELEASE_BASE_URL:-https://github.com/unisequence/freenetic/releases/download/$RELEASE_TAG}"
 
 MIN_RAM_MIB=128
@@ -152,10 +152,10 @@ download_checked() {
 
 # APKs are noarch, but each target feed has its own GitHub asset name so the
 # installer can select the same target path as apk's package index.
-download_checked "$THEME_APK" "b70cb3983a4f3b996e3a9c339bf06bc040469f04b732b784bf01f974e00bdd05"
-download_checked "$APP_APK" "d6af574990926d2715a6bf88ec01cf9600ef92f354e70da4716078d031249afe"
-download_checked "$THEME_RU_APK" "5c3756614a05877ee87a8ff19b7337d6da57a0c89a008c626fc303b2413bd528"
-download_checked "$APP_RU_APK" "03941cd8d0e9324ae7ce6abff7fcecb55e3ab2325d6ac79bdcff0832a79288ef"
+download_checked "$THEME_APK" "109b3f53c820eeff73a8c1dcf3c02dfd83b97d04db422726f96c1303c797ac60"
+download_checked "$APP_APK" "990e1249124bed929272b21a8c3d49bc5208214ce846c5bebf9fc6f027003af8"
+download_checked "$THEME_RU_APK" "d3532a80b514a42b4c6fd5f3991c0bbfe9bc4a35ccf0e15ba8f7e738827f76c8"
+download_checked "$APP_RU_APK" "b3266e7d593813d012b61fc5551e68b6912d049348a9dcf841ec46f85bfe8cba"
 download_checked "$FNC_BIN" "$fnc_sha256"
 
 info "installing LuCI packages"
