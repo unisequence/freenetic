@@ -36,6 +36,7 @@ assert.ok(protocols.protocolChoice('sctp').options.some(option => option[0] === 
 
 const myNetworks = read('view/network/freenetic-mynetworks.js');
 const dashboard = read('view/status/freenetic-dashboard.js');
+const clients = read('view/status/freenetic-clients.js');
 assert.match(myNetworks, /iface\.disabled === '1' \|\| radio\.disabled === '1'/,
 	'Home Network must show the effective radio and SSID state');
 assert.match(myNetworks, /uci\.set\('wireless', card\.radioName, 'disabled', '0'\)/,
@@ -46,6 +47,20 @@ assert.match(dashboard, /toggleWifi\(iface\['\.name'\], iface\.device, toggle\)/
 	'Dashboard toggles must identify the parent radio');
 assert.match(dashboard, /section: radioName, values: \{ disabled: '0' \}/,
 	'Dashboard must enable the parent radio before enabling an SSID');
+assert.match(dashboard, /renderClientsCard\(leases, wifiStations, activeArpMacs, dhcpConfig, guestInfo\)/,
+	'Dashboard must render its client summary from data available on legacy LuCI');
+assert.match(dashboard, /ubusCall\('iwinfo', 'devices'\)/,
+	'Dashboard must discover AP interfaces without relying on network.wireless status');
+assert.match(dashboard, /ubusCall\('iwinfo', 'assoclist', \{ device \}\)/,
+	'Dashboard must read authoritative association data for every AP interface');
+assert.match(dashboard, /Promise\.all\(\[ getDhcpLeases\(\), getWifiStations\(\), getActiveArpMacs\(\) \]\)/,
+	'Dashboard client summary must refresh from legacy-compatible ubus objects');
+assert.match(clients, /ubusCall\('iwinfo', 'devices'\)/,
+	'Client List must discover AP interfaces without relying on network.wireless status');
+assert.match(clients, /ubusCall\('iwinfo', 'assoclist', \{ device \}\)/,
+	'Client List must read authoritative association data for every AP interface');
+assert.match(clients, /live\.online \? _\('Wired'\) : _\('Not connected'\)/,
+	'Client List must not treat a stale DHCP lease as a wired connection');
 
 const wifiAcl = read('view/network/freenetic-wifi-acl.js');
 const policyCard = wifiAcl.slice(
@@ -79,5 +94,7 @@ assert.match(css, /\.fn-mac-value\s*\{[\s\S]*?white-space:\s*nowrap/,
 	'MAC addresses must stay on one line');
 assert.match(css, /\.fn-client-table > \.fn-table-row > \*\s*\{[\s\S]*?align-self:\s*stretch/,
 	'client table cells must fill their shared grid row so separators stay aligned');
+assert.match(css, /\.fn-dashboard-client-list\s*\{[\s\S]*?max-height:\s*560px/,
+	'dashboard client rows must remain bounded on networks with many leases');
 
 console.log('OpenWrt 24.10 compatibility contract: ok');

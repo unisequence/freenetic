@@ -424,6 +424,44 @@ function ipInLan(ip, lan) {
 	return (a >>> shift) === (b >>> shift);
 }
 
+function dashboardClientRows(leases, stations, activeArpMacs, dhcpConfig, guestInfo) {
+	const hosts = {};
+	const clients = {};
+
+	Object.keys(dhcpConfig || {}).forEach(sectionName => {
+		const section = dhcpConfig[sectionName] || {};
+		if (section['.type'] !== 'host')
+			return;
+		const mac = upperString(section.mac);
+		if (mac)
+			hosts[mac] = section;
+	});
+
+	(leases || []).forEach(lease => {
+		const mac = upperString(lease && lease.macaddr);
+		if (!mac)
+			return;
+
+		const station = stations[mac];
+		const ethernet = !station && !!activeArpMacs[mac];
+		const host = hosts[mac] || {};
+		const guest = ipInLan(lease.ipaddr, guestInfo);
+		clients[mac] = {
+			mac,
+			name: host.name || lease.hostname || mac,
+			ip: lease.ipaddr || '–',
+			segment: guest ? _('Guest network') : _('Home network'),
+			connection: station ? station.band + ' Wi-Fi' : (ethernet ? 'Ethernet' : _('Not connected')),
+			wifi: !!station,
+			ethernet,
+			online: !!station || ethernet
+		};
+	});
+
+	return Object.keys(clients).map(mac => clients[mac])
+		.sort((left, right) => left.name.localeCompare(right.name));
+}
+
 function getSystemBoard() {
 	return ubusCall('system', 'board').catch(() => ({}));
 }
@@ -532,6 +570,43 @@ function getWirelessStatus() {
 	return ubusCall('network.wireless', 'status').catch(() => ({}));
 }
 
+function getActiveArpMacs() {
+	return ubusCall('file', 'read', { path: '/proc/net/arp' }).then(result => {
+		const active = {};
+		(result.data || '').split('\n').slice(1).forEach(line => {
+			const columns = line.trim().split(/\s+/);
+			const mac = columns.length >= 4 ? upperString(columns[3]) : '';
+			if (mac && (parseInt(columns[2], 16) & 0x2))
+				active[mac] = true;
+		});
+		return active;
+	}).catch(() => ({}));
+}
+
+/* network.wireless status exposes interface metadata but leaves its station
+   arrays empty or transiently fails on some OpenWrt builds. Discover live AP
+   interfaces through iwinfo itself, then use its authoritative association
+   data just like the full Client List. */
+function getWifiStations() {
+	const stations = {};
+
+	return ubusCall('iwinfo', 'devices').then(result =>
+		Promise.all((result.devices || []).map(device =>
+			Promise.all([
+				ubusCall('iwinfo', 'info', { device }).catch(() => ({})),
+				ubusCall('iwinfo', 'assoclist', { device }).catch(() => ({ results: [] }))
+			]).then(([info, associations]) => {
+				const band = Number(info.frequency) >= 5000 ? '5 GHz' : '2.4 GHz';
+				(associations.results || []).forEach(station => {
+					const mac = upperString(station && station.mac);
+					if (mac)
+						stations[mac] = { band, device, signal: station.signal };
+				});
+			})
+		)).then(() => stations)
+	).catch(() => stations);
+}
+
 function getIwinfoInfos(wstatus) {
 	const names = [];
 	Object.keys(wstatus).forEach(r => (wstatus[r].interfaces || []).forEach(i => {
@@ -553,11 +628,6 @@ function findIfaceEntry(wstatus, sectionName) {
 			if (i.section === sectionName)
 				return i;
 	return null;
-}
-
-function stationCountFor(wstatus, sectionName) {
-	const entry = findIfaceEntry(wstatus, sectionName);
-	return entry ? (entry.stations || []).length : 0;
 }
 
 function getNetworkConfig() {
@@ -618,7 +688,9 @@ return view.extend({
 					getInterfaceInfo('guest'),
 					getSystemBoard(),
 					getSysupgradeConfig(),
-					getFreeneticUpdateState()
+					getFreeneticUpdateState(),
+					getWifiStations(),
+					getActiveArpMacs()
 				])));
 	},
 
@@ -639,12 +711,18 @@ return view.extend({
 		const board = data[11];
 		const sysupgradeCfg = data[12];
 		const freeneticUpdateState = data[13];
+		const wifiStations = data[14];
+		const activeArpMacs = data[15];
 
 		this.lanInfo = lan;
 		this.trafficHistory = {};
 		this.wstatus = wstatus;
 		this.ifaceInfos = ifaceInfos;
 		this.ports = ports;
+		this.wifiStations = wifiStations;
+		this.activeArpMacs = activeArpMacs;
+		this.clientDhcpConfig = dhcpConfig;
+		this.clientGuestInfo = guestInfo;
 
 		const container = E('div', { class: 'fn-dash' }, [
 			E('div', { class: 'fn-dash-col' }, [
@@ -655,7 +733,8 @@ return view.extend({
 			E('div', { class: 'fn-dash-col' }, [
 				this.renderNetworksCard(wireless, ports, netConfig, dhcpConfig, leases, guestInfo),
 				this.renderPortsCard(ports),
-				this.renderWifiMonitorCard(radios)
+				this.renderWifiMonitorCard(radios),
+				this.renderClientsCard(leases, wifiStations, activeArpMacs, dhcpConfig, guestInfo)
 			])
 		]);
 
@@ -703,6 +782,7 @@ return view.extend({
 		if (lan) {
 			this.pollTraffic();
 		}
+		poll.add(L.bind(this.pollClients, this), 10);
 		this.pollSystem();
 
 		return container;
@@ -994,21 +1074,14 @@ return view.extend({
 			body.appendChild(opts.provisionForm);
 		} else {
 			const leases = opts.leases;
-			const wifiCount = opts.ifaces.reduce((sum, ifc) => sum + stationCountFor(this.wstatus, ifc['.name']), 0);
-
-			let wiredCount = 0;
-			if (opts.ipInfo && opts.ipInfo.address) {
-				const wifiMacs = {};
-				opts.ifaces.forEach(ifc => {
-					const entry = findIfaceEntry(this.wstatus, ifc['.name']);
-					(entry ? entry.stations : []).forEach(st => {
-						const mac = upperString(st.mac);
-						if (mac)
-							wifiMacs[mac] = true;
-					});
-				});
-				wiredCount = leases.filter(l => ipInLan(l.ipaddr, opts.ipInfo) && !wifiMacs[upperString(l.macaddr)]).length;
-			}
+			const networkLeases = opts.ipInfo && opts.ipInfo.address
+				? leases.filter(lease => ipInLan(lease.ipaddr, opts.ipInfo)) : [];
+			const wifiCount = networkLeases.filter(lease =>
+				!!(this.wifiStations || {})[upperString(lease.macaddr)]).length;
+			const wiredCount = networkLeases.filter(lease => {
+				const mac = upperString(lease.macaddr);
+				return !(this.wifiStations || {})[mac] && !!(this.activeArpMacs || {})[mac];
+			}).length;
 
 			body.appendChild(E('div', { class: 'fn-net-counts' }, [
 				_('Wi-Fi') + ': ', E('b', {}, String(wifiCount)), ' ',
@@ -1196,9 +1269,10 @@ return view.extend({
 			getInterfaceInfo('guest')
 		]).then(([wireless, ports, netConfig, dhcpConfig, leases, guestInfo]) =>
 			getWirelessStatus().then(wstatus =>
-				getIwinfoInfos(wstatus).then(L.bind(function(ifaceInfos) {
+				Promise.all([ getIwinfoInfos(wstatus), getWifiStations() ]).then(L.bind(function(result) {
 					this.wstatus = wstatus;
-					this.ifaceInfos = ifaceInfos;
+					this.ifaceInfos = result[0];
+					this.wifiStations = result[1];
 					this.buildNetworksBody(wireless, ports, netConfig, dhcpConfig, leases, guestInfo);
 				}, this))
 			)
@@ -1489,6 +1563,62 @@ return view.extend({
 				legend
 			])
 		]);
+	},
+
+	renderClientsCard(leases, stations, activeArpMacs, dhcpConfig, guestInfo) {
+		const body = E('div', { class: 'fn-card-body fn-dashboard-clients' });
+		this.clientsBody = body;
+		this.fillClientsCard(leases, stations, activeArpMacs, dhcpConfig, guestInfo);
+
+		return E('div', { class: 'fn-card fn-dashboard-clients-card' }, [
+			cardHead('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', _('Client List'), [ 'admin', 'status', 'clients' ]),
+			body
+		]);
+	},
+
+	fillClientsCard(leases, stations, activeArpMacs, dhcpConfig, guestInfo) {
+		const body = this.clientsBody;
+		if (!body)
+			return;
+
+		const rows = dashboardClientRows(leases, stations, activeArpMacs, dhcpConfig, guestInfo);
+		const wifiCount = rows.filter(row => row.wifi).length;
+		const ethernetCount = rows.filter(row => row.ethernet).length;
+		const stat = (value, label) => E('div', { class: 'fn-dashboard-client-stat' }, [
+			E('div', { class: 'fn-dashboard-client-count' }, String(value)),
+			E('div', { class: 'fn-dashboard-client-label' }, label)
+		]);
+
+		dom_empty(body);
+		body.appendChild(E('div', { class: 'fn-dashboard-client-summary' }, [
+			stat(rows.length, _('Total')),
+			stat(wifiCount, _('Wi-Fi')),
+			stat(ethernetCount, 'Ethernet')
+		]));
+
+		const list = E('div', { class: 'fn-dashboard-client-list' });
+		if (!rows.length) {
+			list.appendChild(E('div', { class: 'fn-info-empty' }, _('No clients are connected.')));
+		} else {
+			rows.forEach(row => list.appendChild(E('div', { class: 'fn-dashboard-client-row' }, [
+				E('span', { class: 'fn-client-dot ' + (row.online ? 'fn-client-online' : 'fn-client-offline'), 'aria-hidden': 'true' }),
+				E('div', { class: 'fn-dashboard-client-main' }, [
+					E('div', { class: 'fn-dashboard-client-name', title: row.name }, row.name),
+					E('div', { class: 'fn-dashboard-client-meta' }, row.ip + ' · ' + row.segment)
+				]),
+				E('div', { class: 'fn-dashboard-client-connection' }, row.connection)
+			])));
+		}
+		body.appendChild(list);
+	},
+
+	pollClients() {
+		return Promise.all([ getDhcpLeases(), getWifiStations(), getActiveArpMacs() ])
+			.then(L.bind(function(result) {
+				this.wifiStations = result[1];
+				this.activeArpMacs = result[2];
+				this.fillClientsCard(result[0], result[1], result[2], this.clientDhcpConfig, this.clientGuestInfo);
+			}, this)).catch(() => {});
 	},
 
 	pollTraffic() {

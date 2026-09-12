@@ -35,6 +35,19 @@ function getArpTable() {
 	}).catch(() => ({}));
 }
 
+function getActiveArpMacs() {
+	return ubusCall('file', 'read', { path: '/proc/net/arp' }).then(result => {
+		const active = {};
+		(result.data || '').split('\n').slice(1).forEach(line => {
+			const columns = line.trim().split(/\s+/);
+			const mac = columns.length >= 4 ? macKey(columns[3]) : '';
+			if (mac && (parseInt(columns[2], 16) & 0x2))
+				active[mac] = true;
+		});
+		return active;
+	}).catch(() => ({}));
+}
+
 function getDhcpHosts() {
 	return ubusCall('uci', 'get', { config: 'dhcp' }).then(r => {
 		const values = r.values || {};
@@ -76,37 +89,28 @@ function ipInLan(ip, lan) {
 	return (a >>> shift) === (b >>> shift);
 }
 
-function getWirelessStatus() {
-	return ubusCall('network.wireless', 'status').catch(() => ({}));
-}
-
-/* Cross-references every configured AP interface's live station list
-   (iwinfo assoclist, which has signal strength) against its uci network/
-   band, keyed by MAC so client rows can say "5 GHz Wi-Fi, Guest, -52 dBm"
-   instead of just "Wired". */
-function getWifiStations(wstatus) {
+/* network.wireless status is not a reliable source of AP interfaces across
+   supported OpenWrt versions: it may transiently fail or omit stations.
+   Discover interfaces and their bands directly through iwinfo, then index
+   every current association by MAC. */
+function getWifiStations() {
 	const map = {};
-	const jobs = [];
 
-	Object.keys(wstatus).forEach(radioName => {
-		const radio = wstatus[radioName];
-		(radio.interfaces || []).forEach(iface => {
-			if (!iface.ifname)
-				return;
-			const network = (iface.config && iface.config.network && iface.config.network[0]) || 'lan';
-			const band = radio.config && radio.config.band;
-
-			jobs.push(ubusCall('iwinfo', 'assoclist', { device: iface.ifname }).then(res => {
-				(res.results || []).forEach(st => {
-					const mac = macKey(st.mac);
+	return ubusCall('iwinfo', 'devices').then(result =>
+		Promise.all((result.devices || []).map(device =>
+			Promise.all([
+				ubusCall('iwinfo', 'info', { device }).catch(() => ({})),
+				ubusCall('iwinfo', 'assoclist', { device }).catch(() => ({ results: [] }))
+			]).then(([info, associations]) => {
+				const band = Number(info.frequency) >= 5000 ? '5g' : '2g';
+				(associations.results || []).forEach(station => {
+					const mac = macKey(station.mac);
 					if (mac)
-						map[mac] = { band, network, signal: st.signal };
+						map[mac] = { band, signal: station.signal };
 				});
-			}).catch(() => {}));
-		});
-	});
-
-	return Promise.all(jobs).then(() => map);
+			})
+		)).then(() => map)
+	).catch(() => map);
 }
 
 /* Bit 1 of the first octet marks a locally-administered (i.e. randomized,
@@ -134,15 +138,15 @@ function macKey(mac) {
 
 return view.extend({
 	load() {
-		return getWirelessStatus().then(wstatus =>
-			Promise.all([
-				getDhcpLeases(),
-				getArpTable(),
-				getWifiStations(wstatus),
-				getInterfaceInfo('guest'),
-				getDhcpHosts(),
-				getFirewallBlocks()
-			]));
+		return Promise.all([
+			getDhcpLeases(),
+			getArpTable(),
+			getWifiStations(),
+			getInterfaceInfo('guest'),
+			getDhcpHosts(),
+			getFirewallBlocks(),
+			getActiveArpMacs()
+		]);
 	},
 
 	render(data) {
@@ -152,6 +156,7 @@ return view.extend({
 		this.guestInfo = data[3];
 		this.hosts = data[4];
 		this.blocks = data[5];
+		this.activeArpMacs = data[6];
 
 		this.unregTable = E('div', { class: 'fn-table fn-client-table' });
 		this.regTable = E('div', { class: 'fn-table fn-client-table' });
@@ -184,17 +189,16 @@ return view.extend({
 	},
 
 	refresh() {
-		return getWirelessStatus().then(L.bind(function(wstatus) {
-			return Promise.all([
-				getDhcpLeases(), getArpTable(), getWifiStations(wstatus), getDhcpHosts(), getFirewallBlocks()
-			]).then(L.bind(function(res) {
-				this.leases = res[0];
-				this.arp = res[1];
-				this.stations = res[2];
-				this.hosts = res[3];
-				this.blocks = res[4];
-				this.fillTables();
-			}, this));
+		return Promise.all([
+			getDhcpLeases(), getArpTable(), getWifiStations(), getDhcpHosts(), getFirewallBlocks(), getActiveArpMacs()
+		]).then(L.bind(function(res) {
+			this.leases = res[0];
+			this.arp = res[1];
+			this.stations = res[2];
+			this.hosts = res[3];
+			this.blocks = res[4];
+			this.activeArpMacs = res[5];
+			this.fillTables();
 		}, this)).catch(() => {});
 	},
 
@@ -208,15 +212,19 @@ return view.extend({
 			const mac = macKey(l.macaddr);
 			if (!mac)
 				return;
-			devices[mac] = { mac, ip: l.ipaddr, hostname: l.hostname || '' };
+			devices[mac] = { mac, ip: l.ipaddr, hostname: l.hostname || '', online: !!this.activeArpMacs[mac] };
 		});
 
 		Object.keys(this.arp).forEach(ip => {
 			const mac = macKey(this.arp[ip]);
 			if (!devices[mac])
-				devices[mac] = { mac, ip, hostname: '' };
+				devices[mac] = { mac, ip, hostname: '', online: !!this.activeArpMacs[mac] };
 			else if (!devices[mac].ip)
 				devices[mac].ip = ip;
+		});
+		Object.keys(this.stations).forEach(mac => {
+			if (devices[mac])
+				devices[mac].online = true;
 		});
 
 		return devices;
@@ -227,11 +235,11 @@ return view.extend({
 			return { segment: _('Not in network'), connection: '–' };
 
 		const wifi = this.stations[mac];
-		const isGuest = wifi ? wifi.network === 'guest' : ipInLan(live.ip, this.guestInfo);
+		const isGuest = ipInLan(live.ip, this.guestInfo);
 		const segment = isGuest ? _('Guest network') : _('Home network');
 		const connection = wifi
 			? (wifi.band === '5g' ? '5 GHz' : '2.4 GHz') + ' Wi-Fi' + (typeof wifi.signal === 'number' ? ' · ' + wifi.signal + ' dBm' : '')
-			: _('Wired');
+			: (live.online ? _('Wired') : _('Not connected'));
 
 		return { segment, connection };
 	},
@@ -304,7 +312,7 @@ return view.extend({
 
 		rows.forEach(row => {
 			const { segment, connection } = this.describeConnection(row.mac, row.live);
-			const online = !!row.live;
+			const online = !!(row.live && row.live.online);
 			const ip = row.live ? row.live.ip : (row.ip || '–');
 			const isBlocked = opts.blockedByMac && opts.blockedByMac[row.mac];
 

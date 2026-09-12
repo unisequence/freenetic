@@ -98,6 +98,12 @@ msgstr "Панель управления"
 msgid "Client List"
 msgstr "Список клиентов"
 
+msgid "Total"
+msgstr "Всего"
+
+msgid "No clients are connected."
+msgstr "Нет подключённых клиентов."
+
 msgid "Traffic Monitor"
 msgstr "Монитор трафика"
 

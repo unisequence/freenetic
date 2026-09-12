@@ -126,6 +126,7 @@ const uiHelper = new Function('baseclass', 'ui', 'uci', 'document', 'E', 'setTim
 	for (const route of [
 		'admin/network/internet',
 		'admin/network/home_network',
+		'admin/status/clients',
 		'admin/status/traffic',
 		'admin/status/wifimonitor',
 		'admin/system/system'

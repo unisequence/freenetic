@@ -3053,6 +3053,79 @@ body.modal-overlay-active { overflow: hidden; }
 }
 .fn-traffic-value { flex: 0 0 auto; color: var(--fn-text-secondary); font-variant-numeric: tabular-nums; }
 
+/* Dashboard client summary: enough detail to use the otherwise empty second
+   column, while the full register/block workflow remains on Client List. */
+.fn-dashboard-clients { padding-top: 14px; padding-bottom: 10px; }
+.fn-dashboard-client-summary {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	padding-bottom: 14px;
+	border-bottom: 1px solid var(--fn-border);
+}
+.fn-dashboard-client-stat {
+	min-width: 0;
+	padding: 0 14px;
+	text-align: center;
+	border-right: 1px solid var(--fn-border);
+}
+.fn-dashboard-client-stat:first-child { padding-left: 0; }
+.fn-dashboard-client-stat:last-child { padding-right: 0; border-right: none; }
+.fn-dashboard-client-count {
+	color: var(--fn-text);
+	font-size: 1.55rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+.fn-dashboard-client-label {
+	margin-top: 2px;
+	color: var(--fn-text-secondary);
+	font-size: .875rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.fn-dashboard-client-list {
+	max-height: 560px;
+	overflow-y: auto;
+	padding-right: 6px;
+}
+.fn-dashboard-client-row {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: 0 4px;
+	min-height: 56px;
+	padding: 9px 2px;
+	border-bottom: 1px solid var(--fn-border);
+}
+.fn-dashboard-client-row:last-child { border-bottom: none; }
+.fn-dashboard-client-row .fn-client-dot { margin: 0 7px 0 0; }
+.fn-dashboard-client-main { min-width: 0; }
+.fn-dashboard-client-name {
+	overflow: hidden;
+	color: var(--fn-text);
+	font-size: 1.1rem;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.fn-dashboard-client-meta {
+	margin-top: 2px;
+	overflow: hidden;
+	color: var(--fn-text-secondary);
+	font-size: .9375rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.fn-dashboard-client-connection {
+	max-width: 150px;
+	margin-left: 12px;
+	color: var(--fn-text-secondary);
+	font-size: .9375rem;
+	text-align: right;
+}
+.fn-dashboard-client-list > .fn-info-empty { padding: 18px 0 10px; }
+
 /* iOS-style toggle switch, used for Wi-Fi enable/disable */
 .fn-switch {
 	position: relative;
@@ -3702,6 +3775,7 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 
 @media (max-width: 640px) {
 	.fn-spark-legend { flex-wrap: wrap; gap: 8px 16px; }
+	.fn-dashboard-client-connection { max-width: 110px; }
 	.fn-survey-chart {
 		gap: 2px;
 		overflow: hidden;
