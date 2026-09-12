@@ -2,6 +2,7 @@
 'require view';
 'require ui';
 'require uci';
+'require freenetic-network as networkHelper';
 'require freenetic-view-guard as guard';
 'require freenetic-rpc as rpc';
 'require freenetic-ui as uiHelper';
@@ -736,6 +737,7 @@ return view.extend({
 		dom_content(this.activeTitle, this.activeFamily === 'ipv6' ? _('Active IPv6 routes') : _('Active IPv4 routes'));
 		dom_content(this.activeDescription, _('Routes currently installed in the kernel, including connected and default routes.'));
 		const rows = [];
+		const seen = {};
 		(this.interfaceDump.interface || []).forEach(iface => {
 			(iface.route || []).forEach(route => {
 				const familyKey = String(route.target || '').indexOf(':') !== -1 ? 'ipv6' : 'ipv4';
@@ -743,11 +745,35 @@ return view.extend({
 					return;
 				const suffix = route.mask != null && route.mask !== '' ? '/' + route.mask : '';
 				const interfaceName = route.interface || iface.interface || iface.l3_device || '';
-				rows.push({
-					target: (route.target || '–') + suffix,
+				const target = String(route.target || '–');
+				const row = {
+					target: target + (target.indexOf('/') === -1 ? suffix : ''),
 					gateway: route.nexthop || '–',
 					interface: routeInterfaceLabel(interfaceName, this.interfaces)
-				});
+				};
+				const key = [ row.target, row.gateway, row.interface ].join('|');
+				if (!seen[key]) {
+					seen[key] = true;
+					rows.push(row);
+				}
+			});
+
+			const addressKey = this.activeFamily === 'ipv6' ? 'ipv6-address' : 'ipv4-address';
+			(iface[addressKey] || []).forEach(address => {
+				const target = networkHelper.connectedRouteTarget(address);
+				if (!target)
+					return;
+				const interfaceName = iface.interface || iface.l3_device || '';
+				const row = {
+					target,
+					gateway: '–',
+					interface: routeInterfaceLabel(interfaceName, this.interfaces)
+				};
+				const key = [ row.target, row.gateway, row.interface ].join('|');
+				if (!seen[key]) {
+					seen[key] = true;
+					rows.push(row);
+				}
 			});
 		});
 

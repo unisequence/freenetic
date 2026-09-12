@@ -641,21 +641,23 @@ return view.extend({
 
 		const subtitle = [ cidr || _('IPv4 address is not configured'), zone ? _('Firewall zone %s').format(zone.name || sectionName(zone)) : _('No firewall zone') ].join(' · ');
 		const title = network.label || networkLabel(name);
+		const bodyChildren = [
+			E('div', { class: 'fn-wifi-policy-form' }, [
+				E('div', { class: 'fn-settings-field' }, [ E('label', {}, _('Traffic policy')), modeSelect ]),
+				vpnField
+			]),
+			hint
+		];
+		if (!cidr || !zone || !wanZone)
+			bodyChildren.push(E('div', { class: 'fn-wifi-policy-warning' },
+				!cidr ? _('Set an IPv4 address and subnet mask for this network first.') : _('A firewall zone for this network and the Internet is required for this policy.')));
+		bodyChildren.push(E('div', { class: 'fn-oc-actions fn-wifi-policy-actions' }, [ saveButton ]));
 		const card = E('article', { class: 'fn-card fn-wifi-policy-card' }, [
 			E('div', { class: 'fn-card-head fn-wifi-policy-card-head' }, [
 				E('div', { class: 'fn-oc-card-title' }, [ E('h3', {}, title), E('span', { class: 'fn-oc-protocol' }, subtitle) ]),
 				status
 			]),
-			E('div', { class: 'fn-card-body' }, [
-				E('div', { class: 'fn-wifi-policy-form' }, [
-					E('div', { class: 'fn-settings-field' }, [ E('label', {}, _('Traffic policy')), modeSelect ]),
-					vpnField
-				]),
-				hint,
-				(!cidr || !zone || !wanZone) ? E('div', { class: 'fn-wifi-policy-warning' },
-					!cidr ? _('Set an IPv4 address and subnet mask for this network first.') : _('A firewall zone for this network and the Internet is required for this policy.')) : null,
-				E('div', { class: 'fn-oc-actions fn-wifi-policy-actions' }, [ saveButton ])
-			])
+			E('div', { class: 'fn-card-body' }, bodyChildren)
 		]);
 
 		saveButton.addEventListener('click', () => this.savePolicy(name, {

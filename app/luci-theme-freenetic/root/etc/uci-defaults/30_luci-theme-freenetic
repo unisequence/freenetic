@@ -1,21 +1,18 @@
 #!/bin/sh
 
 changed=0
+theme_added=0
 
-set_opt() {
-	local key=$1
-	local val=$2
+if ! uci -q get "luci.themes.Freenetic" 2>/dev/null; then
+	uci set "luci.themes.Freenetic=/luci-static/freenetic"
+	changed=1
+	theme_added=1
+fi
 
-	if ! uci -q get "luci.$key" 2>/dev/null; then
-		uci set "luci.$key=$val"
-		changed=1
-	fi
-}
-
-set_opt themes.Freenetic /luci-static/freenetic
-
-if [ "$PKG_UPGRADE" != 1 ] && [ $changed = 1 ]; then
-	set_opt main.mediaurlbase /luci-static/freenetic
+if [ "$PKG_UPGRADE" != 1 ] && [ "$theme_added" = 1 ] &&
+   [ "$(uci -q get luci.main.mediaurlbase 2>/dev/null)" != /luci-static/freenetic ]; then
+	uci set "luci.main.mediaurlbase=/luci-static/freenetic"
+	changed=1
 fi
 
 if [ $changed = 1 ]; then

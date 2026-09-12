@@ -316,7 +316,7 @@ return view.extend({
 		conn.statusPill.className = 'fn-status-pill ' + (wan.up ? 'fn-status-ok' : 'fn-status-off');
 		dom_content(conn.statusPill, wan.up ? _('Connected') : _('Not connected'));
 
-		conn.macEl = E('div', { class: 'fn-info-value' }, '–');
+		conn.macEl = E('div', { class: 'fn-info-value fn-mac-value' }, '–');
 		conn.rxTotalEl = E('div', { class: 'fn-info-value' }, '–');
 		conn.txTotalEl = E('div', { class: 'fn-info-value' }, '–');
 		[ [_('MAC address'), conn.macEl], [_('Received'), conn.rxTotalEl], [_('Sent'), conn.txTotalEl] ]

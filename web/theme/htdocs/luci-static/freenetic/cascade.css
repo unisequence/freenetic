@@ -1821,6 +1821,55 @@ body.modal-overlay-active { overflow: hidden; }
 
 .actions { display: flex; gap: 8px; justify-content: flex-end; }
 
+/* The 24.10 opkg view ships its own flex rules with 250px minimum labels.
+   Once the sidebar is accounted for, those controls overflow even on a
+   1024px tablet. Keep the stock view intact and only reflow its toolbar. */
+@media (max-width: 1100px) {
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type {
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-start;
+	}
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type > * {
+		flex: 1 1 auto;
+		width: 100%;
+		min-width: 0;
+	}
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type > *:first-child,
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type > * > label {
+		min-width: 0;
+	}
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type .control-group {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		width: 100%;
+		min-width: 0;
+		margin-bottom: 0;
+		white-space: normal;
+	}
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type .control-group > input {
+		flex: 1 1 220px;
+		width: auto;
+		min-width: 0;
+	}
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type .control-group > .btn {
+		flex: 0 1 auto;
+		min-width: 0;
+		white-space: normal;
+	}
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type > :last-child > div {
+		white-space: normal;
+	}
+}
+
+@media (max-width: 480px) {
+	body[data-page="admin-system-package-manager"] #maincontent > .controls:first-of-type > :nth-child(4) .control-group > .btn {
+		flex-basis: 100%;
+		width: 100%;
+	}
+}
+
 /* ---------- Freenetic dashboard (Status > Dashboard) ---------- */
 
 .fn-dash {
@@ -1957,6 +2006,11 @@ body.modal-overlay-active { overflow: hidden; }
 }
 .fn-info-label { font-size: 1.125rem; color: var(--fn-text-secondary); margin-bottom: 2px; }
 .fn-info-value { font-size: 1.375rem; color: var(--fn-text); word-break: break-word; }
+.fn-mac-value {
+	font-size: 1rem;
+	white-space: nowrap;
+	word-break: normal;
+}
 .fn-info-empty { color: var(--fn-text-secondary); font-size: 1.125rem; }
 .fn-conn-ipv6 {
 	margin-top: 14px;

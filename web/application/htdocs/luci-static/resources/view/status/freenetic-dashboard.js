@@ -722,8 +722,8 @@ return view.extend({
 		   place, MAC/Received/Sent included since they were recreated too. */
 		if (!conn.infoBuilt) {
 			const grid = conn.infoGrid;
-			const makeItem = label => {
-				const valueEl = E('div', { class: 'fn-info-value' }, '–');
+			const makeItem = (label, valueClass) => {
+				const valueEl = E('div', { class: 'fn-info-value' + (valueClass ? ' ' + valueClass : '') }, '–');
 				grid.appendChild(E('div', { class: 'fn-info-item' }, [
 					E('div', { class: 'fn-info-label' }, label),
 					valueEl
@@ -738,7 +738,7 @@ return view.extend({
 			conn.connectedEl = makeItem(_('Connected'));
 			conn.interfaceEl = makeItem(_('Interface'));
 			/* filled in once network.device status resolves, in pollWan() below */
-			conn.macEl = makeItem(_('MAC address'));
+			conn.macEl = makeItem(_('MAC address'), 'fn-mac-value');
 			conn.rxTotalEl = makeItem(_('Received'));
 			conn.txTotalEl = makeItem(_('Sent'));
 			conn.infoBuilt = true;
@@ -946,12 +946,12 @@ return view.extend({
 					const radio = opts.radios[iface.device] || {};
 					const entry = findIfaceEntry(this.wstatus, iface['.name']);
 					const info = entry && entry.ifname ? this.ifaceInfos[entry.ifname] : null;
-					const disabled = iface.disabled === '1';
+					const disabled = iface.disabled === '1' || radio.disabled === '1';
 					const ssid = iface.ssid || _('(hidden)');
 
 					const toggle = E('input', { type: 'checkbox', class: 'fn-switch-input' });
 					toggle.checked = !disabled;
-					toggle.addEventListener('change', () => this.toggleWifi(iface['.name'], toggle));
+					toggle.addEventListener('change', () => this.toggleWifi(iface['.name'], iface.device, toggle));
 
 					const mainChildren = [
 						E('div', { class: 'fn-wifi-ssid' }, ssid),
@@ -1019,6 +1019,7 @@ return view.extend({
 					uci.set('wireless', name, 'network', 'guest');
 					uci.set('wireless', name, 'isolate', '1');
 				}
+				uci.set('wireless', dev['.name'], 'disabled', '0');
 				uci.set('wireless', name, 'disabled', '0');
 				uci.set('wireless', name, 'ssid', ssid);
 				uci.set('wireless', name, 'encryption', 'psk2');
@@ -1108,9 +1109,15 @@ return view.extend({
 		);
 	},
 
-	toggleWifi(sectionName, toggleEl) {
-		const disabled = toggleEl.checked ? '' : '1';
-		return ubusCall('uci', 'set', { config: 'wireless', section: sectionName, values: { disabled } })
+	toggleWifi(sectionName, radioName, toggleEl) {
+		const enableRadio = toggleEl.checked && radioName
+			? ubusCall('uci', 'set', { config: 'wireless', section: radioName, values: { disabled: '0' } })
+			: Promise.resolve();
+		return enableRadio
+			.then(() => ubusCall('uci', 'set', {
+				config: 'wireless', section: sectionName,
+				values: { disabled: toggleEl.checked ? '0' : '1' }
+			}))
 			.then(() => ubusCall('uci', 'commit', { config: 'wireless' }))
 			.then(() => ubusCall('network', 'reload', {}))
 			.catch(err => {

@@ -392,7 +392,7 @@ return view.extend({
 	renderWifiCard(radio, iface, isGuest, radioAdv) {
 		const band = radio.band === '5g' ? '5 GHz' : '2.4 GHz';
 		const configured = !!iface;
-		const disabled = configured ? iface.disabled === '1' : true;
+		const disabled = configured ? iface.disabled === '1' || radio.disabled === '1' : true;
 
 		const enableToggle = E('input', { type: 'checkbox', class: 'fn-switch-input' });
 		enableToggle.checked = configured && !disabled;
@@ -675,6 +675,7 @@ return view.extend({
 						uci.set('wireless', name, 'isolate', '1');
 				}
 				const v = effectiveWifi(card);
+				uci.set('wireless', card.radioName, 'disabled', '0');
 				uci.set('wireless', name, 'disabled', '0');
 				uci.set('wireless', name, 'ssid', v.ssid);
 				uci.set('wireless', name, 'encryption', v.enc);

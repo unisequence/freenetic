@@ -33,17 +33,49 @@ function detectZones(firewall) {
 	return zones.length ? zones : [ 'wan', 'lan' ];
 }
 
+function protoTokens(protos) {
+	const list = [];
+	[].concat(protos || []).forEach(value => String(value).trim().split(/\s+/).forEach(proto => {
+		proto = proto.toLowerCase();
+		if (proto && list.indexOf(proto) === -1)
+			list.push(proto);
+	}));
+	if (list.indexOf('all') !== -1)
+		return [ 'all' ];
+	if (list.length === 2 && list.indexOf('tcp') !== -1 && list.indexOf('udp') !== -1)
+		return [ 'tcp', 'udp' ];
+	return list;
+}
+
+function protoValue(protos) {
+	const list = protoTokens(protos);
+	return list.length ? list.join(' ') : 'all';
+}
+
 function protoLabel(protos) {
-	const list = [].concat(protos || []).map(p => p.toLowerCase());
-	if (!list.length || list.indexOf('all') !== -1)
+	const list = protoTokens(protos);
+	if (!list.length || list[0] === 'all')
 		return _('Any');
-	if (list.indexOf('tcp') !== -1 && list.indexOf('udp') !== -1)
-		return 'TCP+UDP';
-	if (list.indexOf('udp') !== -1)
-		return 'UDP';
-	if (list.indexOf('icmp') !== -1)
-		return 'ICMP';
-	return 'TCP';
+	return list.map(proto => proto === 'icmpv6' ? 'ICMPv6' : proto.toUpperCase()).join('+');
+}
+
+function protocolChoice(protos) {
+	const value = protoValue(protos);
+	const options = [
+		[ 'all', _('Any') ],
+		[ 'tcp', 'TCP' ],
+		[ 'udp', 'UDP' ],
+		[ 'tcp udp', 'TCP+UDP' ],
+		[ 'icmp', 'ICMP' ],
+		[ 'icmpv6', 'ICMPv6' ],
+		[ 'igmp', 'IGMP' ],
+		[ 'esp', 'ESP' ],
+		[ 'ah', 'AH' ],
+		[ 'gre', 'GRE' ]
+	];
+	if (!options.some(option => option[0] === value))
+		options.push([ value, protoLabel(value) ]);
+	return { value, options };
 }
 
 function actionLabel(target) {
@@ -184,16 +216,10 @@ return view.extend({
 		]);
 		actionSelect.value = rule ? (rule.target || 'ACCEPT') : 'ACCEPT';
 
-		const protoSelect = E('select', { class: 'fn-input' }, [
-			E('option', { value: 'all' }, _('Any')),
-			E('option', { value: 'tcp' }, 'TCP'),
-			E('option', { value: 'udp' }, 'UDP'),
-			E('option', { value: 'tcp udp' }, 'TCP+UDP'),
-			E('option', { value: 'icmp' }, 'ICMP')
-		]);
-		protoSelect.value = rule ? ([].concat(rule.proto || []).sort().join(' ') || 'all') : 'all';
-		if (!protoSelect.value)
-			protoSelect.value = 'all';
+		const protocol = protocolChoice(rule ? rule.proto : 'all');
+		const protoSelect = E('select', { class: 'fn-input' },
+			protocol.options.map(option => E('option', { value: option[0] }, option[1])));
+		protoSelect.value = protocol.value;
 
 		const srcIpInput = E('input', { type: 'text', class: 'fn-input', placeholder: _('any'), value: rule ? (rule.src_ip || '') : '' });
 		const destIpInput = E('input', { type: 'text', class: 'fn-input', placeholder: _('any'), value: rule ? (rule.dest_ip || '') : '' });
