@@ -1135,7 +1135,7 @@ return view.extend({
 				const info = E('div', { class: 'fn-apps-info' }, [
 					E('div', { class: 'fn-apps-name' }, entry.mac),
 					entry.label ? E('div', { class: 'fn-apps-desc' }, entry.label) : null
-				]);
+				].filter(Boolean));
 				list.appendChild(E('div', { class: 'fn-apps-row fn-wifi-acl-row' }, [
 					E('span', { class: 'fn-wifi-acl-mac-icon', 'aria-hidden': 'true' }, '⌁'),
 					info,
