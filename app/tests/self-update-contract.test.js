@@ -16,6 +16,8 @@ const themeMakefile = fs.readFileSync(path.join(root, 'app', 'luci-theme-freenet
 
 assert.ok(fs.statSync(helperPath).mode & 0o111, 'self-update helper must be executable');
 assert.ok(helper.startsWith('#!/bin/sh'), 'self-update helper must be POSIX sh');
+assert.doesNotMatch(helper, /^set -u$/m,
+	'OpenWrt 24.10 jshn expands optional variables and is incompatible with nounset');
 assert.match(helper, /RAW_BASE_URL=https:\/\/raw\.githubusercontent\.com\/unisequence\/freenetic/,
 	'installer source repository must be fixed router-side');
 assert.match(helper, /RELEASES_BASE_URL=https:\/\/github\.com\/unisequence\/freenetic\/releases\/download/,

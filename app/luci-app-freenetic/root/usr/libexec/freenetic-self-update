@@ -2,7 +2,8 @@
 # Install a pinned Freenetic release selected by the LuCI dashboard.
 # The browser supplies only a release tag; repository and asset URLs stay
 # fixed here, while the release installer verifies every downloaded asset.
-set -u
+# Do not enable nounset: OpenWrt 24.10's jshn.sh intentionally expands a few
+# optional variables before json_init() has created them.
 
 JSHN=/usr/share/libubox/jshn.sh
 RAW_BASE_URL=https://raw.githubusercontent.com/unisequence/freenetic
