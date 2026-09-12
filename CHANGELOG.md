@@ -6,7 +6,11 @@ which they became user-visible.
 
 ## [Unreleased]
 
-No changes yet.
+### Fixed
+
+- The dashboard now shows the persisted installed release tag (for example,
+  `v0.2.2`) instead of labeling a release installation as `v0.2.x-dev`.
+  The development label and source hash remain available for untagged builds.
 
 ## [0.2.2] — 2026-09-12
 

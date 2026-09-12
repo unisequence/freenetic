@@ -530,7 +530,16 @@ function freeneticBuildRevision(version) {
 	return match ? match[1].slice(0, 7) : '';
 }
 
-function formatFreeneticVersion(packages) {
+function freeneticReleaseTag(value) {
+	const tag = String(value || '').trim();
+	return /^v\d+\.\d+\.\d+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$/.test(tag) ? tag : '';
+}
+
+function formatFreeneticVersion(packages, installedRelease) {
+	const releaseTag = freeneticReleaseTag(installedRelease);
+	if (releaseTag)
+		return releaseTag;
+
 	const versioned = packages.filter(pkg => pkg.version);
 	if (!versioned.length)
 		return _('Development build');
@@ -1919,7 +1928,7 @@ return view.extend({
 			E('div', {
 				class: 'fn-update-build-version',
 				title: _('Installed build')
-			}, formatFreeneticVersion(state.packages || [])),
+			}, formatFreeneticVersion(state.packages || [], updater.installed_release)),
 			sourceLink
 		]);
 		const actions = E('div', { class: 'fn-update-actions' }, [ channelSelect, checkButton, installButton ]);

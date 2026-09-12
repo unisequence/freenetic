@@ -62,6 +62,10 @@ assert.equal(displayVersion, 'v0.2.x-dev',
 	'the dashboard development label must identify the service branch without promising its next patch number');
 assert.equal(formatFreeneticVersion(installed(version)), 'v0.2.x-dev · abc1234',
 	'identical component builds must show one short revision');
+assert.equal(formatFreeneticVersion(installed(version), 'v0.2.2'), 'v0.2.2',
+	'an update installed from a release must show its release tag instead of a development label');
+assert.equal(formatFreeneticVersion(installed(version), 'not-a-release'), 'v0.2.x-dev · abc1234',
+	'an invalid persisted release value must not replace the development build identity');
 assert.match(formatFreeneticVersion([
 	{ name: packageNames[0], version },
 	{ name: packageNames[1], version: '26.299.00001~def5678' }
