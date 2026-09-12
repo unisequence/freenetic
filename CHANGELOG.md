@@ -6,11 +6,7 @@ which they became user-visible.
 
 ## [Unreleased]
 
-### Fixed
-
-- The dashboard now shows the persisted installed release tag (for example,
-  `v0.2.2`) instead of labeling a release installation as `v0.2.x-dev`.
-  The development label and source hash remain available for untagged builds.
+No changes yet.
 
 ## [0.2.2] — 2026-09-12
 
@@ -33,6 +29,9 @@ which they became user-visible.
 
 ### Fixed
 
+- The dashboard now shows the persisted installed release tag (for example,
+  `v0.2.2`) instead of labeling a release installation as `v0.2.x-dev`.
+  The development label and source hash remain available for untagged builds.
 - Wi-Fi clients are now identified from the active `iwinfo` association list
   instead of the occasionally incomplete `network.wireless` ubus response.
   Active ARP state distinguishes wired clients from stale DHCP leases in both
