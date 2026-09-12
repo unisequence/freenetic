@@ -60,6 +60,8 @@ assert.deepEqual(collisions, [], 'theme and application packages must not own th
 const themeMakefile = fs.readFileSync(path.join(themePackage, 'Makefile'), 'utf8');
 const applicationMakefile = fs.readFileSync(path.join(applicationPackage, 'Makefile'), 'utf8');
 const preflightMakefile = fs.readFileSync(path.join(root, 'app', 'freenetic-preflight.mk'), 'utf8');
+const backupHelper = fs.readFileSync(path.join(applicationPackage, 'root', 'usr', 'libexec',
+	'freenetic-backup-call'), 'utf8');
 const deployScript = fs.readFileSync(path.join(root, 'app', 'deploy.sh'), 'utf8');
 const routerPreflightPath = path.join(root, 'app', 'check-router.sh');
 const routerPreflight = fs.readFileSync(routerPreflightPath, 'utf8');
@@ -72,6 +74,9 @@ assert.match(preflightMakefile, /ramips\/mt7621/, 'preflight must support MT7621
 assert.match(preflightMakefile, /min_overlay_kib=32768/, 'Filogic needs the larger overlay reserve');
 assert.match(preflightMakefile, /min_overlay_kib=16384/, 'MT7621 needs its own overlay reserve');
 assert.match(preflightMakefile, /at least 128 MiB RAM/, 'preflight must reject low-memory routers');
+assert.match(preflightMakefile, /command -v opkg/, 'preflight must support OpenWrt 24.10 opkg installs');
+assert.match(backupHelper, /opkg list-installed/,
+	'configuration backups must record packages installed by OpenWrt 24.10');
 assert.match(deployScript, /check-router\.sh/, 'development deployment must run the hardware preflight');
 assert.match(themeMakefile, /Package\/luci-theme-freenetic\/preinst/, 'theme APK must guard direct installs');
 assert.match(applicationMakefile, /Package\/luci-app-freenetic\/preinst/, 'application APK must guard direct installs');
@@ -83,6 +88,10 @@ assert.match(applicationMakefile, /LUCI_DEPENDS:=.*\+luci-theme-freenetic/,
 	'application must depend on the matching theme');
 assert.match(applicationMakefile, /LUCI_DEPENDS:=.*\+luci-app-package-manager/,
 	'application must declare its package manager dependency');
+assert.match(themeMakefile, /app\/freenetic-preflight\.mk/,
+	'theme package versions must change with the shared preflight');
+assert.match(applicationMakefile, /app\/freenetic-preflight\.mk/,
+	'application package versions must change with the shared preflight');
 
 const menuPath = path.join(applicationPackage, 'root', 'usr', 'share', 'luci',
 	'menu.d', 'zz-luci-freenetic.json');

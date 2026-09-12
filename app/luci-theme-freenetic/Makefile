@@ -14,11 +14,12 @@ LUCI_DEPENDS:=+luci-base
 
 PKG_LICENSE:=Apache-2.0
 
-# Include both the package and theme web sources when deriving the version.
+# Include the package, shared preflight and theme web sources when deriving
+# the version.
 FREENETIC_ROOT:=$(abspath $(CURDIR)/../..)
 include $(FREENETIC_ROOT)/app/freenetic-preflight.mk
 PKG_SRC_VERSION:=$(if $(DUMP),x,$(strip $(shell \
-	set -- $$(git -C "$(FREENETIC_ROOT)" log -1 --format="%ct %h" -- app/luci-theme-freenetic web/theme luci-theme-freenetic 2>/dev/null); \
+	set -- $$(git -C "$(FREENETIC_ROOT)" log -1 --format="%ct %h" -- app/luci-theme-freenetic app/freenetic-preflight.mk web/theme luci-theme-freenetic 2>/dev/null); \
 	if [ -n "$$1" ]; then \
 		secs="$$(($$1 % 86400))"; \
 		yday="$$(date --utc --date="@$$1" "+%y.%j")"; \

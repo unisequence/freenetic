@@ -1,6 +1,6 @@
-# Shared package pre-install gate.  Keep this independent of files shipped by
-# the package itself: apk runs preinst before those files exist on a fresh
-# install.
+# Shared package pre-install gate. Keep this independent of files shipped by
+# the package itself: the package manager runs preinst before those files exist
+# on a fresh install.
 define FREENETIC_PACKAGE_PREINST
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] && exit 0
@@ -12,7 +12,8 @@ freenetic_fail() {
 
 command -v ubus >/dev/null 2>&1 || freenetic_fail "ubus is not installed"
 command -v jsonfilter >/dev/null 2>&1 || freenetic_fail "jsonfilter is not installed"
-command -v apk >/dev/null 2>&1 || freenetic_fail "apk is not installed"
+command -v apk >/dev/null 2>&1 || command -v opkg >/dev/null 2>&1 || \
+	freenetic_fail "neither apk nor opkg is installed"
 
 board_json="$$(ubus call system board 2>/dev/null)" || freenetic_fail "cannot read system board information"
 target="$$(printf '%s\n' "$$board_json" | jsonfilter -e '@.release.target' 2>/dev/null || true)"
