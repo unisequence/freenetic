@@ -1585,9 +1585,9 @@ return view.extend({
 			updaterReady ? _('Not checked yet.') : _('Updates are unavailable on this router.'));
 		const checkButton = E('button', {
 			type: 'button',
-			class: 'fn-settings-btn',
-			disabled: !updaterReady
+			class: 'fn-settings-btn'
 		}, _('Check for updates'));
+		checkButton.disabled = !updaterReady;
 		const installButton = E('button', {
 			type: 'button',
 			class: 'fn-settings-btn cbi-button-positive',

@@ -9,6 +9,10 @@ const dashboard = fs.readFileSync(path.join(root, 'web', 'application', 'htdocs'
 	'luci-static', 'resources', 'view', 'status', 'freenetic-dashboard.js'), 'utf8');
 assert.match(dashboard, /packages: updaterPackages\.length \? updaterPackages : packages/,
 	'dashboard must use helper package versions when legacy package-manager-call cannot return JSON');
+assert.doesNotMatch(dashboard, /disabled:\s*!updaterReady/,
+	'LuCI E() must not render disabled="false", which still disables the check button');
+assert.match(dashboard, /checkButton\.disabled = !updaterReady/,
+	'initial updater availability must be applied through the DOM boolean property');
 const prefix = dashboard.slice(0, dashboard.indexOf('function svgIcon'));
 const helpers = new Function('rpc', prefix +
 	'\nreturn { freeneticBuildVersion, compareFreeneticBuilds, freeneticReleasePlan };')({ call() {} });
