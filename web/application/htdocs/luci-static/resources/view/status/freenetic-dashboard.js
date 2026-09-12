@@ -32,7 +32,75 @@ const POLL_INTERVAL = 3; /* seconds */
 const MIN_CPU_SAMPLE_INTERVAL = 1000; /* milliseconds */
 const FREENETIC_REPOSITORY = 'https://github.com/unisequence/freenetic';
 const FREENETIC_RELEASES_API = 'https://api.github.com/repos/unisequence/freenetic/releases?per_page=30';
+const FREENETIC_UPDATE_HELPER = '/usr/libexec/freenetic-self-update';
 const FREENETIC_PACKAGE_NAMES = [ 'luci-theme-freenetic', 'luci-app-freenetic' ];
+const FREENETIC_RELEASE_PACKAGES = [
+	'luci-theme-freenetic',
+	'luci-app-freenetic',
+	'luci-i18n-theme-freenetic-ru',
+	'luci-i18n-freenetic-ru'
+];
+
+function freeneticBuildVersion(value) {
+	const match = String(value || '').replace(/~/g, '.').match(/^(\d+)\.(\d+)\.(\d+)/);
+	return match ? match.slice(1).map(Number) : null;
+}
+
+function compareFreeneticBuilds(left, right) {
+	for (let i = 0; i < 3; i++) {
+		if (left[i] !== right[i])
+			return left[i] > right[i] ? 1 : -1;
+	}
+	return 0;
+}
+
+/* A release is installable only when all four LuCI archives and the matching
+ * fnc binary exist for this router. This keeps a partially uploaded GitHub
+ * release from turning an application/theme pair into a mixed revision. */
+function freeneticReleasePlan(release, updater, installedPackages) {
+	const tag = release && release.tag_name;
+	if (!/^v\d+\.\d+\.\d+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$/.test(String(tag || '')))
+		return { compatible: false, reason: 'tag' };
+	if (!updater || updater.can_update !== true)
+		return { compatible: false, reason: 'updater' };
+
+	const packageManager = updater.package_manager;
+	const assetSuffix = updater.asset_suffix;
+	if ((packageManager !== 'apk' && packageManager !== 'opkg') ||
+		(assetSuffix !== 'aarch64_cortex-a53' && assetSuffix !== 'mipsel_24kc'))
+		return { compatible: false, reason: 'target' };
+
+	const names = new Set((Array.isArray(release.assets) ? release.assets : [])
+		.map(asset => asset && asset.name).filter(Boolean));
+	const packageSuffix = packageManager === 'apk' ? '-' + assetSuffix + '.apk' : '-all.ipk';
+	const appPrefix = 'luci-app-freenetic-';
+	const appAsset = Array.from(names).find(name =>
+		name.startsWith(appPrefix) && name.endsWith(packageSuffix));
+	if (!appAsset)
+		return { compatible: false, reason: 'assets' };
+
+	const version = appAsset.slice(appPrefix.length, -packageSuffix.length);
+	if (!/^[0-9][0-9A-Za-z._-]*$/.test(version))
+		return { compatible: false, reason: 'assets' };
+
+	const required = FREENETIC_RELEASE_PACKAGES.map(name => name + '-' + version + packageSuffix);
+	required.push('fnc-' + version + '-' + assetSuffix);
+	if (!required.every(name => names.has(name)))
+		return { compatible: false, reason: 'assets', version, required };
+
+	const releaseBuild = freeneticBuildVersion(version);
+	const installedBuilds = (Array.isArray(installedPackages) ? installedPackages : [])
+		.filter(pkg => pkg && FREENETIC_PACKAGE_NAMES.indexOf(pkg.name) !== -1)
+		.map(pkg => freeneticBuildVersion(pkg.version)).filter(Boolean);
+	let comparison = null;
+	if (releaseBuild && installedBuilds.length) {
+		const comparisons = installedBuilds.map(current => compareFreeneticBuilds(releaseBuild, current));
+		comparison = comparisons.some(value => value > 0) ? 1 :
+			(comparisons.every(value => value === 0) ? 0 : -1);
+	}
+
+	return { compatible: true, tag, version, comparison, required };
+}
 
 function svgIcon(d, size) {
 	size = size || 18;
@@ -397,13 +465,21 @@ function getFreeneticInstalledPackages() {
 		.catch(() => []);
 }
 
+function getFreeneticUpdaterStatus() {
+	return fs.exec_direct(FREENETIC_UPDATE_HELPER, [ 'status' ], 'json')
+		.then(result => result || { can_update: false })
+		.catch(error => ({ can_update: false, error: error.message || String(error) }));
+}
+
 function getFreeneticUpdateState() {
 	return Promise.all([
 		uci.load('freenetic').catch(() => []),
-		getFreeneticInstalledPackages()
-	]).then(([, packages]) => ({
+		getFreeneticInstalledPackages(),
+		getFreeneticUpdaterStatus()
+	]).then(([, packages, updater]) => ({
 		channel: uci.get('freenetic', 'updates', 'channel') || 'stable',
-		packages
+		packages,
+		updater
 	}));
 }
 
@@ -1493,6 +1569,8 @@ return view.extend({
 
 	renderFreeneticUpdates(state, row, groupTitle) {
 		state = state || {};
+		const updater = state.updater || {};
+		const updaterReady = updater.can_update === true;
 		const channel = state.channel === 'beta' ? 'beta' : 'stable';
 		const channelSelect = E('select', { class: 'fn-update-channel' }, [
 			E('option', { value: 'stable' }, _('Stable')),
@@ -1500,18 +1578,47 @@ return view.extend({
 		]);
 		channelSelect.value = channel;
 
-		const status = E('span', { class: 'fn-update-status' }, _('Not checked yet.'));
+		const status = E('span', { class: 'fn-update-status' },
+			updaterReady ? _('Not checked yet.') : _('Updates are unavailable on this router.'));
 		const checkButton = E('button', {
 			type: 'button',
-			class: 'fn-settings-btn'
+			class: 'fn-settings-btn',
+			disabled: !updaterReady
 		}, _('Check for updates'));
+		const installButton = E('button', {
+			type: 'button',
+			class: 'fn-settings-btn cbi-button-positive',
+			hidden: true
+		}, _('Install update'));
+		let pendingPlan = null;
 
 		const setStatus = (message, kind) => {
 			status.className = 'fn-update-status' + (kind ? ' fn-update-status-' + kind : '');
 			dom_content(status, message);
 		};
+		const setReleaseStatus = (message, release, kind) => {
+			const link = E('a', {
+				href: release.html_url || FREENETIC_REPOSITORY + '/releases',
+				target: '_blank',
+				rel: 'noopener'
+			}, release.tag_name);
+			dom_empty(status);
+			status.appendChild(document.createTextNode(message + ' '));
+			status.appendChild(link);
+			status.className = 'fn-update-status fn-update-status-' + kind;
+		};
+		const resetPlan = () => {
+			pendingPlan = null;
+			installButton.hidden = true;
+		};
+		const setBusy = busy => {
+			channelSelect.disabled = busy;
+			checkButton.disabled = busy || !updaterReady;
+			installButton.disabled = busy;
+		};
 
 		channelSelect.addEventListener('change', () => {
+			resetPlan();
 			const previous = state.channel === 'beta' ? 'beta' : 'stable';
 			const next = channelSelect.value;
 			channelSelect.disabled = true;
@@ -1533,7 +1640,8 @@ return view.extend({
 		});
 
 		checkButton.addEventListener('click', () => {
-			checkButton.disabled = true;
+			resetPlan();
+			setBusy(true);
 			dom_content(checkButton, _('Checking…'));
 			setStatus(_('Looking for a %s release…').format(channelSelect.value === 'beta' ? _('beta') : _('stable')), 'pending');
 
@@ -1554,26 +1662,89 @@ return view.extend({
 					return;
 				}
 
-				const tag = latest.tag_name || latest.name || _('Unnamed release');
-				const link = E('a', {
-					href: latest.html_url || FREENETIC_REPOSITORY + '/releases',
-					target: '_blank',
-					rel: 'noopener'
-				}, tag);
-				dom_empty(status);
-				status.appendChild(document.createTextNode(
-					latest.assets && latest.assets.length
-						? _('Latest release:') + ' '
-						: _('Found a release without APK assets:') + ' '
-				));
-				status.appendChild(link);
-				status.className = 'fn-update-status fn-update-status-' + (latest.assets && latest.assets.length ? 'success' : 'info');
+				const plan = freeneticReleasePlan(latest, updater, state.packages || []);
+				if (!plan.compatible) {
+					setReleaseStatus(_('The latest release has no complete update for this router:'), latest, 'error');
+					return;
+				}
+
+				if (plan.comparison === 0) {
+					setReleaseStatus(_('Freenetic is up to date:'), latest, 'success');
+					return;
+				}
+				if (plan.comparison < 0) {
+					setReleaseStatus(_('The installed build is newer than:'), latest, 'info');
+					return;
+				}
+
+				pendingPlan = Object.assign({ release: latest }, plan);
+				installButton.hidden = false;
+				setReleaseStatus(plan.comparison == null
+					? _('A compatible Freenetic release is available:')
+					: _('Freenetic update is available:'), latest, 'success');
 			}).catch(error => {
 				setStatus(_('Update check failed: %s').format(error.message || error), 'error');
 			}).finally(() => {
-				checkButton.disabled = false;
+				setBusy(false);
 				dom_content(checkButton, _('Check for updates'));
 			});
+		});
+
+		installButton.addEventListener('click', () => {
+			const plan = pendingPlan;
+			if (!plan)
+				return;
+
+			ui.showModal(_('Install Freenetic update?'), [
+				E('p', {}, _('The theme, interface, Russian translations and fnc will be updated together to %s. Router settings will be preserved.').format(plan.tag)),
+				E('p', {}, _('Do not power off the router while packages are being installed.')),
+				E('div', { class: 'button-row' }, [
+					E('button', { class: 'btn', click: ui.hideModal }, _('Cancel')),
+					E('button', {
+						class: 'btn cbi-button-positive',
+						click: ui.createHandlerFn(this, () => {
+							setBusy(true);
+							ui.showModal(_('Updating Freenetic…'), [
+								E('p', { class: 'spinning' }, _('Downloading and verifying the release. Do not power off the router.'))
+							]);
+
+							return fs.exec_direct(FREENETIC_UPDATE_HELPER, [ 'install', plan.tag ], 'json')
+								.then(result => {
+									if (!result || result.ok !== true) {
+										const error = new Error(result && result.error || _('The release installer failed.'));
+										error.freeneticConfirmedFailure = true;
+										throw error;
+									}
+									ui.showModal(_('Freenetic was updated'), [
+										E('p', {}, _('The interface update was installed successfully. Reload the page to use the new version.')),
+										E('div', { class: 'button-row' }, [
+											E('button', {
+												class: 'btn cbi-button-positive',
+												click: () => window.location.reload()
+											}, _('Reload interface'))
+										])
+									]);
+								})
+								.catch(error => {
+									const confirmed = error && error.freeneticConfirmedFailure;
+									ui.showModal(confirmed ? _('Freenetic update failed') : _('Update connection was interrupted'), [
+										E('p', {}, confirmed
+											? _('The update was not installed: %s').format(error.message || error)
+											: _('rpcd may have restarted while applying the update. Reload the interface and check the installed version.')),
+										E('div', { class: 'button-row' }, [
+											E('button', { class: 'btn', click: ui.hideModal }, _('Close')),
+											E('button', {
+												class: 'btn cbi-button-positive',
+												click: () => window.location.reload()
+											}, _('Reload interface'))
+										])
+									]);
+								})
+								.finally(() => setBusy(false));
+						})
+					}, _('Install'))
+				])
+			]);
 		});
 
 		const sourceLink = E('a', {
@@ -1582,7 +1753,7 @@ return view.extend({
 			rel: 'noopener'
 		}, 'github.com/unisequence/freenetic');
 		const channelValue = E('div', { class: 'fn-update-channel-value' }, channelSelect);
-		const checkValue = E('div', { class: 'fn-update-actions' }, [ checkButton, status ]);
+		const checkValue = E('div', { class: 'fn-update-actions' }, [ checkButton, installButton, status ]);
 
 		return [
 			groupTitle(_('Freenetic'), 'freenetic'),

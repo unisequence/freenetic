@@ -1,0 +1,185 @@
+#!/bin/sh
+# Install a pinned Freenetic release selected by the LuCI dashboard.
+# The browser supplies only a release tag; repository and asset URLs stay
+# fixed here, while the release installer verifies every downloaded asset.
+set -u
+
+JSHN=/usr/share/libubox/jshn.sh
+RAW_BASE_URL=https://raw.githubusercontent.com/unisequence/freenetic
+RELEASES_BASE_URL=https://github.com/unisequence/freenetic/releases/download
+MAX_INSTALLER_BYTES=262144
+
+if [ ! -r "$JSHN" ]; then
+	printf '%s\n' '{"ok":false,"error":"JSON support is unavailable"}'
+	exit 0
+fi
+# shellcheck disable=SC1090
+. "$JSHN"
+
+reply_error() {
+	json_init
+	json_add_boolean ok 0
+	json_add_string error "$*"
+	json_dump
+}
+
+valid_tag() {
+	printf '%s\n' "$1" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9][A-Za-z0-9.-]*)?$'
+}
+
+status() {
+	package_manager=
+	if command -v apk >/dev/null 2>&1; then
+		package_manager=apk
+	elif command -v opkg >/dev/null 2>&1; then
+		package_manager=opkg
+	fi
+
+	target=
+	if command -v ubus >/dev/null 2>&1 && command -v jsonfilter >/dev/null 2>&1; then
+		board_json="$(ubus call system board 2>/dev/null || true)"
+		target="$(printf '%s\n' "$board_json" | jsonfilter -e '@.release.target' 2>/dev/null || true)"
+	fi
+
+	asset_suffix=
+	case "$target" in
+		mediatek/filogic) asset_suffix=aarch64_cortex-a53 ;;
+		ramips/mt7621) asset_suffix=mipsel_24kc ;;
+	esac
+
+	installed_release=
+	if command -v uci >/dev/null 2>&1; then
+		installed_release="$(uci -q get freenetic.updates.installed_release 2>/dev/null || true)"
+	fi
+
+	json_init
+	json_add_boolean ok 1
+	json_add_string package_manager "$package_manager"
+	json_add_string target "$target"
+	json_add_string asset_suffix "$asset_suffix"
+	json_add_string installed_release "$installed_release"
+	if [ -n "$package_manager" ] && [ -n "$asset_suffix" ]; then
+		json_add_boolean can_update 1
+	else
+		json_add_boolean can_update 0
+		if [ -z "$package_manager" ]; then
+			json_add_string error "Neither apk nor opkg is installed"
+		else
+			json_add_string error "Unsupported OpenWrt target: ${target:-unknown}"
+		fi
+	fi
+	json_dump
+}
+
+run_update() {
+	tag="$1"
+	stage_dir="$2"
+	case "$stage_dir" in
+		/tmp/freenetic-self-update.??????) ;;
+		*) reply_error "Invalid update staging directory"; exit 0 ;;
+	esac
+
+	installer="$stage_dir/install.sh"
+	log="$stage_dir/install.log"
+	installer_url="$RAW_BASE_URL/$tag/install.sh"
+
+	if ! command -v wget >/dev/null 2>&1; then
+		reply_error "wget is not installed"
+		rm -rf "$stage_dir"
+		exit 0
+	fi
+	if ! wget -qO "$installer" "$installer_url"; then
+		reply_error "Cannot download the pinned release installer"
+		rm -rf "$stage_dir"
+		exit 0
+	fi
+
+	installer_bytes="$(wc -c < "$installer" 2>/dev/null || true)"
+	case "$installer_bytes" in
+		''|*[!0-9]*) installer_bytes=0 ;;
+	esac
+	if [ "$installer_bytes" -le 0 ] || [ "$installer_bytes" -gt "$MAX_INSTALLER_BYTES" ]; then
+		reply_error "The release installer has an invalid size"
+		rm -rf "$stage_dir"
+		exit 0
+	fi
+	if ! grep -Fqx "RELEASE_TAG=\"$tag\"" "$installer"; then
+		reply_error "The release installer does not match the selected tag"
+		rm -rf "$stage_dir"
+		exit 0
+	fi
+	if ! sh -n "$installer"; then
+		reply_error "The release installer has invalid shell syntax"
+		rm -rf "$stage_dir"
+		exit 0
+	fi
+
+	# Serialize with the stock LuCI package manager. The lock descriptor is
+	# inherited by install.sh and remains held through all package operations.
+	if command -v flock >/dev/null 2>&1; then
+		exec 200>/tmp/ipkg.lock
+		if ! flock -x 200; then
+			reply_error "Cannot acquire the package manager lock"
+			rm -rf "$stage_dir"
+			exit 0
+		fi
+	fi
+
+	if ! FREENETIC_RELEASE_BASE_URL="$RELEASES_BASE_URL/$tag" sh "$installer" >"$log" 2>&1; then
+		detail="$(tail -n 12 "$log" 2>/dev/null || true)"
+		[ -n "$detail" ] || detail="The release installer failed without output"
+		reply_error "$detail"
+		rm -rf "$stage_dir"
+		exit 0
+	fi
+
+	if command -v uci >/dev/null 2>&1; then
+		uci -q set freenetic.updates=freenetic
+		uci -q set "freenetic.updates.installed_release=$tag"
+		uci -q commit freenetic
+	fi
+	detail="$(tail -n 12 "$log" 2>/dev/null || true)"
+	json_init
+	json_add_boolean ok 1
+	json_add_string tag "$tag"
+	json_add_string detail "$detail"
+	json_dump
+	rm -rf "$stage_dir"
+}
+
+action="${1:-}"
+case "$action" in
+	status)
+		status
+		;;
+	install)
+		tag="${2:-}"
+		if ! valid_tag "$tag"; then
+			reply_error "Invalid release tag"
+			exit 0
+		fi
+		stage_dir="$(mktemp -d /tmp/freenetic-self-update.XXXXXX 2>/dev/null || true)"
+		if [ -z "$stage_dir" ]; then
+			reply_error "Cannot create the update staging directory"
+			exit 0
+		fi
+		if ! cp "$0" "$stage_dir/runner" || ! chmod 0700 "$stage_dir/runner"; then
+			reply_error "Cannot stage the update runner"
+			rm -rf "$stage_dir"
+			exit 0
+		fi
+		exec "$stage_dir/runner" run "$tag" "$stage_dir"
+		;;
+	run)
+		tag="${2:-}"
+		stage_dir="${3:-}"
+		if ! valid_tag "$tag"; then
+			reply_error "Invalid release tag"
+			exit 0
+		fi
+		run_update "$tag" "$stage_dir"
+		;;
+	*)
+		reply_error "Usage: $0 {status|install TAG}"
+		;;
+esac

@@ -6,7 +6,18 @@ which they became user-visible.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- The dashboard can now check the selected Freenetic release channel and
+  install a compatible, complete theme/application/translation/CLI update
+  directly from the interface. The privileged updater accepts only pinned
+  releases from the Freenetic GitHub repository and delegates integrity
+  verification to the release installer.
+
+### Improved
+
+- Theme and application packages now derive one shared source revision, so
+  every self-update release is an internally consistent four-package set.
 
 ## [0.2.1] — 2026-09-12
 

@@ -523,6 +523,68 @@ msgstr "Последний выпуск:"
 msgid "Update check failed: %s"
 msgstr "Не удалось проверить обновления: %s"
 
+msgid "Updates are unavailable on this router."
+msgstr "Обновление Freenetic недоступно на этом роутере."
+
+msgid "Install update"
+msgstr "Установить обновление"
+
+msgid "The latest release has no complete update for this router:"
+msgstr "В последнем выпуске нет полного комплекта обновления для этого роутера:"
+
+msgid "Freenetic is up to date:"
+msgstr "Установлена актуальная версия Freenetic:"
+
+msgid "The installed build is newer than:"
+msgstr "Установленная сборка новее выпуска:"
+
+msgid "A compatible Freenetic release is available:"
+msgstr "Доступен совместимый выпуск Freenetic:"
+
+msgid "Freenetic update is available:"
+msgstr "Доступно обновление Freenetic:"
+
+msgid "Install Freenetic update?"
+msgstr "Установить обновление Freenetic?"
+
+#, javascript-format
+msgid "The theme, interface, Russian translations and fnc will be updated together to %s. Router settings will be preserved."
+msgstr "Тема, интерфейс, русский перевод и fnc будут вместе обновлены до %s. Настройки роутера сохранятся."
+
+msgid "Do not power off the router while packages are being installed."
+msgstr "Не выключайте роутер во время установки пакетов."
+
+msgid "Updating Freenetic…"
+msgstr "Обновление Freenetic…"
+
+msgid "Downloading and verifying the release. Do not power off the router."
+msgstr "Загрузка и проверка выпуска. Не выключайте роутер."
+
+msgid "The release installer failed."
+msgstr "Установщик выпуска завершился с ошибкой."
+
+msgid "Freenetic was updated"
+msgstr "Freenetic обновлён"
+
+msgid "The interface update was installed successfully. Reload the page to use the new version."
+msgstr "Обновление интерфейса успешно установлено. Перезагрузите страницу, чтобы использовать новую версию."
+
+msgid "Reload interface"
+msgstr "Перезагрузить интерфейс"
+
+msgid "Freenetic update failed"
+msgstr "Не удалось обновить Freenetic"
+
+msgid "Update connection was interrupted"
+msgstr "Соединение при обновлении прервалось"
+
+#, javascript-format
+msgid "The update was not installed: %s"
+msgstr "Обновление не установлено: %s"
+
+msgid "rpcd may have restarted while applying the update. Reload the interface and check the installed version."
+msgstr "Во время установки мог перезапуститься rpcd. Перезагрузите интерфейс и проверьте установленную версию."
+
 # Applications
 msgid "Recommended"
 msgstr "Рекомендуемые"

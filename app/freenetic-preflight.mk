@@ -1,3 +1,8 @@
+# Both LuCI packages are released and updated as one atomic Freenetic UI set.
+# Derive their version from the same source paths so a change in either half
+# cannot produce release assets with mismatched versions.
+FREENETIC_VERSION_PATHS:=app/luci-app-freenetic app/luci-theme-freenetic app/freenetic-preflight.mk web/application web/theme luci-theme-freenetic
+
 # Shared package pre-install gate. Keep this independent of files shipped by
 # the package itself: the package manager runs preinst before those files exist
 # on a fresh install.
