@@ -116,9 +116,13 @@ check-release-tree:
 check-package-index:
 	@node "$(APP_DIR)/check-release.js" "$(OPENWRT_DIR)/bin"
 
-# This deliberately builds the package index only after the source tree has
-# passed the clean-tree gate. It stays local; publishing remains explicit.
-release: check-release-tree check-package
+# This deliberately cleans Freenetic's package staging after the source tree
+# passes the clean-tree gate. OpenWrt may otherwise stamp a new package version
+# around files left by an earlier compile. Publishing remains explicit.
+release: check-release-tree
+	@$(MAKE) -C "$(OPENWRT_DIR)" DL_DIR="$(DL_DIR)" \
+		package/luci-theme-freenetic/clean package/luci-app-freenetic/clean
+	@$(MAKE) check-package OPENWRT_DIR="$(OPENWRT_DIR)" DL_DIR="$(DL_DIR)"
 	@$(MAKE) -C "$(OPENWRT_DIR)" DL_DIR="$(DL_DIR)" package/index
 	@$(MAKE) stage-mt7621-packages OPENWRT_DIR="$(OPENWRT_DIR)" DL_DIR="$(DL_DIR)"
 	@$(MAKE) check-package-index OPENWRT_DIR="$(OPENWRT_DIR)" DL_DIR="$(DL_DIR)"

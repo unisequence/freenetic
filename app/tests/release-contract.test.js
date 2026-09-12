@@ -44,8 +44,12 @@ assert.match(makefile, /CONFIG_PACKAGE_luci-i18n-theme-freenetic-ru=m/,
 	'package checks must build the theme translation APK');
 assert.match(makefile, /CONFIG_PACKAGE_luci-i18n-freenetic-ru=m/,
 	'package checks must build the application translation APK');
-assert.match(makefile, /^release: check-release-tree check-package$/m,
+assert.match(makefile, /^release: check-release-tree$/m,
 	'the release target must run the clean-tree guard before package/index generation');
+assert.match(makefile, /package\/luci-theme-freenetic\/clean package\/luci-app-freenetic\/clean/,
+	'the release target must clear stale OpenWrt package staging before compilation');
+assert.match(makefile, /\$\(MAKE\) check-package OPENWRT_DIR=/,
+	'the release target must compile packages after clearing stale staging');
 assert.match(makefile, /stage-mt7621-packages OPENWRT_DIR=/,
 	'the release target must generate the MT7621 package index');
 
