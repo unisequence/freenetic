@@ -77,5 +77,7 @@ assert.match(css, /body\[data-page="admin-system-package-manager"\] #maincontent
 	'the legacy package manager toolbar must reflow on tablets and phones');
 assert.match(css, /\.fn-mac-value\s*\{[\s\S]*?white-space:\s*nowrap/,
 	'MAC addresses must stay on one line');
+assert.match(css, /\.fn-client-table > \.fn-table-row > \*\s*\{[\s\S]*?align-self:\s*stretch/,
+	'client table cells must fill their shared grid row so separators stay aligned');
 
 console.log('OpenWrt 24.10 compatibility contract: ok');

@@ -2112,7 +2112,14 @@ body.modal-overlay-active { overflow: hidden; }
 	.fn-client-table > .fn-table-row > * {
 		padding: 10px 4px;
 		border-bottom: 1px solid var(--fn-border);
-		align-self: center;
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+	}
+	.fn-client-table > .fn-table-row > :nth-child(2) {
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
 	}
 	.fn-client-table > .fn-table-row.fn-table-head > * { padding-top: 10px; padding-bottom: 10px; }
 	.fn-client-table > .fn-table-row:last-of-type > * { border-bottom: none; }
