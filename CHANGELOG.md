@@ -8,6 +8,46 @@ which they became user-visible.
 
 No changes yet.
 
+## [0.2.1] — 2026-09-12
+
+### Added
+
+- Added the `v0.2.x-Legacy.24.10.x` release line for OpenWrt 24.10.x. The
+  Freenetic source remains shared with `v0.2.x-Stable.25.12.x`; releases are
+  built and verified against both package-manager generations.
+- The one-shot installer now detects `apk` or `opkg`, downloads the matching
+  APK or IPK set, verifies every asset by SHA-256 and installs the same
+  Freenetic package revision on either release line.
+
+### Improved
+
+- Package status, installation and removal work through either OpenWrt's
+  current `apk` stack or the 24.10 `opkg` compatibility path.
+- Theme activation, LuCI cache cleanup, network widgets and responsive layout
+  now tolerate both current LuCI markup and the older 24.10 runtime structure.
+- Raw ubus failures now expose the actual JSON-RPC error instead of reporting
+  every rejected request as a malformed reply.
+
+### Fixed
+
+- Added the explicit rpcd permission required by OpenWrt 24.10 for raw
+  `uci.commit` calls. Dashboard Wi-Fi toggles now complete the
+  `uci.set`/`uci.commit`/`network.reload` sequence without an `Access denied`
+  failure.
+- Hardened firewall, routing, Wi-Fi policy, dashboard and traffic views
+  against API and response-shape differences present in LuCI 24.10.
+
+### Verification
+
+- OpenWrt 24.10.8 initramfs was TFTP-booted on a Globitel BT-RB300 without
+  writing NAND. All four Legacy IPKs report revision
+  `26.255.53418~deb4b84`.
+- The real dashboard Wi-Fi switch was exercised in both directions; every
+  raw ubus call returned success and the original radio configuration was
+  restored afterward.
+- All 17 exposed pages passed desktop light, desktop dark and mobile dark
+  browser audits (51 combinations), and all 16 contract/unit tests passed.
+
 ## [0.2.0] — 2026-09-11
 
 ### Added

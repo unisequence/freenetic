@@ -8,7 +8,7 @@ const installer = fs.readFileSync(path.join(__dirname, '../../install.sh'), 'utf
 
 assert(installer.startsWith('#!/bin/sh'), 'installer must be POSIX sh');
 for (const marker of [
-	"RELEASE_TAG=\"v0.2.0\"",
+	"RELEASE_TAG=\"v0.2.1\"",
 	"mediatek/filogic",
 	"ramips/mt7621",
 	"aarch64_cortex-a53",
@@ -17,9 +17,15 @@ for (const marker of [
 	"luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk",
 	"luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk",
 	"luci-i18n-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk",
+	"luci-theme-freenetic-${ASSET_VERSION}-all.ipk",
+	"luci-app-freenetic-${ASSET_VERSION}-all.ipk",
+	"luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-all.ipk",
+	"luci-i18n-freenetic-ru-${ASSET_VERSION}-all.ipk",
 	"FNC_BIN=\"fnc-${ASSET_VERSION}-${target_suffix}\"",
 	"sha256sum",
 	"apk add --allow-untrusted",
+	"opkg install",
+	"neither apk nor opkg is installed",
 	"link_runtime_library",
 	"LD_LIBRARY_PATH=\"/usr/lib/freenetic:/lib:/usr/lib",
 	"/usr/lib/freenetic/fnc.bin",

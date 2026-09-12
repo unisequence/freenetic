@@ -1,16 +1,16 @@
 #!/bin/sh
-# Freenetic one-shot installer for supported apk-based OpenWrt routers.
+# Freenetic one-shot installer for supported OpenWrt routers.
 #
 # Usage:
-#   sh <(wget -qO - 'https://raw.githubusercontent.com/unisequence/freenetic/main/install.sh')
+#   wget -qO- 'https://raw.githubusercontent.com/unisequence/freenetic/v0.2.1/install.sh' | sh
 #
 # The release and checksums are deliberately pinned. Do not install a
 # partially downloaded or silently replaced package.
 set -eu
 
-RELEASE_TAG="v0.2.0"
+RELEASE_TAG="v0.2.1"
 # GitHub normalizes the '~' in the OpenWrt-derived package version to '.'.
-ASSET_VERSION="26.254.66317.d5bb35a"
+ASSET_VERSION="26.255.53418.deb4b84"
 RELEASE_BASE_URL="${FREENETIC_RELEASE_BASE_URL:-https://github.com/unisequence/freenetic/releases/download/$RELEASE_TAG}"
 
 MIN_RAM_MIB=128
@@ -35,10 +35,18 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-for command_name in apk awk df grep jsonfilter sha256sum ubus uname wget; do
+for command_name in awk df grep jsonfilter sha256sum ubus uname wget; do
 	command -v "$command_name" >/dev/null 2>&1 ||
 		fail "required command is missing: $command_name"
 done
+
+if command -v apk >/dev/null 2>&1; then
+	package_manager=apk
+elif command -v opkg >/dev/null 2>&1; then
+	package_manager=opkg
+else
+	fail "neither apk nor opkg is installed"
+fi
 
 TMP_DIR="${TMPDIR:-/tmp}/freenetic-install.$$"
 mkdir "$TMP_DIR" 2>/dev/null || fail "cannot create temporary directory"
@@ -129,11 +137,30 @@ overlay_mib=$((overlay_free_kib / 1024))
 
 info "preflight passed: $model, $target, ${release_arch:-$machine}, ${cpu_cores} cores, ${ram_mib} MiB RAM, ${overlay_mib} MiB free"
 
-THEME_APK="luci-theme-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
-APP_APK="luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
-THEME_RU_APK="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
-APP_RU_APK="luci-i18n-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
 FNC_BIN="fnc-${ASSET_VERSION}-${target_suffix}"
+
+case "$package_manager" in
+	apk)
+		THEME_PACKAGE="luci-theme-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
+		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
+		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
+		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
+		theme_sha256="045c57497d32bf1856889d887d6de68102f402aab26fbb14e9abc5cd797dd05f"
+		app_sha256="8b628559f01ffee880f6531853c448f3387495712b31adb094a00165a6135183"
+		theme_ru_sha256="f4d995f071b0062b6318a4d92106b0e7ae3d058f9f499cc4d8d5adaa9a04c5ce"
+		app_ru_sha256="935c32fbedc965f87505df60d1a1e9818eb0732ca3678a7fba01a2f50baee706"
+		;;
+	opkg)
+		THEME_PACKAGE="luci-theme-freenetic-${ASSET_VERSION}-all.ipk"
+		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-all.ipk"
+		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-all.ipk"
+		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-all.ipk"
+		theme_sha256="7fa611042e3e14536f03b6969815648503c9d2d728cc87e52be2f0af45560d4c"
+		app_sha256="5fa900ddbc58fc95ad033bbf5f2426858a56b7e9313e8a1068d3a54799563187"
+		theme_ru_sha256="645bcca53840e366143f3aef30e33216a8ea192348983635bf9e5119c41945d6"
+		app_ru_sha256="7c4a453b9da2b5bad7b0550762cda593b91290adf7bb376a8195dcb02f86152d"
+		;;
+esac
 
 download_checked() {
 	asset_name="$1"
@@ -150,23 +177,32 @@ download_checked() {
 		fail "SHA-256 mismatch for $asset_name"
 }
 
-# APKs are noarch, but each target feed has its own GitHub asset name so the
-# installer can select the same target path as apk's package index.
-download_checked "$THEME_APK" "109b3f53c820eeff73a8c1dcf3c02dfd83b97d04db422726f96c1303c797ac60"
-download_checked "$APP_APK" "990e1249124bed929272b21a8c3d49bc5208214ce846c5bebf9fc6f027003af8"
-download_checked "$THEME_RU_APK" "d3532a80b514a42b4c6fd5f3991c0bbfe9bc4a35ccf0e15ba8f7e738827f76c8"
-download_checked "$APP_RU_APK" "b3266e7d593813d012b61fc5551e68b6912d049348a9dcf841ec46f85bfe8cba"
+# APKs are mirrored under each target feed name, while opkg uses the common
+# all-architecture IPK built and tested on the OpenWrt 24.10.x line.
+download_checked "$THEME_PACKAGE" "$theme_sha256"
+download_checked "$APP_PACKAGE" "$app_sha256"
+download_checked "$THEME_RU_PACKAGE" "$theme_ru_sha256"
+download_checked "$APP_RU_PACKAGE" "$app_ru_sha256"
 download_checked "$FNC_BIN" "$fnc_sha256"
 
 info "installing LuCI packages"
-# v0.2.0 APKs are built without a device-side signing key. Their embedded
-# checksums above protect the download; allow apk to accept these local files.
-apk add --allow-untrusted \
-	"$TMP_DIR/$THEME_APK" \
-	"$TMP_DIR/$APP_APK" \
-	"$TMP_DIR/$THEME_RU_APK" \
-	"$TMP_DIR/$APP_RU_APK" ||
-	fail "apk package installation failed"
+if [ "$package_manager" = apk ]; then
+	# Release APKs are built without a device-side signing key. Their embedded
+	# checksums above protect the download; allow apk to accept the local files.
+	apk add --allow-untrusted \
+		"$TMP_DIR/$THEME_PACKAGE" \
+		"$TMP_DIR/$APP_PACKAGE" \
+		"$TMP_DIR/$THEME_RU_PACKAGE" \
+		"$TMP_DIR/$APP_RU_PACKAGE" ||
+		fail "apk package installation failed"
+else
+	opkg install \
+		"$TMP_DIR/$THEME_PACKAGE" \
+		"$TMP_DIR/$APP_PACKAGE" \
+		"$TMP_DIR/$THEME_RU_PACKAGE" \
+		"$TMP_DIR/$APP_RU_PACKAGE" ||
+		fail "opkg package installation failed"
+fi
 
 # LuCI caches the resolved menu tree, including depends.uci results. An APK
 # upgrade can leave a previous tree in /tmp, making only the ungated groups
@@ -235,6 +271,6 @@ if ! /usr/bin/fnc show version >/dev/null 2>&1; then
 	fail "fnc was installed but could not start with the router's runtime libraries"
 fi
 
-info "installed Freenetic $RELEASE_TAG for $target"
+info "installed Freenetic $RELEASE_TAG for $target using $package_manager"
 info "fnc is available as /usr/bin/fnc (binary: /usr/lib/freenetic/fnc.bin)"
 info "Russian translations are installed; select Русский in LuCI if needed"
