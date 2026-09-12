@@ -13,6 +13,10 @@ assert.doesNotMatch(dashboard, /disabled:\s*!updaterReady/,
 	'LuCI E() must not render disabled="false", which still disables the check button');
 assert.match(dashboard, /checkButton\.disabled = !updaterReady/,
 	'initial updater availability must be applied through the DOM boolean property');
+assert.match(dashboard, /installButton\.style\.display = 'none'/,
+	'theme button display rules must not override the hidden update action');
+assert.match(dashboard, /installButton\.style\.display = ''/,
+	'a compatible release must explicitly reveal the update action');
 const prefix = dashboard.slice(0, dashboard.indexOf('function svgIcon'));
 const helpers = new Function('rpc', prefix +
 	'\nreturn { freeneticBuildVersion, compareFreeneticBuilds, freeneticReleasePlan };')({ call() {} });

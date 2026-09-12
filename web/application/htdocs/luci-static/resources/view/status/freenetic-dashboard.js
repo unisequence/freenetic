@@ -1591,7 +1591,8 @@ return view.extend({
 		const installButton = E('button', {
 			type: 'button',
 			class: 'fn-settings-btn cbi-button-positive',
-			hidden: true
+			hidden: true,
+			style: 'display:none'
 		}, _('Install update'));
 		let pendingPlan = null;
 
@@ -1613,6 +1614,7 @@ return view.extend({
 		const resetPlan = () => {
 			pendingPlan = null;
 			installButton.hidden = true;
+			installButton.style.display = 'none';
 		};
 		const setBusy = busy => {
 			channelSelect.disabled = busy;
@@ -1682,6 +1684,7 @@ return view.extend({
 
 				pendingPlan = Object.assign({ release: latest }, plan);
 				installButton.hidden = false;
+				installButton.style.display = '';
 				setReleaseStatus(plan.comparison == null
 					? _('A compatible Freenetic release is available:')
 					: _('Freenetic update is available:'), latest, 'success');
