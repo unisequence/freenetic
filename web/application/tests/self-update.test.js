@@ -7,6 +7,8 @@ const path = require('node:path');
 const root = path.join(__dirname, '..', '..', '..');
 const dashboard = fs.readFileSync(path.join(root, 'web', 'application', 'htdocs',
 	'luci-static', 'resources', 'view', 'status', 'freenetic-dashboard.js'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs', 'luci-static',
+	'freenetic', 'cascade.css'), 'utf8');
 assert.match(dashboard, /packages: updaterPackages\.length \? updaterPackages : packages/,
 	'dashboard must use helper package versions when legacy package-manager-call cannot return JSON');
 assert.doesNotMatch(dashboard, /disabled:\s*!updaterReady/,
@@ -17,9 +19,20 @@ assert.match(dashboard, /installButton\.style\.display = 'none'/,
 	'theme button display rules must not override the hidden update action');
 assert.match(dashboard, /installButton\.style\.display = ''/,
 	'a compatible release must explicitly reveal the update action');
+assert.match(dashboard, /class: 'fn-freenetic-update-panel'/,
+	'the dashboard must group Freenetic build details and update controls in one panel');
+assert.match(css, /\.fn-freenetic-update-panel\s*\{[\s\S]*?\.fn-update-status-info::before/,
+	'the Freenetic update panel must style its overview, controls and status states');
 const prefix = dashboard.slice(0, dashboard.indexOf('function svgIcon'));
 const helpers = new Function('rpc', prefix +
 	'\nreturn { freeneticBuildVersion, compareFreeneticBuilds, freeneticReleasePlan };')({ call() {} });
+const formatterSource = dashboard.slice(
+	dashboard.indexOf('function freeneticBuildRevision'),
+	dashboard.indexOf('function fmtMB')
+);
+const displayVersion = dashboard.match(/const FREENETIC_DISPLAY_VERSION = '([^']+)'/)[1];
+const formatFreeneticVersion = new Function('_', 'FREENETIC_DISPLAY_VERSION', formatterSource +
+	'\nreturn formatFreeneticVersion;')(value => value, displayVersion);
 
 const version = '26.300.12345.abc1234';
 const packageNames = [
@@ -45,6 +58,15 @@ const release = (packageManager, assetSuffix, selectedVersion = version) => {
 
 assert.deepEqual(helpers.freeneticBuildVersion('26.255.53418~deb4b84-r1'), [ 26, 255, 53418 ]);
 assert.equal(helpers.compareFreeneticBuilds([ 26, 300, 1 ], [ 26, 255, 60000 ]), 1);
+assert.equal(displayVersion, 'v0.2.x-dev',
+	'the dashboard development label must identify the service branch without promising its next patch number');
+assert.equal(formatFreeneticVersion(installed(version)), 'v0.2.x-dev · abc1234',
+	'identical component builds must show one short revision');
+assert.match(formatFreeneticVersion([
+	{ name: packageNames[0], version },
+	{ name: packageNames[1], version: '26.299.00001~def5678' }
+]), /theme abc1234 \/ app def5678/,
+	'mismatched component builds must retain their package names');
 
 const apkPlan = helpers.freeneticReleasePlan(
 	release('apk', 'aarch64_cortex-a53'),

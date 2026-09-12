@@ -2677,11 +2677,6 @@ body.modal-overlay-active { overflow: hidden; }
 		margin-top: 4px;
 	}
 	.fn-system-card .fn-meter-value { font-size: 1rem; }
-	.fn-system-card .fn-update-actions .fn-settings-btn {
-		font-size: .9rem;
-		padding: 5px 10px;
-	}
-	.fn-system-card .fn-update-status { font-size: .9rem; }
 }
 
 /* Stacked label/value rows (used by "My Networks & Wi-Fi"), as opposed to
@@ -2690,15 +2685,76 @@ body.modal-overlay-active { overflow: hidden; }
 .fn-info-row { display: flex; gap: 16px; font-size: 0.8125rem; align-items: center; }
 .fn-info-row .fn-info-label { flex: 0 0 150px; color: var(--fn-text-secondary); }
 .fn-info-row .fn-info-value { flex: 1 1 auto; color: var(--fn-text); word-break: break-word; }
-.fn-update-channel-value { display: flex; align-items: center; gap: 8px; }
-.fn-update-channel { min-width: 120px; }
-.fn-update-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.fn-update-actions .fn-settings-btn { width: auto; flex: 0 0 auto; padding: 6px 12px; font-size: 1rem; }
-.fn-update-status { color: var(--fn-text-secondary); font-size: 1rem; }
-.fn-update-status a { color: var(--fn-accent); }
+.fn-freenetic-update-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.fn-update-overview {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+.fn-update-build-version {
+	color: var(--fn-text);
+	font: 500 .9375rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+	overflow-wrap: anywhere;
+}
+.fn-update-repository {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	flex: 0 0 auto;
+	color: var(--fn-accent);
+	font-size: .875rem;
+	font-weight: 500;
+	line-height: 1.2;
+	text-decoration: none;
+}
+.fn-update-repository:hover { text-decoration: underline; }
+.fn-update-external { font-size: .85em; }
+.fn-update-channel { min-width: 130px; }
+.fn-update-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.fn-update-actions .fn-settings-btn {
+	width: auto;
+	min-height: 38px;
+	flex: 0 0 auto;
+	padding: 6px 12px;
+	font-size: 1rem;
+}
+.fn-update-status {
+	position: relative;
+	min-height: 20px;
+	padding-left: 15px;
+	color: var(--fn-text-secondary);
+	font-size: .875rem;
+	line-height: 1.4;
+}
+.fn-update-status::before {
+	content: '';
+	position: absolute;
+	top: .48em;
+	left: 1px;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--fn-text-disabled);
+}
+.fn-update-status a { color: currentColor; font-weight: 600; }
 .fn-update-status-success { color: var(--fn-status-ok); }
+.fn-update-status-success::before { background: var(--fn-status-ok); }
 .fn-update-status-error { color: var(--fn-danger); }
-.fn-update-status-pending { color: var(--fn-text-secondary); }
+.fn-update-status-error::before { background: var(--fn-danger); }
+.fn-update-status-pending { color: var(--fn-warning); }
+.fn-update-status-pending::before { background: var(--fn-warning); }
+.fn-update-status-info { color: var(--fn-accent); }
+.fn-update-status-info::before { background: var(--fn-accent); }
 
 /* Update controls stay readable even while the surrounding system values are
    scaled down on narrow screens. */
@@ -2706,7 +2762,7 @@ body.modal-overlay-active { overflow: hidden; }
 	font-size: 1.125rem;
 	line-height: 1.35;
 }
-.fn-system-card .fn-update-channel { font-size: 1.125rem; min-height: 40px; }
+.fn-system-card .fn-update-channel { font-size: 1rem; min-height: 38px; }
 .fn-system-card .fn-update-channel:disabled {
 	appearance: none;
 	-webkit-appearance: none;
@@ -2718,12 +2774,19 @@ body.modal-overlay-active { overflow: hidden; }
 	cursor: wait;
 }
 .fn-system-card .fn-update-actions .fn-settings-btn {
-	padding: 7px 14px;
-	font-size: 1.125rem;
+	padding: 6px 12px;
+	font-size: 1rem;
 }
 .fn-system-card .fn-update-status {
-	font-size: 1.125rem;
+	font-size: .875rem;
 	line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+	.fn-update-overview { flex-wrap: wrap; }
+	.fn-update-actions { align-items: stretch; flex-direction: column; width: 100%; }
+	.fn-system-card .fn-update-channel { width: 100%; }
+	.fn-update-actions .fn-settings-btn { width: 100%; }
 }
 
 /* "About System" card: label/meter/value rows (CPU, RAM) plus grouped

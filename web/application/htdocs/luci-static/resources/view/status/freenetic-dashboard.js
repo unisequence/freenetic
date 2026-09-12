@@ -34,6 +34,7 @@ const FREENETIC_REPOSITORY = 'https://github.com/unisequence/freenetic';
 const FREENETIC_RELEASES_API = 'https://api.github.com/repos/unisequence/freenetic/releases?per_page=30';
 const FREENETIC_UPDATE_HELPER = '/usr/libexec/freenetic-self-update';
 const FREENETIC_PACKAGE_NAMES = [ 'luci-theme-freenetic', 'luci-app-freenetic' ];
+const FREENETIC_DISPLAY_VERSION = 'v0.2.x-dev';
 const FREENETIC_RELEASE_PACKAGES = [
 	'luci-theme-freenetic',
 	'luci-app-freenetic',
@@ -486,12 +487,28 @@ function getFreeneticUpdateState() {
 	});
 }
 
-function formatFreeneticVersion(packages) {
-	const versions = packages
-		.filter(pkg => pkg.version)
-		.map(pkg => pkg.name.replace(/^luci-/, '') + ' ' + pkg.version);
+function freeneticBuildRevision(version) {
+	const match = String(version || '').match(/[.~]([0-9a-f]{7,})(?:-r\d+)?$/i);
+	return match ? match[1].slice(0, 7) : '';
+}
 
-	return versions.length ? versions.join(' · ') : _('Development build');
+function formatFreeneticVersion(packages) {
+	const versioned = packages.filter(pkg => pkg.version);
+	if (!versioned.length)
+		return _('Development build');
+
+	const revisions = versioned.map(pkg => freeneticBuildRevision(pkg.version));
+	const firstRevision = revisions[0];
+	if (firstRevision && revisions.every(revision => revision === firstRevision))
+		return FREENETIC_DISPLAY_VERSION + ' · ' + firstRevision;
+
+	if (versioned.every(pkg => pkg.version === versioned[0].version))
+		return FREENETIC_DISPLAY_VERSION;
+
+	return FREENETIC_DISPLAY_VERSION + ' · ' + versioned.map((pkg, index) => {
+		const name = pkg.name === 'luci-theme-freenetic' ? 'theme' : 'app';
+		return name + ' ' + (revisions[index] || pkg.version);
+	}).join(' / ');
 }
 
 function fmtMB(bytes) {
@@ -1579,9 +1596,14 @@ return view.extend({
 			E('option', { value: 'stable' }, _('Stable')),
 			E('option', { value: 'beta' }, _('Beta'))
 		]);
+		channelSelect.setAttribute('aria-label', _('Channel'));
 		channelSelect.value = channel;
 
-		const status = E('span', { class: 'fn-update-status' },
+		const status = E('div', {
+			class: 'fn-update-status',
+			role: 'status',
+			'aria-live': 'polite'
+		},
 			updaterReady ? _('Not checked yet.') : _('Updates are unavailable on this router.'));
 		const checkButton = E('button', {
 			type: 'button',
@@ -1754,19 +1776,32 @@ return view.extend({
 		});
 
 		const sourceLink = E('a', {
+			class: 'fn-update-repository',
 			href: FREENETIC_REPOSITORY,
 			target: '_blank',
-			rel: 'noopener'
-		}, 'github.com/unisequence/freenetic');
-		const channelValue = E('div', { class: 'fn-update-channel-value' }, channelSelect);
-		const checkValue = E('div', { class: 'fn-update-actions' }, [ checkButton, installButton, status ]);
+			rel: 'noopener',
+			title: FREENETIC_REPOSITORY
+		}, [
+			E('span', {}, 'GitHub'),
+			E('span', { class: 'fn-update-external', 'aria-hidden': 'true' }, '↗')
+		]);
+		const overview = E('div', { class: 'fn-update-overview' }, [
+			E('div', {
+				class: 'fn-update-build-version',
+				title: _('Installed build')
+			}, formatFreeneticVersion(state.packages || [])),
+			sourceLink
+		]);
+		const actions = E('div', { class: 'fn-update-actions' }, [ channelSelect, checkButton, installButton ]);
+		const panel = E('div', { class: 'fn-freenetic-update-panel' }, [
+			overview,
+			actions,
+			status
+		]);
 
 		return [
 			groupTitle(_('Freenetic'), 'freenetic'),
-			row(_('Installed'), E('div', { class: 'fn-info-value' }, formatFreeneticVersion(state.packages || []))),
-			row(_('Channel'), channelValue),
-			row(_('Repository'), sourceLink),
-			row(_('Updates'), checkValue)
+			panel
 		];
 	},
 

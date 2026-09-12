@@ -430,6 +430,9 @@ msgstr "Freenetic"
 msgid "Installed"
 msgstr "Установлено"
 
+msgid "Installed build"
+msgstr "Установленная сборка"
+
 msgid "Repository"
 msgstr "Репозиторий"
 
