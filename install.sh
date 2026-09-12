@@ -145,20 +145,20 @@ case "$package_manager" in
 		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
 		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
 		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
-		theme_sha256="9ad151ffc2f8214da44d671008bb39285242c269a6b74d936a50719b3fbf6d9b"
-		app_sha256="6d284a091f1e01189160addf39052849ddbc29dd59bf9ede7814982d0b3abf56"
-		theme_ru_sha256="c617aab871f4f52defa90c178e5b09838d9ede2be41a4b5f7955cf3e076858af"
-		app_ru_sha256="eb329413b9a1c6f5cf35826c2c920f4cddcc3f587253227614e8966dedfb7133"
+		theme_sha256="9abc8e848f1103c5ad5420465e548f1ca754bc4dfccde679b29c89967745ff23"
+		app_sha256="c83a60e5801daa21153b7a6d647d8d174429ec26f71b17971d1ac8e378a24586"
+		theme_ru_sha256="11957bcbf019871637de61da5865fab2e8c532e28f12701b09452fecdacc41b4"
+		app_ru_sha256="b45fd5bce501f16cafe8012619f702fb3bcb5ce2ff06a5c20d6f83bbb812ab25"
 		;;
 	opkg)
 		THEME_PACKAGE="luci-theme-freenetic-${ASSET_VERSION}-all.ipk"
 		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-all.ipk"
 		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-all.ipk"
 		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-all.ipk"
-		theme_sha256="f820d58c9817548ee3fc609109741bfe38173a86fc2ceeb42f99fdf709ebd068"
-		app_sha256="fc6180a5f4ec4bc99359ca170897693cc622e92e8fa9b6fa16047abce316848c"
-		theme_ru_sha256="676558419df202c996f6272cb2dd2cc57739569f81446bb20b63d6370dabe961"
-		app_ru_sha256="42a6b704bd8698bd5e1493bd2d7e39ca86b591742875cdc7d377801ed6af51c6"
+		theme_sha256="3c7a26634d084fced4bf7ba7b3b78c8f36479f863864eae45d6bd917d76fe483"
+		app_sha256="49ae01d19bd2c0dcf13b5d369bd2e0841d1ddd074e6abece37c5c7e15953959b"
+		theme_ru_sha256="0ee4bdb4de9920e55441336d51f958922e00f7896d2b63c4020f67904d7d0d49"
+		app_ru_sha256="02098c414d49fba9216c2bc8a7b156b3db3700d95bfffba3f9b71cfdb3e1b7ad"
 		;;
 esac
 
