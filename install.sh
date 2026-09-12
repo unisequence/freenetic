@@ -35,7 +35,7 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-for command_name in awk df grep jsonfilter sha256sum ubus uname wget; do
+for command_name in awk df grep jsonfilter sha256sum ubus uci uname wget; do
 	command -v "$command_name" >/dev/null 2>&1 ||
 		fail "required command is missing: $command_name"
 done
@@ -270,6 +270,14 @@ FNC_STAGED=""
 if ! /usr/bin/fnc show version >/dev/null 2>&1; then
 	fail "fnc was installed but could not start with the router's runtime libraries"
 fi
+
+# Keep one-shot installs and dashboard-triggered updates consistent. The
+# dashboard uses this tag for the friendly release label; package revisions
+# remain the authoritative signal for refreshed assets under the same tag.
+uci -q set freenetic.updates=freenetic || fail "cannot initialize update state"
+uci -q set "freenetic.updates.installed_release=$RELEASE_TAG" ||
+	fail "cannot record the installed release"
+uci -q commit freenetic || fail "cannot save the installed release"
 
 info "installed Freenetic $RELEASE_TAG for $target using $package_manager"
 info "fnc is available as /usr/bin/fnc (binary: /usr/lib/freenetic/fnc.bin)"

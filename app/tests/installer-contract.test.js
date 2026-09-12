@@ -32,7 +32,9 @@ for (const marker of [
 	"/usr/bin/fnc",
 	"/tmp/luci-indexcache*",
 	"/etc/init.d/rpcd",
-	"fnc show version"
+	"fnc show version",
+	"freenetic.updates.installed_release=$RELEASE_TAG",
+	"uci -q commit freenetic"
 ]) {
 	assert(installer.includes(marker), `installer is missing: ${marker}`);
 }

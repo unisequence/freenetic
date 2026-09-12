@@ -40,17 +40,18 @@ The thresholds can be raised for a particular environment with
 
 ## Quick install
 
-On a supported apk-based OpenWrt router, the current pinned release can be
-installed with one command from a local shell:
+On a supported OpenWrt router, the current pinned release can be installed
+with one POSIX-compatible command:
 
 ```sh
-sh <(wget -qO - 'https://raw.githubusercontent.com/unisequence/freenetic/main/install.sh')
+wget -qO- 'https://raw.githubusercontent.com/unisequence/freenetic/main/install.sh' | sh
 ```
 
 The installer checks the router before changing it, downloads the four LuCI
-APK packages and the matching `fnc` binary, verifies every download by
-SHA-256, and installs `fnc` as `/usr/bin/fnc`. The Russian packages are
-installed but the current LuCI language is not changed automatically.
+packages and the matching `fnc` binary, verifies every download by
+SHA-256, selects APK or IPK automatically, records the installed release and
+installs `fnc` as `/usr/bin/fnc`. The Russian packages are installed but the
+current LuCI language is not changed automatically.
 
 | | |
 |---|---|

@@ -32,6 +32,9 @@ No changes yet.
 - The dashboard now shows the persisted installed release tag (for example,
   `v0.2.2`) instead of labeling a release installation as `v0.2.x-dev`.
   The development label and source hash remain available for untagged builds.
+- The one-shot installer now persists its pinned release tag, so installations
+  started from either `main/install.sh` or a tagged installer receive the same
+  release identity as updates started from the dashboard.
 - Wi-Fi clients are now identified from the active `iwinfo` association list
   instead of the occasionally incomplete `network.wireless` ubus response.
   Active ARP state distinguishes wired clients from stale DHCP leases in both
