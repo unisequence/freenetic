@@ -49,11 +49,17 @@ assert.match(dashboard, /section: radioName, values: \{ disabled: '0' \}/,
 
 const wifiAcl = read('view/network/freenetic-wifi-acl.js');
 const policyCard = wifiAcl.slice(
-	wifiAcl.indexOf('renderNetworkPolicyCard('),
-	wifiAcl.indexOf('renderDevicePolicyCard(')
+	wifiAcl.indexOf('\trenderPolicyCard(name)'),
+	wifiAcl.indexOf('\trenderDevicePolicyCard(client)')
 );
 assert.doesNotMatch(policyCard, /:\s*null\s*,/,
 	'network policy cards must not pass null children to LuCI E()');
+const devicePolicyCard = wifiAcl.slice(
+	wifiAcl.indexOf('\trenderDevicePolicyCard(client)'),
+	wifiAcl.indexOf('\treorderManagedPbrPolicies()')
+);
+assert.match(devicePolicyCard, /\]\.filter\(Boolean\)\)/,
+	'device policy cards must remove optional null children before calling LuCI E()');
 const aclEntries = wifiAcl.slice(
 	wifiAcl.indexOf('const renderEntries = () =>'),
 	wifiAcl.indexOf('const addMac = (value, label)')
@@ -67,7 +73,7 @@ assert.match(routing, /networkHelper\.connectedRouteTarget\(address\)/,
 
 const css = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs', 'luci-static',
 	'freenetic', 'cascade.css'), 'utf8');
-assert.match(css, /body\[data-page="admin-system-package-manager"\] #maincontent #view > \.controls:first-of-type[\s\S]*?@media \(max-width: 480px\)/,
+assert.match(css, /body\[data-page="admin-system-package-manager"\] #maincontent #view > \.cbi-map-descr \+ \.controls[\s\S]*?@media \(max-width: 480px\)/,
 	'the legacy package manager toolbar must reflow on tablets and phones');
 assert.match(css, /\.fn-mac-value\s*\{[\s\S]*?white-space:\s*nowrap/,
 	'MAC addresses must stay on one line');

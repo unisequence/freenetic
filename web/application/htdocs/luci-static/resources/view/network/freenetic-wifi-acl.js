@@ -749,7 +749,7 @@ return view.extend({
 				hint,
 				warning,
 				E('div', { class: 'fn-oc-actions fn-wifi-policy-actions' }, [ saveButton ])
-			])
+			].filter(Boolean))
 		]);
 		saveButton.addEventListener('click', () => this.saveDevicePolicy(mac, {
 			mode: modeSelect.value,
