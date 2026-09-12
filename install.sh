@@ -10,7 +10,7 @@ set -eu
 
 RELEASE_TAG="v0.2.2"
 # GitHub normalizes the '~' in the OpenWrt-derived package version to '.'.
-ASSET_VERSION="26.255.63373.9a542a2"
+ASSET_VERSION="26.255.64511.adb8cd9"
 RELEASE_BASE_URL="${FREENETIC_RELEASE_BASE_URL:-https://github.com/unisequence/freenetic/releases/download/$RELEASE_TAG}"
 
 MIN_RAM_MIB=128
