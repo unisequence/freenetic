@@ -8,7 +8,7 @@ const installer = fs.readFileSync(path.join(__dirname, '../../install.sh'), 'utf
 
 assert(installer.startsWith('#!/bin/sh'), 'installer must be POSIX sh');
 for (const marker of [
-	"RELEASE_TAG=\"v0.2.1\"",
+	"RELEASE_TAG=\"v0.2.2\"",
 	"mediatek/filogic",
 	"ramips/mt7621",
 	"aarch64_cortex-a53",

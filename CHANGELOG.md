@@ -6,6 +6,10 @@ which they became user-visible.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.2.2] — 2026-09-12
+
 ### Added
 
 - The dashboard can now check the selected Freenetic release channel and
@@ -13,11 +17,32 @@ which they became user-visible.
   directly from the interface. The privileged updater accepts only pinned
   releases from the Freenetic GitHub repository and delegates integrity
   verification to the release installer.
+- Added a dashboard client summary with total, Wi-Fi and Ethernet counts,
+  current connection type, segment and a direct link to the full client list.
 
 ### Improved
 
 - Theme and application packages now derive one shared source revision, so
   every self-update release is an internally consistent four-package set.
+- The Freenetic update panel is more compact and presents the release version
+  prominently while retaining the exact development revision when needed.
+
+### Fixed
+
+- Wi-Fi clients are now identified from the active `iwinfo` association list
+  instead of the occasionally incomplete `network.wireless` ubus response.
+  Active ARP state distinguishes wired clients from stale DHCP leases in both
+  the dashboard summary and the full client list.
+- Client-list columns and action buttons remain aligned across long mixed
+  wired/wireless lists, and the dashboard cards stay responsive without
+  horizontal overflow.
+
+### Verification
+
+- All static, syntax, contract and UI tests pass, including the dashboard
+  client summary and OpenWrt 24.10 legacy compatibility coverage.
+- The same four-package source revision was built and exercised on OpenWrt
+  25.12.4 (`apk`) and OpenWrt 24.10.8 (`opkg`).
 
 ## [0.2.1] — 2026-09-12
 
