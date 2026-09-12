@@ -54,5 +54,8 @@ assert.deepEqual([ ...missingUbus ].sort(), [], 'literal ubus calls must be cove
 assert.deepEqual([ ...missingFiles ].sort(), [], 'literal file operations must be covered by rpcd ACL');
 assert.ok(acl.read.uci.includes('luci'), 'theme detection requires read access to luci config');
 assert.ok(acl.write.uci.includes('luci'), 'theme settings require write access to luci config');
+assert.ok(acl.read.ubus.uci.includes('get'), 'raw UCI reads require the legacy ubus method grant');
+assert.ok(acl.write.ubus.uci.includes('set'), 'raw UCI writes require the legacy ubus method grant');
+assert.ok(acl.write.ubus.uci.includes('commit'), 'OpenWrt 24.10 requires an explicit UCI commit grant');
 
 console.log('rpcd ACL contract: ok');

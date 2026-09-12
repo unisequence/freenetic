@@ -4,6 +4,7 @@
 		"read": {
 			"cgi-io": [ "download" ],
 			"ubus": {
+				"uci": [ "get" ],
 				"network.interface": [ "status", "dump" ],
 				"network.device": [ "status" ],
 				"network.wireless": [ "status" ],
@@ -41,6 +42,7 @@
 		"write": {
 			"cgi-io": [ "upload" ],
 			"ubus": {
+				"uci": [ "set", "commit" ],
 				"network": [ "reload" ],
 				"luci.wireguard": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],
 				"luci.amneziawg": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],

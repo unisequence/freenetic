@@ -13,6 +13,7 @@ const responses = [
 	{ result: [ 0, { ok: true } ] },
 	{ result: [ 0, null ] },
 	{ result: [ 4, null ] },
+	{ error: { code: -32002, message: 'Access denied' } },
 	{ unexpected: true }
 ];
 
@@ -45,6 +46,7 @@ const rpc = new Function('baseclass', 'fetch', 'L', source)(
 	assert.equal(JSON.parse(requests[1].options.body).id, 2);
 
 	await assert.rejects(call('uci', 'get'), /object=uci method=get, code 4/);
+	await assert.rejects(call('uci', 'commit'), /object=uci method=commit, Access denied, code -32002/);
 	await assert.rejects(call('system', 'info'), /Malformed ubus reply/);
 
 	const expectedViews = [

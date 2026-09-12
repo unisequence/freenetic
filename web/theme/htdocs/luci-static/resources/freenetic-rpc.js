@@ -60,6 +60,12 @@ return baseclass.extend({
 
 			return r.json();
 		}).then(msg => {
+			if (msg && msg.error) {
+				const code = msg.error.code != null ? ', code ' + msg.error.code : '';
+				const message = msg.error.message || 'JSON-RPC error';
+				throw new Error('ubus request failed (object=' + object + ' method=' + method +
+					', ' + message + code + ')');
+			}
 			if (!msg || !Array.isArray(msg.result))
 				throw new Error('Malformed ubus reply');
 
