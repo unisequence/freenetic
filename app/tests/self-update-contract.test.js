@@ -38,6 +38,12 @@ assert.match(helper, /FREENETIC_RELEASE_BASE_URL="\$RELEASES_BASE_URL\/\$tag" sh
 	'asset downloads must stay pinned to the selected GitHub release');
 assert.match(helper, /uci -q set "freenetic\.updates\.installed_release=\$tag"/,
 	'a successful UI update must persist its release tag');
+assert.match(helper, /apk query --fields name,version --format json --installed/,
+	'status must read package versions from current apk');
+assert.match(helper, /opkg status "\$package_name"/,
+	'status must read package versions from legacy opkg');
+assert.match(helper, /json_add_array packages/,
+	'status must expose installed versions without relying on package-manager-call');
 
 assert.deepEqual(acl.read.file['/usr/libexec/freenetic-self-update status'], [ 'exec' ]);
 assert.deepEqual(acl.write.file['/usr/libexec/freenetic-self-update install *'], [ 'exec' ]);

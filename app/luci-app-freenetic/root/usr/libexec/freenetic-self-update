@@ -28,6 +28,20 @@ valid_tag() {
 	printf '%s\n' "$1" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9][A-Za-z0-9.-]*)?$'
 }
 
+installed_package_version() {
+	package_name="$1"
+	case "$package_manager" in
+		apk)
+			package_json="$(apk query --fields name,version --format json --installed \
+				--from system "$package_name" 2>/dev/null || true)"
+			printf '%s\n' "$package_json" | jsonfilter -e '@[0].version' 2>/dev/null || true
+			;;
+		opkg)
+			opkg status "$package_name" 2>/dev/null | awk '$1 == "Version:" { print $2; exit }'
+			;;
+	esac
+}
+
 status() {
 	package_manager=
 	if command -v apk >/dev/null 2>&1; then
@@ -59,6 +73,16 @@ status() {
 	json_add_string target "$target"
 	json_add_string asset_suffix "$asset_suffix"
 	json_add_string installed_release "$installed_release"
+	json_add_array packages
+	for package_name in luci-theme-freenetic luci-app-freenetic; do
+		package_version="$(installed_package_version "$package_name")"
+		[ -n "$package_version" ] || continue
+		json_add_object ""
+		json_add_string name "$package_name"
+		json_add_string version "$package_version"
+		json_close_object
+	done
+	json_close_array
 	if [ -n "$package_manager" ] && [ -n "$asset_suffix" ]; then
 		json_add_boolean can_update 1
 	else

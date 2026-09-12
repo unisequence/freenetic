@@ -476,11 +476,14 @@ function getFreeneticUpdateState() {
 		uci.load('freenetic').catch(() => []),
 		getFreeneticInstalledPackages(),
 		getFreeneticUpdaterStatus()
-	]).then(([, packages, updater]) => ({
-		channel: uci.get('freenetic', 'updates', 'channel') || 'stable',
-		packages,
-		updater
-	}));
+	]).then(([, packages, updater]) => {
+		const updaterPackages = updater && Array.isArray(updater.packages) ? updater.packages : [];
+		return {
+			channel: uci.get('freenetic', 'updates', 'channel') || 'stable',
+			packages: updaterPackages.length ? updaterPackages : packages,
+			updater
+		};
+	});
 }
 
 function formatFreeneticVersion(packages) {

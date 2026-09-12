@@ -7,6 +7,8 @@ const path = require('node:path');
 const root = path.join(__dirname, '..', '..', '..');
 const dashboard = fs.readFileSync(path.join(root, 'web', 'application', 'htdocs',
 	'luci-static', 'resources', 'view', 'status', 'freenetic-dashboard.js'), 'utf8');
+assert.match(dashboard, /packages: updaterPackages\.length \? updaterPackages : packages/,
+	'dashboard must use helper package versions when legacy package-manager-call cannot return JSON');
 const prefix = dashboard.slice(0, dashboard.indexOf('function svgIcon'));
 const helpers = new Function('rpc', prefix +
 	'\nreturn { freeneticBuildVersion, compareFreeneticBuilds, freeneticReleasePlan };')({ call() {} });
