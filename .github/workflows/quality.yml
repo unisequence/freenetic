@@ -131,6 +131,23 @@ jobs:
             package/feeds/base/uci/compile
           make check-package OPENWRT_DIR="$SDK_DIR" DL_DIR="$SDK_DIR/dl" \
             FREENETIC_PACKAGE_FORMAT="$PACKAGE_FORMAT"
+          if test "$PACKAGE_FORMAT" = apk; then
+            key_dir="$RUNNER_TEMP/freenetic-apk-keys"
+            mkdir -p "$key_dir"
+            cp "$SDK_DIR/public-key.pem" "$key_dir/freenetic-release.pem"
+            # SDK preparation can create its own transient build key before
+            # our release key is installed. Re-sign the final payloads
+            # explicitly so the exported public key is always the signer.
+            # allow-untrusted applies only while replacing the SDK signature;
+            # the immediately following verification is deliberately strict.
+            find "$SDK_DIR/bin" -type f -name '*freenetic*.apk' -print0 | \
+              xargs -0 -r -n1 "$SDK_DIR/staging_dir/host/bin/apk" \
+                --allow-untrusted adbsign \
+                --reset-signatures --sign-key "$SDK_DIR/private-key.pem"
+            find "$SDK_DIR/bin" -type f -name '*freenetic*.apk' -print0 | \
+              xargs -0 -r "$SDK_DIR/staging_dir/host/bin/apk" \
+                --keys-dir "$key_dir" verify
+          fi
           make -C "$SDK_DIR" package/index
           make check-package-index OPENWRT_DIR="$SDK_DIR"
           make -C cli OPENWRT_DIR="$SDK_DIR" FREENETIC_TARGET="$CLI_TARGET" -B
@@ -185,6 +202,10 @@ jobs:
               test -n "$archive"
               cp -f "$archive" "$release_dir/$target_name"
             done
+            if [ "$PACKAGE_FORMAT" = apk ]; then
+              cp -f "$SDK_DIR/public-key.pem" \
+                "$release_dir/freenetic-apk-release-key-$asset_version.pem"
+            fi
           fi
 
           if [ "$INCLUDE_FNC" = true ]; then
@@ -209,16 +230,32 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: openwrt-packages
+    needs: [static, openwrt-packages]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: Check out the tagged source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Verify immutable annotated release tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          # actions/checkout resolves an annotated tag to its commit and then
+          # replaces the local tag ref with that commit. Fetch the remote tag
+          # object into FETCH_HEAD so its type and target can still be checked
+          # without rewriting the published ref.
+          git fetch --no-tags origin "refs/tags/$RELEASE_TAG"
+          test "$(git cat-file -t FETCH_HEAD)" = tag
+          test "$(git rev-list -n 1 FETCH_HEAD)" = "$(git rev-parse HEAD)"
 
       - name: Download 24.10 mediatek IPK build
         uses: actions/download-artifact@v4
@@ -295,10 +332,15 @@ jobs:
             "$asset_version"
 
           asset_count="$(find "$release_dir" -maxdepth 1 -type f | wc -l)"
-          test "$asset_count" -eq 20
+          test "$asset_count" -eq 21
           echo "asset_version=$asset_version" >> "$GITHUB_OUTPUT"
           echo "release_dir=$release_dir" >> "$GITHUB_OUTPUT"
           echo "release_notes=$notes_file" >> "$GITHUB_OUTPUT"
+
+      - name: Attest release assets
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ steps.release.outputs.release_dir }}/*
 
       - name: Publish release
         env:
@@ -309,21 +351,15 @@ jobs:
         run: |
           set -eu
           release_title="$(node app/release-codenames.js "$RELEASE_TAG")"
-          # Keep the generated installer at the tag as well as in the release.
-          # Older routers fetch raw/.../<tag>/install.sh and do not know about
-          # release assets yet; this commit keeps that URL checksum-correct.
-          cp -f "$RELEASE_DIR/install.sh" "$GITHUB_WORKSPACE/install.sh"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add install.sh
-          if ! git diff --cached --quiet -- install.sh; then
-            git commit -m "ci(release): pin installer checksums for $RELEASE_TAG [skip ci]"
-          fi
-          git tag -a -f "$RELEASE_TAG" -m "Release $RELEASE_TAG"
-          git push --force origin "refs/tags/$RELEASE_TAG"
+          release_flags=()
+          case "$RELEASE_TAG" in
+            *-*) release_flags+=(--prerelease) ;;
+          esac
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
+            --latest=false \
             --title "$release_title" \
             --notes-file "$RELEASE_NOTES" \
+            "${release_flags[@]}" \
             "$RELEASE_DIR"/*

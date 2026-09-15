@@ -11,6 +11,11 @@ const dashboardData = fs.readFileSync(path.join(root, 'web', 'application', 'htd
 	'luci-static', 'resources', 'freenetic-dashboard-data.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs', 'luci-static',
 	'freenetic', 'cascade.css'), 'utf8');
+const themeFontDir = path.join(root, 'web', 'theme', 'htdocs', 'luci-static', 'freenetic', 'fonts');
+for (const fontAsset of [ 'CherryBombOne-Latin.woff2', 'CherryBombOne-OFL.txt' ]) {
+	assert.ok(fs.statSync(path.join(themeFontDir, fontAsset)).size > 0,
+		fontAsset + ' must be present and non-empty');
+}
 assert.match(dashboardData, /updaterPackages\.length \? state\(updaterPackages\)\s*:\s*\n?\s*getFreeneticInstalledPackages\(\)\.then\(state\)/,
 	'dashboard must avoid a full package listing when the status helper returned package versions');
 assert.match(dashboardData, /freenetic-package-status', FREENETIC_PACKAGE_NAMES, 'json'/,
@@ -25,8 +30,12 @@ assert.match(dashboard, /installButton\.style\.display = ''/,
 	'a compatible release must explicitly reveal the update action');
 assert.match(dashboard, /class: 'fn-freenetic-update-panel'/,
 	'the dashboard must group Freenetic build details and update controls in one panel');
+assert.match(dashboard, /class: 'fn-update-codename fn-update-codename-' \+ codename\.toLowerCase\(\)/,
+	'the dashboard must render a stable release codename beside its version');
 assert.match(css, /\.fn-freenetic-update-panel\s*\{[\s\S]*?\.fn-update-status-info::before/,
 	'the Freenetic update panel must style its overview, controls and status states');
+assert.match(css, /@font-face\s*\{[\s\S]*?font-family: "CherryBombOne";[\s\S]*?CherryBombOne-Latin\.woff2/,
+	'the Onyx display font must be bundled with the theme');
 const helpers = new Function('baseclass', 'fs', 'uci', 'rpc', '_', dashboardData)(
 	{ extend: value => value },
 	{ exec_direct() { return Promise.resolve([]); } },
@@ -41,6 +50,7 @@ const formatterSource = dashboardData.slice(
 const displayVersion = dashboardData.match(/const FREENETIC_DISPLAY_VERSION = '([^']+)'/)[1];
 const formatFreeneticVersion = new Function('_', 'FREENETIC_DISPLAY_VERSION', formatterSource +
 	'\nreturn formatFreeneticVersion;')(value => value, displayVersion);
+const freeneticReleaseCodename = helpers.freeneticReleaseCodename;
 
 const version = '26.300.12345.abc1234';
 const packageNames = [
@@ -73,6 +83,12 @@ assert.equal(formatFreeneticVersion(installed(version)), 'v0.2.x-dev · abc1234'
 	'identical component builds must show one short revision');
 assert.equal(formatFreeneticVersion(installed(version), 'v0.2.2'), 'v0.2.2',
 	'an update installed from a release must show its release tag instead of a development label');
+assert.equal(freeneticReleaseCodename('v0.2.8'), 'Onyx',
+	'the stable 0.2 release line must expose its Onyx codename');
+assert.equal(freeneticReleaseCodename('v0.2.8-alpha.1'), '',
+	'prerelease builds must keep the stable codename hidden');
+assert.equal(freeneticReleaseCodename('v0.3.0'), '',
+	'unrevealed release lines must not expose a codename');
 assert.equal(formatFreeneticVersion(installed(version), 'not-a-release'), 'v0.2.x-dev · abc1234',
 	'an invalid persisted release value must not replace the development build identity');
 assert.match(formatFreeneticVersion([

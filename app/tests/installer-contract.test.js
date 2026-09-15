@@ -22,7 +22,8 @@ for (const marker of [
 	"luci-i18n-freenetic-ru-${ASSET_VERSION}-all.ipk",
 	"FNC_BIN=\"fnc-${ASSET_VERSION}-${target_suffix}-${fnc_variant}\"",
 	"sha256sum",
-	"apk add --allow-untrusted",
+	"APK_RELEASE_KEY=\"freenetic-apk-release-key-${ASSET_VERSION}.pem\"",
+	"apk --keys-dir \"$APK_KEYS_DIR\" add",
 	"opkg install",
 	"neither apk nor opkg is installed",
 	"link_runtime_library",
@@ -47,6 +48,28 @@ for (const name of [ 'theme_sha256', 'app_sha256', 'theme_ru_sha256', 'app_ru_sh
 	assert.strictEqual((installer.match(new RegExp(`${name}="[0-9a-f]{64}"`, 'g')) || []).length, 2,
 		`${name} must be pinned for APK and IPK/target variants`);
 }
+assert.match(installer, /apk_key_sha256="[0-9a-f]{64}"/,
+	'the APK signing key must be pinned by the generated installer');
+assert.ok(installer.indexOf('stage fnc_preflight') < installer.indexOf('stage package_install'),
+	'fnc ABI validation must complete before LuCI packages are changed');
+assert.ok(installer.indexOf('"$FNC_STAGED_DIR/fnc.bin" show version') < installer.indexOf('stage package_install'),
+	'the target binary must actually start against staged aliases before package installation');
+assert.match(installer, /FNC_STAGED="\$\(mktemp \/usr\/bin\/\.fnc\.freenetic\.XXXXXX/,
+	'the root-owned fnc launcher must use an unpredictable same-filesystem temporary path');
+assert.doesNotMatch(installer, /\/tmp\/\.fnc\.freenetic\.\$\$/,
+	'the installer must not use a PID-derived root temporary file');
+assert.ok(installer.indexOf('stage native_snapshot') < installer.indexOf('stage package_install'),
+	'native files must be snapshotted before the package transaction');
+assert.ok(installer.indexOf('stage smoke_test') < installer.indexOf('stage package_install'),
+	'all fallible native validation must finish before the package transaction');
+assert.ok(installer.indexOf('stage state_commit') < installer.indexOf('stage package_install'),
+	'fallible update-state persistence must finish before the package transaction');
+assert.match(installer, /PERSISTENT_MUTATION_STARTED:-0[\s\S]*INSTALL_COMMITTED:-0[\s\S]*rolling back native files and update state/,
+	'a pre-commit failure must restore the native and UCI snapshot');
+const afterPackageCommit = installer.slice(installer.indexOf('INSTALL_COMMITTED=1',
+	installer.indexOf('stage package_install')));
+assert.doesNotMatch(afterPackageCommit, /\bfail\s+"/,
+	'post-commit maintenance must be best-effort and cannot turn success into partial-install failure');
 
 for (const name of [
 	'fnc_ubus_lib_apk="libubus.so.20251202"',
@@ -60,6 +83,6 @@ for (const name of [
 }
 
 const checksumCount = (installer.match(/download_checked /g) || []).length;
-assert.strictEqual(checksumCount, 5, 'installer must verify exactly five assets');
+assert.strictEqual(checksumCount, 6, 'installer must verify five payloads and the APK signing key');
 
 console.log('installer contract: ok');

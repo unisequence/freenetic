@@ -63,6 +63,16 @@
 	font-display: swap;
 	unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F;
 }
+/* Cherry Bomb One (Google Fonts, SIL OFL 1.1 — see
+   fonts/CherryBombOne-OFL.txt) — the display face for the Onyx release line.
+   Only its Latin glyphs are bundled because the codename is its sole use. */
+@font-face {
+	font-family: "CherryBombOne";
+	src: url("fonts/CherryBombOne-Latin.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
 
 /* ---------- design tokens ---------- */
 
@@ -2910,10 +2920,32 @@ body.modal-overlay-active { overflow: hidden; }
 	justify-content: space-between;
 	gap: 12px;
 }
+.fn-update-build-identity {
+	display: inline-flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 7px;
+	min-width: 0;
+}
 .fn-update-build-version {
 	color: var(--fn-text);
 	font: 500 .9375rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
 	overflow-wrap: anywhere;
+}
+.fn-update-codename {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 7px;
+	color: var(--fn-text-secondary);
+	font: 400 1.05rem/1.2 "CherryBombOne", var(--fn-font-system);
+	letter-spacing: .025em;
+	transform: skewX(-6deg);
+	transform-origin: left center;
+}
+.fn-update-codename-separator {
+	color: var(--fn-text-disabled);
+	font-family: var(--fn-font-system);
+	font-size: .8em;
 }
 .fn-update-repository {
 	display: inline-flex;

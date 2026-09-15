@@ -76,7 +76,8 @@ function releaseHashes(releaseDir, assetVersion) {
 			fail(`APK target mirror differs for ${name}`);
 	}
 
-	return { apk, ipk, fnc };
+	const apkKey = fileHash(releaseDir, `freenetic-apk-release-key-${assetVersion}.pem`);
+	return { apk, apkKey, ipk, fnc };
 }
 
 function patchInstaller(template, tag, assetVersion, hashes) {
@@ -87,6 +88,7 @@ function patchInstaller(template, tag, assetVersion, hashes) {
 	installer = replaceTargetAssignment(installer, 'mediatek/filogic', 'fnc_sha256_ipk', hashes.fnc.filogic.ipk);
 	installer = replaceTargetAssignment(installer, 'ramips/mt7621', 'fnc_sha256_apk', hashes.fnc.mt7621.apk);
 	installer = replaceTargetAssignment(installer, 'ramips/mt7621', 'fnc_sha256_ipk', hashes.fnc.mt7621.ipk);
+	installer = replaceTargetAssignment(installer, 'apk', 'apk_key_sha256', hashes.apkKey);
 
 	for (const name of PACKAGE_NAMES) {
 		const variable = name === 'luci-theme-freenetic' ? 'theme_sha256' :
@@ -97,7 +99,7 @@ function patchInstaller(template, tag, assetVersion, hashes) {
 	}
 
 	installer = installer.replace(
-		/https:\/\/raw\.githubusercontent\.com\/unisequence\/freenetic\/[^']+\/install\.sh/g,
+		/https:\/\/(?:raw\.githubusercontent\.com\/unisequence\/freenetic\/[^']+|github\.com\/unisequence\/freenetic\/releases\/download\/[^']+)\/install\.sh/g,
 		`https://github.com/unisequence/freenetic/releases/download/${tag}/install.sh`
 	);
 	return installer;

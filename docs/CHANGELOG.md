@@ -6,6 +6,22 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.2.8] — 2026-09-15
+
+### Added
+
+- Stable `v0.2.x` builds now show the Onyx codename beside their installed
+  version on the dashboard, set in the self-hosted Cherry Bomb One display
+  font. Prerelease and development builds keep the codename concealed.
+
+### Security
+
+- APK release artifacts are signed and strictly verified in CI; the matching
+  public key is checksum-pinned by the generated installer and published with
+  the release.
+- Release publication now waits for the complete test matrix, verifies an
+  immutable annotated tag and attaches keyless provenance to every asset.
+
 ## [0.2.7] — 2026-09-15
 
 ### Fixed

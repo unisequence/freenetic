@@ -28,7 +28,7 @@
  */
 const ubusCall = rpc.call;
 
-const { HISTORY_LEN, POLL_INTERVAL, MIN_CPU_SAMPLE_INTERVAL, FREENETIC_REPOSITORY, FREENETIC_RELEASES_API, FREENETIC_UPDATE_HELPER, FREENETIC_PACKAGE_NAMES, FREENETIC_DISPLAY_VERSION, FREENETIC_RELEASE_PACKAGES, freeneticBuildVersion, compareFreeneticBuilds, freeneticReleasePlan, upperString, getFirewallConfig, getInterfaceDump, getWanConnections, mergeWanGroup, connectionLabel, connectionInterfaceLabel, getWirelessConfig, getPorts, getIwinfoDevices, getWifiRadios, mhzToChannel, getLanInfo, getConntrack, getArpTable, ip2int, ipInLan, dashboardClientRows, getSystemBoard, getSystemInfo, getProcStatCpu, getConntrackCounts, getSysupgradeConfig, getFreeneticInstalledPackages, getFreeneticUpdaterStatus, getFreeneticUpdateState, freeneticBuildRevision, freeneticReleaseTag, formatFreeneticVersion, fmtMB, fmtDateTime, getWirelessStatus, getActiveArpMacs, getWifiStations, getIwinfoInfos, findIfaceEntry, getNetworkConfig, getDhcpConfig, getDhcpLeases, getInterfaceInfo, formatWifiMeta } = dashboardData;
+const { HISTORY_LEN, POLL_INTERVAL, MIN_CPU_SAMPLE_INTERVAL, FREENETIC_REPOSITORY, FREENETIC_RELEASES_API, FREENETIC_UPDATE_HELPER, FREENETIC_PACKAGE_NAMES, FREENETIC_DISPLAY_VERSION, FREENETIC_RELEASE_PACKAGES, freeneticBuildVersion, compareFreeneticBuilds, freeneticReleasePlan, upperString, getFirewallConfig, getInterfaceDump, getWanConnections, mergeWanGroup, connectionLabel, connectionInterfaceLabel, getWirelessConfig, getPorts, getIwinfoDevices, getWifiRadios, mhzToChannel, getLanInfo, getConntrack, getArpTable, ip2int, ipInLan, dashboardClientRows, getSystemBoard, getSystemInfo, getProcStatCpu, getConntrackCounts, getSysupgradeConfig, getFreeneticInstalledPackages, getFreeneticUpdaterStatus, getFreeneticUpdateState, freeneticBuildRevision, freeneticReleaseTag, freeneticReleaseCodename, formatFreeneticVersion, fmtMB, fmtDateTime, getWirelessStatus, getActiveArpMacs, getWifiStations, getIwinfoInfos, findIfaceEntry, getNetworkConfig, getDhcpConfig, getDhcpLeases, getInterfaceInfo, formatWifiMeta } = dashboardData;
 const TRAFFIC_COLORS = [ 'fn-tc-0', 'fn-tc-1', 'fn-tc-2', 'fn-tc-3', 'fn-tc-4', 'fn-tc-other' ];
 function svgIcon(d, size) {
 	size = size || 18;
@@ -1396,11 +1396,22 @@ return view.extend({
 			E('span', {}, 'GitHub'),
 			E('span', { class: 'fn-update-external', 'aria-hidden': 'true' }, '↗')
 		]);
+		const codename = freeneticReleaseCodename(updater.installed_release);
+		const buildIdentity = E('div', {
+			class: 'fn-update-build-identity',
+			title: _('Installed build')
+		}, [
+			E('span', { class: 'fn-update-build-version' },
+				formatFreeneticVersion(state.packages || [], updater.installed_release)),
+			codename ? E('span', {
+				class: 'fn-update-codename fn-update-codename-' + codename.toLowerCase()
+			}, [
+				E('span', { class: 'fn-update-codename-separator', 'aria-hidden': 'true' }, '·'),
+				codename
+			]) : null
+		]);
 		const overview = E('div', { class: 'fn-update-overview' }, [
-			E('div', {
-				class: 'fn-update-build-version',
-				title: _('Installed build')
-			}, formatFreeneticVersion(state.packages || [], updater.installed_release)),
+			buildIdentity,
 			sourceLink
 		]);
 		const actions = E('div', { class: 'fn-update-actions' }, [ channelSelect, checkButton, installButton ]);

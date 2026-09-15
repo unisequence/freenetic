@@ -2,15 +2,15 @@
 # Freenetic one-shot installer for supported OpenWrt routers.
 #
 # Usage:
-#   wget -qO- 'https://github.com/unisequence/freenetic/releases/download/v0.2.7/install.sh' | sh
+#   wget -qO- 'https://raw.githubusercontent.com/unisequence/freenetic/v0.2.5/install.sh' | sh
 #
 # The release and checksums are deliberately pinned. Do not install a
 # partially downloaded or silently replaced package.
 set -eu
 
-RELEASE_TAG="v0.2.7"
+RELEASE_TAG="v0.2.5"
 # GitHub normalizes the '~' in the OpenWrt-derived package version to '.'.
-ASSET_VERSION="26.258.18430.44656d7"
+ASSET_VERSION="26.257.51426.6a30103"
 RELEASE_BASE_URL="${FREENETIC_RELEASE_BASE_URL:-https://github.com/unisequence/freenetic/releases/download/$RELEASE_TAG}"
 
 MIN_RAM_MIB=128
@@ -32,7 +32,29 @@ stage() {
 }
 
 cleanup() {
+	if [ "${PERSISTENT_MUTATION_STARTED:-0}" = 1 ] && [ "${INSTALL_COMMITTED:-0}" != 1 ]; then
+		info "rolling back native files and update state"
+		if [ "${HAD_FNC_HOME:-0}" = 1 ]; then
+			rm -rf /usr/lib/freenetic
+			cp -a "$ROLLBACK_DIR/fnc-home" /usr/lib/freenetic 2>/dev/null || true
+		else
+			rm -rf /usr/lib/freenetic
+		fi
+		if [ "${HAD_FNC_LAUNCHER:-0}" = 1 ]; then
+			rm -f /usr/bin/fnc
+			cp -a "$ROLLBACK_DIR/fnc-launcher" /usr/bin/fnc 2>/dev/null || true
+		else
+			rm -f /usr/bin/fnc
+		fi
+		uci -q revert freenetic >/dev/null 2>&1 || true
+		if [ "${HAD_FREENETIC_CONFIG:-0}" = 1 ]; then
+			cp -a "$ROLLBACK_DIR/freenetic-config" /etc/config/freenetic 2>/dev/null || true
+		else
+			rm -f /etc/config/freenetic
+		fi
+	fi
 	[ -z "${FNC_STAGED:-}" ] || rm -f "$FNC_STAGED"
+	[ -z "${FNC_TARGET:-}" ] || rm -f "$FNC_TARGET"
 	[ -z "${FNC_STAGED_DIR:-}" ] || rm -rf "$FNC_STAGED_DIR"
 	[ -z "${TMP_DIR:-}" ] || rm -rf "$TMP_DIR"
 }
@@ -40,7 +62,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 stage preflight
-for command_name in awk df grep jsonfilter sha256sum ubus uci uname wget; do
+for command_name in awk df grep jsonfilter mktemp readlink sha256sum ubus uci uname wget; do
 	command -v "$command_name" >/dev/null 2>&1 ||
 		fail "required command is missing: $command_name"
 done
@@ -53,8 +75,11 @@ else
 	fail "neither apk nor opkg is installed"
 fi
 
-TMP_DIR="${TMPDIR:-/tmp}/freenetic-install.$$"
-mkdir "$TMP_DIR" 2>/dev/null || fail "cannot create temporary directory"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/freenetic-install.XXXXXX" 2>/dev/null)" ||
+	fail "cannot create secure temporary directory"
+ROLLBACK_DIR="$TMP_DIR/rollback"
+PERSISTENT_MUTATION_STARTED=0
+INSTALL_COMMITTED=0
 
 board_json="$(ubus call system board 2>/dev/null)" ||
 	fail "cannot read system board information"
@@ -75,7 +100,7 @@ case "$target" in
 		target_suffix="aarch64_cortex-a53"
 		min_overlay_mib="$MIN_OVERLAY_MIB_FILOGIC"
 		fnc_sha256_apk="569c07f3523193f646f182f2a09459feda5946c5bc0d9fecf3432a0361481ddb"
-		fnc_sha256_ipk="fc22251fdeb9f4d725e87919ca6b3eb06947b28e735a966a3a10459b77a57106"
+		fnc_sha256_ipk="569c07f3523193f646f182f2a09459feda5946c5bc0d9fecf3432a0361481ddb"
 		fnc_ubus_lib_apk="libubus.so.20251202"
 		fnc_ubox_lib_apk="libubox.so.20260213"
 		fnc_blobmsg_lib_apk="libblobmsg_json.so.20260213"
@@ -96,7 +121,7 @@ case "$target" in
 	ramips/mt7621)
 		target_suffix="mipsel_24kc"
 		min_overlay_mib="$MIN_OVERLAY_MIB_MT7621"
-		fnc_sha256_apk="9ec794c35c078ec56346492e7c7a51aff0ef654c52324fd24a5919773894c515"
+		fnc_sha256_apk="694db49b76061c2cca0a8c4b9ff3d9fc638bfea4ee1d5a48c9f29e06936a1470"
 		fnc_sha256_ipk="694db49b76061c2cca0a8c4b9ff3d9fc638bfea4ee1d5a48c9f29e06936a1470"
 		fnc_ubus_lib_apk="libubus.so.20251202"
 		fnc_ubox_lib_apk="libubox.so.20260213"
@@ -156,20 +181,22 @@ case "$package_manager" in
 		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
 		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
 		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
-		theme_sha256="6c1d0bd94e3893b7ea0594e9ff8b7dc3c520e9c2a1459140fa179897e8ae25b5"
-		app_sha256="ef390d425d04c486ed9f27c8c976c93a0bb4bc89ab65f44f208d2049f356b5ae"
-		theme_ru_sha256="7e56cc8625d852a30ae2a0ea9832707254334c6fb23ee4dc2a79a59a3b4ab7f4"
-		app_ru_sha256="abefa8afdbfba0ddec2ce7b5ee72d7b92a7b2280f9dde910812c4f818f22f867"
+		APK_RELEASE_KEY="freenetic-apk-release-key-${ASSET_VERSION}.pem"
+		apk_key_sha256="0000000000000000000000000000000000000000000000000000000000000000"
+		theme_sha256="60296213f9439bda8e20a823d1f2317d68bb6cb59bdd48e5f077485f19a7c27d"
+		app_sha256="0874fe5621b7c6efa66db0edaf6b0ba56b7eb003b94118b18a70f2284e5fedd5"
+		theme_ru_sha256="dcf582def7bfa9293e32ee295d72e7b6a9fbb3ecaa2573d53a50ddf855cc8826"
+		app_ru_sha256="dce7641f7b274672c8821213c655f1c897f37d1b2435831934cb8adaa96e5bfb"
 		;;
 	opkg)
 		THEME_PACKAGE="luci-theme-freenetic-${ASSET_VERSION}-all.ipk"
 		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-all.ipk"
 		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-all.ipk"
 		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-all.ipk"
-		theme_sha256="90747ae78a8a720eff9fa57ef37a92c9d96388bc502a71d9dfe3f57e5e2969c3"
-		app_sha256="e92cc5ecd2a6057edab8fabd1086df1f9e1e59466744a687ba5dbf0ce82531ae"
-		theme_ru_sha256="b80f91d89146ac9ad55ced7a8de1f5b5a801952c913aab4816b8bea1763df0b7"
-		app_ru_sha256="666a98753343da603919e80b4a9f899cbe94bd8e1b203d9a7e233448f818a1a1"
+		theme_sha256="04f1599288dc0a14c9a61ce08528f057fc9ffc0e1a7e5081eba0e6946f5cd96f"
+		app_sha256="397ad18344c4060f5935a2bed5e4e33bff18ea2397f4c498e84563ace5863430"
+		theme_ru_sha256="1c833b1002e6f75db145ca41249b148baf3f132cf232238cc1ce6e27889927ef"
+		app_ru_sha256="61e822d9ca8b0636aaa9a061ec85bbd756799d050dbd6dd9bcc25485fe033e79"
 		;;
 esac
 
@@ -216,50 +243,27 @@ download_checked "$THEME_RU_PACKAGE" "$theme_ru_sha256"
 download_checked "$APP_RU_PACKAGE" "$app_ru_sha256"
 download_checked "$FNC_BIN" "$fnc_sha256"
 
-stage package_install
-info "installing LuCI packages"
 if [ "$package_manager" = apk ]; then
-	# Release APKs are built without a device-side signing key. Their embedded
-	# checksums above protect the download; allow apk to accept the local files.
-	apk add --allow-untrusted \
-		"$TMP_DIR/$THEME_PACKAGE" \
-		"$TMP_DIR/$APP_PACKAGE" \
-		"$TMP_DIR/$THEME_RU_PACKAGE" \
-		"$TMP_DIR/$APP_RU_PACKAGE" ||
-		fail "apk package installation failed"
-else
-	opkg install \
-		"$TMP_DIR/$THEME_PACKAGE" \
-		"$TMP_DIR/$APP_PACKAGE" \
-		"$TMP_DIR/$THEME_RU_PACKAGE" \
-		"$TMP_DIR/$APP_RU_PACKAGE" ||
-		fail "opkg package installation failed"
+	download_checked "$APK_RELEASE_KEY" "$apk_key_sha256"
+	APK_KEYS_DIR="$TMP_DIR/apk-keys"
+	mkdir -m 0700 "$APK_KEYS_DIR" || fail "cannot create APK trust directory"
+	for system_key in /etc/apk/keys/*.pem; do
+		[ -f "$system_key" ] || continue
+		cp "$system_key" "$APK_KEYS_DIR/" || fail "cannot stage system APK trust key"
+	done
+	cp "$TMP_DIR/$APK_RELEASE_KEY" "$APK_KEYS_DIR/freenetic-release.pem" ||
+		fail "cannot stage Freenetic APK trust key"
 fi
 
-# LuCI caches the resolved menu tree, including depends.uci results. An APK
-# upgrade can leave a previous tree in /tmp, making only the ungated groups
-# visible until the cache is removed.
-stage post_install
-if [ -x /usr/libexec/freenetic-clear-luci-cache ]; then
-	/usr/libexec/freenetic-clear-luci-cache || fail "cannot clear LuCI cache"
-else
-	rm -f /tmp/luci-indexcache*
-	rm -rf /tmp/luci-modulecache
-fi
-if [ -x /etc/init.d/rpcd ]; then
-	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
-fi
-
-FNC_HOME=/usr/lib/freenetic
+# Validate the target-specific binary and every runtime alias before the first
+# package is changed. A late ABI mismatch must never leave LuCI upgraded while
+# fnc is unusable.
+stage fnc_preflight
 FNC_STAGED_DIR="$TMP_DIR/fnc-stage"
-mkdir -p "$FNC_STAGED_DIR" "$FNC_HOME" || fail "cannot create fnc directory"
-cp "$TMP_DIR/$FNC_BIN" "$FNC_HOME/fnc.bin" || fail "cannot copy fnc binary"
-chmod 0755 "$FNC_HOME/fnc.bin" || fail "cannot make fnc executable"
+mkdir -m 0700 "$FNC_STAGED_DIR" || fail "cannot create fnc staging directory"
+cp "$TMP_DIR/$FNC_BIN" "$FNC_STAGED_DIR/fnc.bin" || fail "cannot stage fnc binary"
+chmod 0755 "$FNC_STAGED_DIR/fnc.bin" || fail "cannot make staged fnc executable"
 
-# OpenWrt encodes library ABI dates in SONAMEs. A binary built on a newer
-# snapshot may need libubus.so.20260628 while an older, otherwise compatible
-# router has libubus.so.20231128. Keep aliases in Freenetic's private
-# directory instead of changing the router's system libraries.
 link_runtime_library() {
 	required_library="$1"
 	if [ -e "/lib/$required_library" ] || [ -e "/usr/lib/$required_library" ]; then
@@ -273,8 +277,8 @@ link_runtime_library() {
 
 	for candidate in /lib/${library_prefix}* /usr/lib/${library_prefix}*; do
 		[ -e "$candidate" ] || continue
-		ln -sf "$candidate" "$FNC_HOME/$required_library" ||
-			fail "cannot create private alias for $required_library"
+		ln -s "$candidate" "$FNC_STAGED_DIR/$required_library" ||
+			fail "cannot stage private alias for $required_library"
 		info "fnc: using $candidate for $required_library"
 		return 0
 	done
@@ -287,9 +291,52 @@ for runtime_library in "$fnc_ubus_lib" "$fnc_ubox_lib" \
 	link_runtime_library "$runtime_library"
 done
 
+if ! LD_LIBRARY_PATH="$FNC_STAGED_DIR:/lib:/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+	"$FNC_STAGED_DIR/fnc.bin" show version >/dev/null 2>&1; then
+	fail "fnc is incompatible with the router's runtime libraries"
+fi
+
+# Snapshot every non-package persistent object before changing it. These
+# objects are activated and smoke-tested first; the batched package-manager
+# invocation below is the final fatal commit. A failure before that commit
+# restores this snapshot from cleanup().
+stage native_snapshot
+mkdir -m 0700 "$ROLLBACK_DIR" || fail "cannot create rollback directory"
+HAD_FNC_HOME=0
+HAD_FNC_LAUNCHER=0
+HAD_FREENETIC_CONFIG=0
+if [ -e /usr/lib/freenetic ]; then
+	cp -a /usr/lib/freenetic "$ROLLBACK_DIR/fnc-home" || fail "cannot snapshot fnc directory"
+	HAD_FNC_HOME=1
+fi
+if [ -e /usr/bin/fnc ] || [ -L /usr/bin/fnc ]; then
+	cp -a /usr/bin/fnc "$ROLLBACK_DIR/fnc-launcher" || fail "cannot snapshot fnc launcher"
+	HAD_FNC_LAUNCHER=1
+fi
+if [ -e /etc/config/freenetic ]; then
+	cp -a /etc/config/freenetic "$ROLLBACK_DIR/freenetic-config" || fail "cannot snapshot update state"
+	HAD_FREENETIC_CONFIG=1
+fi
+PERSISTENT_MUTATION_STARTED=1
+
+stage native_activation
+FNC_HOME=/usr/lib/freenetic
+mkdir -p "$FNC_HOME" || fail "cannot create fnc directory"
+FNC_TARGET="$(mktemp "$FNC_HOME/.fnc.bin.XXXXXX" 2>/dev/null)" || fail "cannot stage fnc activation"
+cp "$FNC_STAGED_DIR/fnc.bin" "$FNC_TARGET" || fail "cannot copy fnc binary"
+chmod 0755 "$FNC_TARGET" || fail "cannot make fnc executable"
+for staged_alias in "$FNC_STAGED_DIR"/*.so.*; do
+	[ -L "$staged_alias" ] || continue
+	ln -sf "$(readlink "$staged_alias")" "$FNC_HOME/${staged_alias##*/}" ||
+		fail "cannot activate private runtime alias"
+done
+mv -f "$FNC_TARGET" "$FNC_HOME/fnc.bin" || fail "cannot activate fnc binary"
+FNC_TARGET=""
+
 # Keep /usr/bin/fnc as a stable command while the real binary and any
-# compatibility aliases stay in a private directory.
-FNC_STAGED=/tmp/.fnc.freenetic.$$
+# compatibility aliases stay in a private directory. Stage it on /usr/bin's
+# filesystem so activation is one atomic rename.
+FNC_STAGED="$(mktemp /usr/bin/.fnc.freenetic.XXXXXX 2>/dev/null)" || fail "cannot stage fnc launcher"
 cat > "$FNC_STAGED" <<'FREENETIC_FNC_WRAPPER'
 #!/bin/sh
 LD_LIBRARY_PATH="/usr/lib/freenetic:/lib:/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
@@ -305,14 +352,48 @@ if ! /usr/bin/fnc show version >/dev/null 2>&1; then
 	fail "fnc was installed but could not start with the router's runtime libraries"
 fi
 
-# Keep one-shot installs and dashboard-triggered updates consistent. The
-# dashboard uses this tag for the friendly release label; package revisions
-# remain the authoritative signal for refreshed assets under the same tag.
+# Record the desired state before the package commit so a UCI failure remains
+# rollback-safe. The snapshot above is restored if anything below fails.
 stage state_commit
 uci -q set freenetic.updates=freenetic || fail "cannot initialize update state"
 uci -q set "freenetic.updates.installed_release=$RELEASE_TAG" ||
 	fail "cannot record the installed release"
 uci -q commit freenetic || fail "cannot save the installed release"
+
+stage package_install
+info "installing LuCI packages"
+if [ "$package_manager" = apk ]; then
+	# Verify Freenetic packages with the pinned release key while retaining the
+	# router's system keys for dependencies fetched from the OpenWrt feeds.
+	apk --keys-dir "$APK_KEYS_DIR" add \
+		"$TMP_DIR/$THEME_PACKAGE" \
+		"$TMP_DIR/$APP_PACKAGE" \
+		"$TMP_DIR/$THEME_RU_PACKAGE" \
+		"$TMP_DIR/$APP_RU_PACKAGE" ||
+		fail "apk package installation failed"
+else
+	opkg install \
+		"$TMP_DIR/$THEME_PACKAGE" \
+		"$TMP_DIR/$APP_PACKAGE" \
+		"$TMP_DIR/$THEME_RU_PACKAGE" \
+		"$TMP_DIR/$APP_RU_PACKAGE" ||
+		fail "opkg package installation failed"
+fi
+INSTALL_COMMITTED=1
+
+# LuCI caches the resolved menu tree, including depends.uci results. An APK
+# upgrade can leave a previous tree in /tmp, making only the ungated groups
+# visible until the cache is removed.
+stage post_install
+if [ -x /usr/libexec/freenetic-clear-luci-cache ]; then
+	/usr/libexec/freenetic-clear-luci-cache || info "warning: LuCI cache could not be cleared; reload rpcd or reboot if menus look stale"
+else
+	rm -f /tmp/luci-indexcache* 2>/dev/null || true
+	rm -rf /tmp/luci-modulecache 2>/dev/null || true
+fi
+if [ -x /etc/init.d/rpcd ]; then
+	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+fi
 
 stage complete
 info "installed Freenetic $RELEASE_TAG for $target using $package_manager"

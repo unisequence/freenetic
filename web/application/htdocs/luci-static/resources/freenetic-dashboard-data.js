@@ -16,6 +16,9 @@ const FREENETIC_RELEASES_API = 'https://api.github.com/repos/unisequence/freenet
 const FREENETIC_UPDATE_HELPER = '/usr/libexec/freenetic-self-update';
 const FREENETIC_PACKAGE_NAMES = [ 'luci-theme-freenetic', 'luci-app-freenetic' ];
 const FREENETIC_DISPLAY_VERSION = 'v0.2.x-dev';
+const FREENETIC_RELEASE_CODENAMES = Object.freeze({
+	'0.2': 'Onyx'
+});
 const FREENETIC_RELEASE_PACKAGES = [
 	'luci-theme-freenetic',
 	'luci-app-freenetic',
@@ -392,6 +395,15 @@ function freeneticReleaseTag(value) {
 	return /^v\d+\.\d+\.\d+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$/.test(tag) ? tag : '';
 }
 
+function freeneticReleaseCodename(value) {
+	const tag = freeneticReleaseTag(value);
+	if (!tag || tag.includes('-'))
+		return '';
+
+	const line = tag.match(/^v(\d+\.\d+)\./);
+	return line ? (FREENETIC_RELEASE_CODENAMES[line[1]] || '') : '';
+}
+
 function formatFreeneticVersion(packages, installedRelease) {
 	const releaseTag = freeneticReleaseTag(installedRelease);
 	if (releaseTag)
@@ -578,6 +590,7 @@ return baseclass.extend({
 	getFreeneticUpdateState,
 	freeneticBuildRevision,
 	freeneticReleaseTag,
+	freeneticReleaseCodename,
 	formatFreeneticVersion,
 	fmtMB,
 	fmtDateTime,
