@@ -2,15 +2,15 @@
 # Freenetic one-shot installer for supported OpenWrt routers.
 #
 # Usage:
-#   wget -qO- 'https://raw.githubusercontent.com/unisequence/freenetic/v0.2.5/install.sh' | sh
+#   wget -qO- 'https://github.com/unisequence/freenetic/releases/download/v0.3.0-alpha.1/install.sh' | sh
 #
 # The release and checksums are deliberately pinned. Do not install a
 # partially downloaded or silently replaced package.
 set -eu
 
-RELEASE_TAG="v0.2.5"
+RELEASE_TAG="v0.3.0-alpha.1"
 # GitHub normalizes the '~' in the OpenWrt-derived package version to '.'.
-ASSET_VERSION="26.257.51426.6a30103"
+ASSET_VERSION="26.258.41837.55eb2e4"
 RELEASE_BASE_URL="${FREENETIC_RELEASE_BASE_URL:-https://github.com/unisequence/freenetic/releases/download/$RELEASE_TAG}"
 
 MIN_RAM_MIB=128
@@ -74,8 +74,8 @@ case "$target" in
 	mediatek/filogic)
 		target_suffix="aarch64_cortex-a53"
 		min_overlay_mib="$MIN_OVERLAY_MIB_FILOGIC"
-		fnc_sha256_apk="569c07f3523193f646f182f2a09459feda5946c5bc0d9fecf3432a0361481ddb"
-		fnc_sha256_ipk="569c07f3523193f646f182f2a09459feda5946c5bc0d9fecf3432a0361481ddb"
+		fnc_sha256_apk="fba26ed85719b78d7781417e7496a25cb69b0e15e40a9ca9443873055b1b60eb"
+		fnc_sha256_ipk="2e0516a913bf61e635910670c5091079c21b098f246d0b9f32529ef6c40d6b8b"
 		fnc_ubus_lib_apk="libubus.so.20251202"
 		fnc_ubox_lib_apk="libubox.so.20260213"
 		fnc_blobmsg_lib_apk="libblobmsg_json.so.20260213"
@@ -96,8 +96,8 @@ case "$target" in
 	ramips/mt7621)
 		target_suffix="mipsel_24kc"
 		min_overlay_mib="$MIN_OVERLAY_MIB_MT7621"
-		fnc_sha256_apk="694db49b76061c2cca0a8c4b9ff3d9fc638bfea4ee1d5a48c9f29e06936a1470"
-		fnc_sha256_ipk="694db49b76061c2cca0a8c4b9ff3d9fc638bfea4ee1d5a48c9f29e06936a1470"
+		fnc_sha256_apk="cc50d22443d74ece3c3ff9a83dedde4abfc345838f187a8348c9c9a1eb88b8c1"
+		fnc_sha256_ipk="1b6d268667dd618ecbed5b520dbeab74e2198ab44f5090d62a1d19a7268d14f7"
 		fnc_ubus_lib_apk="libubus.so.20251202"
 		fnc_ubox_lib_apk="libubox.so.20260213"
 		fnc_blobmsg_lib_apk="libblobmsg_json.so.20260213"
@@ -156,20 +156,20 @@ case "$package_manager" in
 		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk"
 		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
 		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk"
-		theme_sha256="60296213f9439bda8e20a823d1f2317d68bb6cb59bdd48e5f077485f19a7c27d"
-		app_sha256="0874fe5621b7c6efa66db0edaf6b0ba56b7eb003b94118b18a70f2284e5fedd5"
-		theme_ru_sha256="dcf582def7bfa9293e32ee295d72e7b6a9fbb3ecaa2573d53a50ddf855cc8826"
-		app_ru_sha256="dce7641f7b274672c8821213c655f1c897f37d1b2435831934cb8adaa96e5bfb"
+		theme_sha256="1131b5691a1bb4adaba183b087ab96a4bfd3a805e6ff1ee589c748b8140cfa4a"
+		app_sha256="dd0e40f444731764623ca07cbc6ff65dcce7f6018670b3c3a2e99fa18a08104b"
+		theme_ru_sha256="d46f22dc5348ec172c5f5e1c793c737262ba843dbc58a8eb76cb9a028357dcd2"
+		app_ru_sha256="c9f6688b1729a47e6f737f32b2f1e227d72b71360314af453b7e42d432387a3f"
 		;;
 	opkg)
 		THEME_PACKAGE="luci-theme-freenetic-${ASSET_VERSION}-all.ipk"
 		APP_PACKAGE="luci-app-freenetic-${ASSET_VERSION}-all.ipk"
 		THEME_RU_PACKAGE="luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-all.ipk"
 		APP_RU_PACKAGE="luci-i18n-freenetic-ru-${ASSET_VERSION}-all.ipk"
-		theme_sha256="04f1599288dc0a14c9a61ce08528f057fc9ffc0e1a7e5081eba0e6946f5cd96f"
-		app_sha256="397ad18344c4060f5935a2bed5e4e33bff18ea2397f4c498e84563ace5863430"
-		theme_ru_sha256="1c833b1002e6f75db145ca41249b148baf3f132cf232238cc1ce6e27889927ef"
-		app_ru_sha256="61e822d9ca8b0636aaa9a061ec85bbd756799d050dbd6dd9bcc25485fe033e79"
+		theme_sha256="a4cde67663cc55dc1e7964f2ed774cc81c27eb80f174a24646859bfa2a07cc2c"
+		app_sha256="f67a10d8baed48e1c9142f8d8dbfd7337d9a0f119746c53f9cd08bce3b32592f"
+		theme_ru_sha256="cde782c52311aa3178945ab5a9c398bdeebec64a1c2e16387367f04be7259d78"
+		app_ru_sha256="7cf1af69db66704d0e8cef65536616b1ec3347c8d5e654b4acc1fb53d0b20098"
 		;;
 esac
 
