@@ -4861,6 +4861,23 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 }
 .fn-zapret-title-row .fn-status-pill { margin-top: 8px; flex: 0 0 auto; }
 .fn-zapret-layout { display: grid; gap: 16px; margin-top: 20px; }
+.fn-mihomo-page { display: grid; gap: 16px; }
+.fn-mihomo-hero .fn-card-head,
+.fn-mihomo-card .fn-card-head { justify-content: space-between; }
+.fn-mihomo-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 16px; }
+.fn-mihomo-card { min-width: 0; }
+.fn-mihomo-card .fn-settings-field { margin-bottom: 16px; }
+.fn-mihomo-input { min-height: 170px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.45; }
+.fn-mihomo-checks { display: flex; flex-wrap: wrap; gap: 14px 24px; margin: 6px 0 18px; }
+.fn-mihomo-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--fn-text); }
+.fn-mihomo-check input { flex: 0 0 auto; }
+.fn-mihomo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fn-mihomo-actions .fn-settings-btn { width: auto; }
+.fn-mihomo-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--fn-text-secondary); font-size: .9rem; }
+.fn-mihomo-log { max-height: 360px; overflow: auto; margin: 16px 0 0; padding: 12px; border: 1px solid var(--fn-border); border-radius: var(--fn-radius); background: var(--fn-surface-alt); color: var(--fn-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+	.fn-mihomo-layout { grid-template-columns: 1fr; }
+}
 .fn-zapret-card { overflow: hidden; }
 .fn-zapret-card .fn-card-head { min-height: 50px; }
 .fn-zapret-card .fn-card-head strong { font-size: 1rem; letter-spacing: .035em; }

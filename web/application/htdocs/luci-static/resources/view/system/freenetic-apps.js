@@ -21,6 +21,7 @@ const NETWORK_RESTART_HELPER = '/usr/libexec/freenetic-network-restart';
 const PACKAGE_MANAGER_HELPER = '/usr/libexec/package-manager-call';
 const TAILSCALE_RECOVERY_HELPER = '/usr/libexec/freenetic-tailscale-recover';
 const ZAPRET2_PACKAGE_HELPER = '/usr/libexec/freenetic-zapret2-package';
+const MIHOMO_PACKAGE_HELPER = '/usr/libexec/freenetic-mihomo-package';
 
 /* Keep the catalog universal: "recommended" means safe for a normal router
  * setup, while "advanced" marks tools which can alter routing, firewall, DNS
@@ -202,6 +203,11 @@ const GROUPS = [
 				configurePath: [ 'admin', 'network', 'zapret2' ],
 				nativeConfigurePath: [ 'admin', 'services', 'zapret2' ],
 				desc: _('Programmable DPI-bypass engine with Lua strategies.') },
+			{ id: 'mihomo', name: _('Mihomo proxy'), tier: 'advanced',
+				packages: [ 'freenetic-mihomo' ], externallyAvailable: true,
+				installHelper: MIHOMO_PACKAGE_HELPER, configurePath: [ 'admin', 'network', 'mihomo' ],
+				customStatus: 'mihomo',
+				desc: _('Local proxy core with router-side URI and subscription conversion.') },
 			{ id: 'magitrickle', name: _('MagiTrickle'), tier: 'advanced', restartNetifdOnInstall: true,
 				packages: [ 'magitrickle' ],
 				desc: _('Specialized traffic-routing and filtering tool for experienced users.') }
@@ -244,6 +250,12 @@ function getPackageStatus() {
 		.catch(() => null);
 }
 
+function getMihomoStatus() {
+	return fs.exec_direct(MIHOMO_PACKAGE_HELPER, [ 'status' ], 'json')
+		.then(result => result && result.ok !== false ? result : null)
+		.catch(() => null);
+}
+
 function restartNetifd() {
 	return fs.exec_direct(NETWORK_RESTART_HELPER, [], 'json').then(result => {
 		if (!result || result.ok !== true)
@@ -256,12 +268,13 @@ return view.extend({
 	load() {
 		/* Read installed and available state in one batched lookup. Repository
 		 * indexes are refreshed only when the user actually starts an install. */
-		return getPackageStatus();
+		return Promise.all([ getPackageStatus(), getMihomoStatus() ]);
 	},
 
 	render(data) {
-		const initialStatus = data && typeof data === 'object' && !Array.isArray(data) ? data : null;
+		const initialStatus = Array.isArray(data) ? data[0] : data;
 		this.packageStatus = initialStatus;
+		this.externalStatus = { mihomo: Array.isArray(data) ? data[1] : null };
 		this.packageAvailabilityKnown = !!initialStatus;
 		this.packageOperationInProgress = 0;
 		this.packageStatusRefreshPending = false;
@@ -314,15 +327,17 @@ return view.extend({
 
 	refreshPackageStatus() {
 		return getPackageStatus().then(status => {
-			if (!status)
-				return;
-
-			this.packageStatus = status;
-			this.packageAvailabilityKnown = true;
-			if (this.packageOperationInProgress)
-				this.packageStatusRefreshPending = true;
-			else
-				this.renderCatalog();
+			if (status) {
+				this.packageStatus = status;
+				this.packageAvailabilityKnown = true;
+			}
+			return getMihomoStatus().then(external => {
+				this.externalStatus = { mihomo: external };
+				if (this.packageOperationInProgress)
+					this.packageStatusRefreshPending = true;
+				else
+					this.renderCatalog();
+			});
 		}).catch(() => null);
 	},
 
@@ -427,6 +442,10 @@ return view.extend({
 	},
 
 	itemConfigurePath(item) {
+		if (item.customStatus && this.itemExisting(item))
+			return item.nativeConfigurePath || null;
+		if (item.customStatus && this.itemInstalled(item))
+			return item.configurePath;
 		const installed = this.itemInstalledPackageSet(item);
 		const native = packageSets(item)[0];
 		return installed && item.nativeConfigurePath && installed === native
@@ -434,10 +453,24 @@ return view.extend({
 	},
 
 	itemInstalled(item) {
+		if (item.customStatus && this.externalStatus && this.externalStatus[item.customStatus])
+			return !!this.externalStatus[item.customStatus].installed;
 		return !!this.itemInstalledPackageSet(item);
 	},
 
+	itemExisting(item) {
+		if (item.customStatus && this.externalStatus && this.externalStatus[item.customStatus])
+			return !this.itemInstalled(item) && !!this.externalStatus[item.customStatus].existing;
+		return false;
+	},
+
+	itemPresent(item) {
+		return this.itemInstalled(item) || this.itemExisting(item);
+	},
+
 	removablePackages(item) {
+		if (item.customStatus)
+			return [];
 		const installedSet = this.itemInstalledPackageSet(item);
 		if (!installedSet)
 			return [];
@@ -457,7 +490,7 @@ return view.extend({
 		case 'advanced':
 			return this.itemTier(item, group) === 'advanced';
 		case 'installed':
-			return this.itemInstalled(item);
+			return this.itemPresent(item);
 		case 'all':
 			return true;
 		default:
@@ -511,6 +544,7 @@ return view.extend({
 	renderItem(item, group) {
 		const focused = item.id === this.focusedAppId;
 		const installed = this.itemInstalled(item);
+		const existing = this.itemExisting(item);
 		const availableSet = !installed && this.packageAvailabilityKnown
 			? packageSets(item).find(set => this.itemPackageSetAvailable(item, set)) : null;
 		const unavailablePackages = !installed && !availableSet && !item.externallyAvailable && this.packageAvailabilityKnown
@@ -520,19 +554,21 @@ return view.extend({
 			}) : [];
 		const unavailable = unavailablePackages.length > 0;
 
-		const statusPill = E('span', { class: 'fn-status-pill ' + (installed ? 'fn-status-ok' : unavailable ? 'fn-status-unavailable' : 'fn-status-off') },
-			installed ? _('Installed') : unavailable ? _('Unavailable') : _('Not installed'));
+		const statusPill = E('span', { class: 'fn-status-pill ' + (installed ? 'fn-status-ok' : existing ? 'fn-status-warn' : unavailable ? 'fn-status-unavailable' : 'fn-status-off') },
+			installed ? _('Installed') : existing ? _('Installed outside Freenetic') : unavailable ? _('Unavailable') : _('Not installed'));
 
 		const buttonAttrs = {
 			type: 'button',
 			class: 'fn-settings-btn' + (installed ? ' fn-settings-btn-danger' : ' fn-settings-btn-primary')
 		};
-		if (unavailable) {
+		if (unavailable || existing) {
 			buttonAttrs.disabled = true;
-			buttonAttrs.title = _('Required package(s) are unavailable for this firmware: %s.').format(unavailablePackages.join(', '));
+			buttonAttrs.title = existing
+				? _('Mihomo is already installed outside Freenetic. Use the existing LuCI interface or remove it first.')
+				: _('Required package(s) are unavailable for this firmware: %s.').format(unavailablePackages.join(', '));
 		}
 		const btn = E('button', buttonAttrs,
-			installed ? _('Remove') : unavailable ? _('Unavailable') : _('Install'));
+			installed ? _('Remove') : existing ? _('Managed elsewhere') : unavailable ? _('Unavailable') : _('Install'));
 		const description = unavailable
 			? _('%s Required package(s) are unavailable for this firmware: %s.').format(item.desc, unavailablePackages.join(', '))
 			: item.desc;
@@ -543,7 +579,7 @@ return view.extend({
 
 		const actions = [ btn ];
 		const configurePath = this.itemConfigurePath(item);
-		if (installed && configurePath) {
+		if ((installed || existing) && configurePath) {
 			actions.unshift(E('a', {
 				class: 'fn-settings-btn fn-settings-btn-primary',
 				href: L.url.apply(L, configurePath)
@@ -566,7 +602,7 @@ return view.extend({
 		if (focused)
 			this.focusedAppRow = row;
 
-		if (!unavailable) {
+		if (!unavailable && !existing) {
 			btn.addEventListener('click', () => {
 				if (!installed && item.id === 'mwan3')
 					this.confirmMwanInstall(item, btn, statusPill, row);
@@ -600,20 +636,20 @@ return view.extend({
 	toggleItem(item, wasInstalled, btn, statusPill, row) {
 		const action = wasInstalled ? 'remove' : 'install';
 		const installSet = wasInstalled ? null : this.itemInstallPackageSet(item);
-		const operationPackages = wasInstalled ? this.removablePackages(item) : installSet.slice();
-		const useInstallHelper = !wasInstalled && this.itemUsesInstallHelper(item, installSet);
+		const useInstallHelper = !!item.installHelper && (wasInstalled || this.itemUsesInstallHelper(item, installSet));
+		const operationPackages = item.customStatus ? [] : (wasInstalled ? this.removablePackages(item) : installSet.slice());
 		this.packageOperationInProgress++;
 		btn.disabled = true;
 		dom_content(btn, wasInstalled ? _('Removing…') : _('Installing…'));
 
 		let mwanInstallTimer = null;
 		const run = () => {
+			if (useInstallHelper)
+				return fs.exec_direct(item.installHelper, [ action ], 'json');
 			if (!operationPackages.length)
 				return Promise.resolve({ code: 0 });
 			if (!wasInstalled && item.id === 'mwan3' && typeof window !== 'undefined')
 				mwanInstallTimer = window.setTimeout(() => window.location.reload(), 10000);
-			if (useInstallHelper)
-				return fs.exec_direct(item.installHelper, [ 'install' ], 'json');
 			return fs.exec_direct(PACKAGE_MANAGER_HELPER, [ action ].concat(operationPackages), 'json');
 		};
 		const prepareRemoval = wasInstalled && item.id === 'mwan3'
@@ -642,12 +678,18 @@ return view.extend({
 				else
 					this.installedNames[p] = true;
 			});
-			const nowInstalled = this.itemInstalled(item);
+			const refreshExternal = item.customStatus
+				? getMihomoStatus().then(status => {
+					this.externalStatus[item.customStatus] = status;
+				}).catch(() => null)
+				: Promise.resolve();
 			const restart = operationPackages.length && item.restartNetifdOnInstall
 				? restartNetifd().then(() => ({ ok: true })).catch(error => ({ ok: false, error: error }))
 				: Promise.resolve({ ok: true });
 
-			return restart.then(networkResult => {
+			return Promise.all([ refreshExternal, restart ]).then(results => {
+				const networkResult = results[1];
+				const nowInstalled = this.itemInstalled(item);
 				if (wasInstalled && nowInstalled)
 					notify(_('%s is still installed because its packages are required by another installed application.').format(item.name), 'warning');
 				else if (wasInstalled && !networkResult.ok)

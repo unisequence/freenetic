@@ -144,6 +144,22 @@
 			}
 		}
 	},
+	"admin/network/mihomo": {
+		"title": "Mihomo",
+		"order": 4.45,
+		"action": {
+			"type": "view",
+			"path": "network/freenetic-mihomo"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-freenetic"
+			],
+			"uci": {
+				"mihomo": { "main": { "freenetic_managed": "1" } }
+			}
+		}
+	},
 	"admin/network/zapret2/config": {
 		"title": "Settings",
 		"order": 10,

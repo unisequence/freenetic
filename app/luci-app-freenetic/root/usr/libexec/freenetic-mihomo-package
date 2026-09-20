@@ -1,0 +1,180 @@
+#!/bin/sh
+# Install and manage the pinned upstream Mihomo core without pulling a
+# JavaScript runtime onto the router.  The LuCI page stores provider input in
+# the router and lets Mihomo do the URI/base64 parsing itself.
+
+set -u
+
+JSHN=/usr/share/libubox/jshn.sh
+MIHOMO_VERSION=1.19.31
+MIHOMO_BASE_URL=https://github.com/MetaCubeX/mihomo/releases/download/v$MIHOMO_VERSION
+MIHOMO_API_URL=https://api.github.com/repos/MetaCubeX/mihomo/releases/tags/v$MIHOMO_VERSION
+MIHOMO_BIN=/usr/bin/mihomo
+MIHOMO_CONFIG=/etc/config/mihomo
+MIHOMO_INIT=/etc/init.d/mihomo
+MIHOMO_HOME=/etc/mihomo
+MIHOMO_TEMPLATE_DIR=/usr/share/freenetic/mihomo
+
+if [ -r "$JSHN" ]; then
+	# shellcheck disable=SC1090
+	. "$JSHN"
+fi
+
+json_reply() {
+	if command -v json_init >/dev/null 2>&1; then
+		json_init
+		if [ "$1" = 1 ]; then
+			json_add_int code 0
+		else
+			json_add_int code 1
+		fi
+		json_add_boolean ok "$1"
+		[ -n "${2:-}" ] && json_add_string error "$2"
+		[ -n "${3:-}" ] && json_add_string version "$3"
+		[ -n "${4:-}" ] && json_add_boolean installed "$4"
+		[ -n "${5:-}" ] && json_add_boolean existing "$5"
+		json_dump
+	else
+		printf '{"ok":%s}\n' "$([ "$1" = 1 ] && printf true || printf false)"
+	fi
+}
+
+fail() {
+	json_reply 0 "$1"
+	exit 0
+}
+
+valid_action() {
+	case "$1" in
+		status|install|remove) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+runtime_version() {
+	[ -x "$MIHOMO_BIN" ] || return 1
+	"$MIHOMO_BIN" -v 2>/dev/null | sed -n '1s/.* Mihomo Meta \([^ ]*\).*/\1/p'
+}
+
+is_installed() {
+	[ -x "$MIHOMO_BIN" ] && [ -f "$MIHOMO_CONFIG" ] && [ -x "$MIHOMO_INIT" ]
+}
+
+status() {
+	version=$(runtime_version || true)
+	existing=0
+	if [ -e "$MIHOMO_BIN" ] || [ -e "$MIHOMO_INIT" ] || [ -e "$MIHOMO_CONFIG" ]; then
+		existing=1
+	fi
+	if is_installed; then
+		json_reply 1 "" "$version" 1 "$existing"
+	else
+		json_reply 1 "" "$version" 0 "$existing"
+	fi
+}
+
+target_asset() {
+	board_json=$(ubus call system board 2>/dev/null || true)
+	target=$(printf '%s\n' "$board_json" | jsonfilter -e '@.release.target' 2>/dev/null || true)
+	case "$target" in
+		mediatek/filogic)
+			asset_name="mihomo-linux-arm64-v1.19.31.gz"
+			asset_hash="9e0f11afbf38426b8bd88fdc594678f8161c57eccb4e1b77acb12b493904f1d4"
+			;;
+		ramips/mt7621)
+			asset_name="mihomo-linux-mipsle-softfloat-v1.19.31.gz"
+			asset_hash="9061daa6a6b8cbb0491387e5de59663441b637eff0e3d295cec6949478752192"
+			;;
+		*)
+			printf '%s\n' "Unsupported OpenWrt target: ${target:-unknown}" >&2
+			return 1
+			;;
+	esac
+}
+
+download_asset() {
+	destination=$1
+	url="$MIHOMO_BASE_URL/$asset_name"
+	if wget -4 -qO "$destination" "$url" 2>/dev/null ||
+		wget -qO "$destination" "$url" 2>/dev/null; then
+		return 0
+	fi
+
+	# Some routers cannot follow GitHub's release redirect.  The API endpoint
+	# returns the asset directly when asked for octet-stream, like the
+	# Freenetic self-updater fallback.
+	asset_id=$(wget -4 -qO- "$MIHOMO_API_URL" 2>/dev/null |
+		jsonfilter -e "@.assets[@.name='$asset_name'].id" 2>/dev/null || true)
+	[ -n "$asset_id" ] || return 1
+	wget -4 --header='Accept: application/octet-stream' -qO "$destination" \
+		"https://api.github.com/repos/MetaCubeX/mihomo/releases/assets/$asset_id" 2>/dev/null || return 1
+}
+
+install_runtime_files() {
+	[ -f "$MIHOMO_TEMPLATE_DIR/config" ] || return 1
+	[ -f "$MIHOMO_TEMPLATE_DIR/init" ] || return 1
+	[ -f "$MIHOMO_TEMPLATE_DIR/default-config.yaml" ] || return 1
+	mkdir -p "$MIHOMO_HOME/providers" || return 1
+	if [ ! -f "$MIHOMO_CONFIG" ]; then
+		install -m 0600 "$MIHOMO_TEMPLATE_DIR/config" "$MIHOMO_CONFIG" || return 1
+	fi
+	if [ ! -f "$MIHOMO_HOME/config.yaml" ]; then
+		install -m 0600 "$MIHOMO_TEMPLATE_DIR/default-config.yaml" "$MIHOMO_HOME/config.yaml" || return 1
+	fi
+	install -m 0755 "$MIHOMO_TEMPLATE_DIR/init" "$MIHOMO_INIT" || return 1
+	return 0
+}
+
+install_runtime() {
+	if [ -x "$MIHOMO_BIN" ] || [ -x "$MIHOMO_INIT" ] || [ -f "$MIHOMO_CONFIG" ]; then
+		fail "Mihomo is already installed outside Freenetic; remove it first or use its existing LuCI interface."
+	fi
+	target_asset || fail "Unsupported OpenWrt target"
+	stage_dir=$(mktemp -d /tmp/freenetic-mihomo.XXXXXX 2>/dev/null || true)
+	[ -n "$stage_dir" ] || fail "Cannot create a private staging directory"
+	chmod 0700 "$stage_dir" || fail "Cannot protect the staging directory"
+	trap 'rm -rf "$stage_dir"' EXIT INT TERM
+
+	archive="$stage_dir/$asset_name"
+	download_asset "$archive" || fail "Cannot download Mihomo $MIHOMO_VERSION"
+	[ -s "$archive" ] || fail "Downloaded Mihomo archive is empty"
+	actual_hash=$(sha256sum "$archive" 2>/dev/null | awk '{print $1}')
+	[ "$actual_hash" = "$asset_hash" ] || fail "Mihomo SHA-256 verification failed"
+
+	gunzip -c "$archive" >"$stage_dir/mihomo" || fail "Cannot unpack Mihomo"
+	chmod 0755 "$stage_dir/mihomo" || fail "Cannot prepare Mihomo binary"
+	"$stage_dir/mihomo" -v >/dev/null 2>&1 || fail "Downloaded Mihomo binary is not runnable on this router"
+
+	if [ -x "$MIHOMO_INIT" ]; then
+		"$MIHOMO_INIT" stop >/dev/null 2>&1 || true
+	fi
+	mkdir -p /usr/bin || fail "Cannot create /usr/bin"
+	mv "$stage_dir/mihomo" "$MIHOMO_BIN" || fail "Cannot install Mihomo binary"
+	if ! install_runtime_files; then
+		# The guard above established that these paths were not present before
+		# installation. Remove the partial runtime so a later retry is safe.
+		rm -f "$MIHOMO_BIN" "$MIHOMO_INIT" "$MIHOMO_CONFIG"
+		fail "Cannot install Mihomo service files"
+	fi
+	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+	json_reply 1 "" "$(runtime_version || true)" 1
+}
+
+remove_runtime() {
+	[ -x "$MIHOMO_INIT" ] && "$MIHOMO_INIT" stop >/dev/null 2>&1 || true
+	rm -f "$MIHOMO_BIN" "$MIHOMO_INIT" "$MIHOMO_CONFIG"
+	# Keep /etc/mihomo so a reinstall does not silently destroy user state.
+	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+	json_reply 1 "" "" 0
+}
+
+[ "$#" -eq 1 ] && valid_action "$1" || {
+	json_reply 0 "Usage: $0 status|install|remove"
+	exit 0
+}
+
+case "$1" in
+	status) status ;;
+	install) install_runtime ;;
+	remove) remove_runtime ;;
+esac

@@ -1,0 +1,5 @@
+config mihomo 'main'
+	option freenetic_managed '1'
+	option enabled '0'
+	option home '/etc/mihomo'
+	option config '/etc/mihomo/config.yaml'

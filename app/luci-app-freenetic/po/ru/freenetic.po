@@ -4521,3 +4521,111 @@ msgstr "Zapret2 отключён."
 
 msgid "Failed to apply Zapret2 settings: %s"
 msgstr "Не удалось применить настройки Zapret2: %s"
+
+msgid "Mihomo proxy"
+msgstr "Прокси Mihomo"
+
+msgid "Local proxy core with router-side URI and subscription conversion."
+msgstr "Локальное прокси-ядро с конвертацией ссылок и подписок на роутере."
+
+msgid "Mihomo operation failed."
+msgstr "Операция Mihomo завершилась ошибкой."
+
+msgid "Stopped"
+msgstr "Остановлен"
+
+msgid "Mihomo"
+msgstr "Mihomo"
+
+msgid "Mihomo is not installed"
+msgstr "Mihomo не установлен"
+
+msgid "Install Mihomo from Applications to convert proxy links and subscriptions on the router."
+msgstr "Установите Mihomo в разделе «Приложения», чтобы конвертировать прокси-ссылки и подписки прямо на роутере."
+
+msgid "Proxy links"
+msgstr "Ссылки прокси"
+
+msgid "Subscriptions"
+msgstr "Подписки"
+
+msgid "vless://, vmess://, ss:// or trojan:// — one per line"
+msgstr "vless://, vmess://, ss:// или trojan:// — по одной ссылке в строке"
+
+msgid "https://example.com/subscription — one URL per line"
+msgstr "https://example.com/subscription — один URL в строке"
+
+msgid "Allow access from LAN"
+msgstr "Разрешить доступ из локальной сети"
+
+msgid "Open Mihomo Web UI"
+msgstr "Открыть веб-интерфейс Mihomo"
+
+msgid "Apply configuration"
+msgstr "Применить конфигурацию"
+
+msgid "Restart"
+msgstr "Перезапустить"
+
+msgid "Logs"
+msgstr "Журналы"
+
+msgid "Version: %s"
+msgstr "Версия: %s"
+
+msgid "Controller: %s"
+msgstr "Контроллер: %s"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Source type"
+msgstr "Тип источника"
+
+msgid "Mihomo parses proxy links and remote subscriptions itself."
+msgstr "Mihomo самостоятельно разбирает прокси-ссылки и удалённые подписки."
+
+msgid "Mihomo converts proxy links and subscriptions locally on the router. No Node.js or cloud converter is required."
+msgstr "Mihomo конвертирует прокси-ссылки и подписки прямо на роутере. Node.js и облачный конвертер не требуются."
+
+msgid "Mihomo parses links and remote subscriptions itself."
+msgstr "Mihomo самостоятельно разбирает ссылки и удалённые подписки."
+
+msgid "Sources"
+msgstr "Источники"
+
+msgid "One item per line. Existing local links are loaded when available."
+msgstr "Один элемент в строке. Сохранённые локальные ссылки подставляются автоматически."
+
+msgid "Mixed port"
+msgstr "Смешанный порт"
+
+msgid "Port exposed by Mihomo for local clients."
+msgstr "Порт Mihomo для локальных клиентов."
+
+msgid "Mihomo configuration applied."
+msgstr "Конфигурация Mihomo применена."
+
+msgid "Failed to apply Mihomo configuration: %s"
+msgstr "Не удалось применить конфигурацию Mihomo: %s"
+
+msgid "Mihomo service updated."
+msgstr "Служба Mihomo обновлена."
+
+msgid "Mihomo service action failed: %s"
+msgstr "Не удалось выполнить действие службы Mihomo: %s"
+
+msgid "Loading logs…"
+msgstr "Загружаем журналы…"
+
+msgid "No logs yet."
+msgstr "Журнал пока пуст."
+
+msgid "Installed outside Freenetic"
+msgstr "Установлен вне Freenetic"
+
+msgid "Managed elsewhere"
+msgstr "Управляется отдельно"
+
+msgid "Mihomo is already installed outside Freenetic. Use the existing LuCI interface or remove it first."
+msgstr "Mihomo уже установлен вне Freenetic. Используйте существующий интерфейс LuCI или сначала удалите его."
