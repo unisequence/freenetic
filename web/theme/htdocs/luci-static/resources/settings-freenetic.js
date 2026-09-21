@@ -204,7 +204,11 @@ return baseclass.extend({
 							   by the menu.d *files'* hash, not by uci values,
 							   so that gating won't visibly change until this
 							   cache is cleared too. */
-							return uci.save().then(() => uci.apply())
+							/* Theme selection is a small luci-only preference.  Do not
+							 * use uci.apply(): its rollback timer can restore the old
+							 * theme when the browser follows the redirect or refreshes
+							 * the newly selected interface. */
+							return uci.save().then(() => commitUci('luci'))
 								.then(() => fs.exec('/usr/libexec/freenetic-clear-luci-cache', []))
 								.then(result => {
 									if (!result || result.code !== 0)
