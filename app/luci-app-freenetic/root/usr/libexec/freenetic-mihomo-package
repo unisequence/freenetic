@@ -118,12 +118,15 @@ install_runtime_files() {
 	[ -f "$MIHOMO_TEMPLATE_DIR/default-config.yaml" ] || return 1
 	mkdir -p "$MIHOMO_HOME/providers" || return 1
 	if [ ! -f "$MIHOMO_CONFIG" ]; then
-		install -m 0600 "$MIHOMO_TEMPLATE_DIR/config" "$MIHOMO_CONFIG" || return 1
+		cp "$MIHOMO_TEMPLATE_DIR/config" "$MIHOMO_CONFIG" || return 1
+		chmod 0600 "$MIHOMO_CONFIG" || return 1
 	fi
 	if [ ! -f "$MIHOMO_HOME/config.yaml" ]; then
-		install -m 0600 "$MIHOMO_TEMPLATE_DIR/default-config.yaml" "$MIHOMO_HOME/config.yaml" || return 1
+		cp "$MIHOMO_TEMPLATE_DIR/default-config.yaml" "$MIHOMO_HOME/config.yaml" || return 1
+		chmod 0600 "$MIHOMO_HOME/config.yaml" || return 1
 	fi
-	install -m 0755 "$MIHOMO_TEMPLATE_DIR/init" "$MIHOMO_INIT" || return 1
+	cp "$MIHOMO_TEMPLATE_DIR/init" "$MIHOMO_INIT" || return 1
+	chmod 0755 "$MIHOMO_INIT" || return 1
 	return 0
 }
 
