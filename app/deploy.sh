@@ -96,7 +96,7 @@ $SSH_CMD "$ROUTER" '
         mkdir -p /etc/config
         cp /tmp/freenetic-pkg/root/etc/config/freenetic /etc/config/freenetic
     fi
-    mkdir -p /usr/share/luci/menu.d /usr/share/rpcd/acl.d /usr/libexec /usr/share/freenetic
+    mkdir -p /usr/share/luci/menu.d /usr/share/rpcd/acl.d /usr/share/rpcd/ucode /usr/libexec /usr/share/freenetic
     acl_changed=0
     cmp -s /tmp/freenetic-pkg/root/usr/share/rpcd/acl.d/luci-app-freenetic.json \
         /usr/share/rpcd/acl.d/luci-app-freenetic.json || acl_changed=1
@@ -104,6 +104,7 @@ $SSH_CMD "$ROUTER" '
     rm -f /usr/share/luci/menu.d/luci-theme-freenetic.json
     cp /tmp/freenetic-pkg/root/usr/share/luci/menu.d/*.json /usr/share/luci/menu.d/
     cp /tmp/freenetic-pkg/root/usr/share/rpcd/acl.d/*.json /usr/share/rpcd/acl.d/
+    cp /tmp/freenetic-pkg/root/usr/share/rpcd/ucode/*.uc /usr/share/rpcd/ucode/
     cp /tmp/freenetic-pkg/root/usr/libexec/freenetic-* /usr/libexec/
     cp -r /tmp/freenetic-pkg/root/usr/share/freenetic/. /usr/share/freenetic/
     # Remove the automatic recovery hook left by earlier development builds.
@@ -173,6 +174,7 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/view/status/freenetic-traffic.js \
              /www/luci-static/resources/view/status/freenetic-wifimonitor.js \
              /www/luci-static/resources/view/system/freenetic-apps.js \
+             /www/luci-static/resources/view/network/freenetic-mihomo.js \
              /www/luci-static/resources/view/system/freenetic-diagnostics.js \
              /www/luci-static/resources/view/system/freenetic-system.js \
              /usr/lib/lua/luci/i18n/freenetic.ru.lmo \
@@ -180,6 +182,8 @@ $SSH_CMD "$ROUTER" '
              /usr/share/luci/menu.d/zz-luci-freenetic.json \
              /usr/share/rpcd/acl.d/luci-theme-freenetic.json \
              /usr/share/rpcd/acl.d/luci-app-freenetic.json \
+             /usr/share/rpcd/ucode/mihomo.uc \
+             /usr/share/freenetic/mihomo \
              /usr/share/freenetic/keys \
              /usr/libexec/freenetic-backup-call /usr/libexec/freenetic-clear-luci-cache \
              /usr/libexec/freenetic-diagnostics-bundle \
@@ -188,7 +192,8 @@ $SSH_CMD "$ROUTER" '
              /usr/libexec/freenetic-package-status \
              /usr/libexec/freenetic-network-restart \
 		     /usr/libexec/freenetic-tailscale-recover \
-		     /usr/libexec/freenetic-zapret2-package \
+             /usr/libexec/freenetic-zapret2-package \
+             /usr/libexec/freenetic-mihomo-package \
 		     /usr/libexec/freenetic-zapret2 \
              /usr/libexec/freenetic-ipsec-restart \
              /usr/libexec/freenetic-ipsec-status \
