@@ -6,6 +6,9 @@
 set -u
 
 JSHN=/usr/share/libubox/jshn.sh
+# OpenWrt's jshn.sh expects this shell variable to exist even when no
+# prefix is requested. Keep nounset enabled for the rest of the helper.
+JSON_PREFIX=
 MIHOMO_VERSION=1.19.31
 MIHOMO_BASE_URL=https://github.com/MetaCubeX/mihomo/releases/download/v$MIHOMO_VERSION
 MIHOMO_API_URL=https://api.github.com/repos/MetaCubeX/mihomo/releases/tags/v$MIHOMO_VERSION
