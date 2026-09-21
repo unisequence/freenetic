@@ -3,11 +3,10 @@
 # JavaScript runtime onto the router.  The LuCI page stores provider input in
 # the router and lets Mihomo do the URI/base64 parsing itself.
 
-set -u
+# jshn.sh intentionally creates and removes JSON_* variables while it builds
+# a response, so nounset is not compatible with its shell API.
 
 JSHN=/usr/share/libubox/jshn.sh
-# OpenWrt's jshn.sh expects this shell variable to exist even when no
-# prefix is requested. Keep nounset enabled for the rest of the helper.
 JSON_PREFIX=
 MIHOMO_VERSION=1.19.31
 MIHOMO_BASE_URL=https://github.com/MetaCubeX/mihomo/releases/download/v$MIHOMO_VERSION
