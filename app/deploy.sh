@@ -194,6 +194,7 @@ $SSH_CMD "$ROUTER" '
 		     /usr/libexec/freenetic-tailscale-recover \
              /usr/libexec/freenetic-zapret2-package \
              /usr/libexec/freenetic-mihomo-package \
+             /usr/libexec/freenetic-magitrickle-package \
 		     /usr/libexec/freenetic-zapret2 \
              /usr/libexec/freenetic-ipsec-restart \
              /usr/libexec/freenetic-ipsec-status \

@@ -977,8 +977,8 @@ msgstr "Использует Android-телефон или другое USB-се
 msgid "Policy-based routing"
 msgstr "Маршрутизация по политикам"
 
-msgid "Route a network segment through a selected WAN or VPN tunnel."
-msgstr "Направляет сегмент сети через выбранный WAN или VPN-туннель."
+msgid "Route an entire network segment or device through a selected WAN or VPN tunnel."
+msgstr "Направляет весь сегмент сети или отдельное устройство через выбранный WAN или VPN-туннель."
 
 msgid "Zapret"
 msgstr "Zapret"
@@ -995,8 +995,26 @@ msgstr "Расширенный инструмент обработки траф�
 msgid "MagiTrickle"
 msgstr "MagiTrickle"
 
-msgid "Specialized traffic-routing and filtering tool for experienced users."
-msgstr "Специализированный инструмент маршрутизации и фильтрации трафика для опытных пользователей."
+msgid "Route selected domains through Mihomo or any VPN tunnel interface."
+msgstr "Направляет выбранные домены через Mihomo или любой интерфейс VPN-туннеля."
+
+msgid "Open interface"
+msgstr "Открыть интерфейс"
+
+msgid "Install MagiTrickle?"
+msgstr "Установить MagiTrickle?"
+
+msgid "MagiTrickle routes selected domains through Mihomo or a VPN tunnel without routing the whole network."
+msgstr "MagiTrickle направляет выбранные домены через Mihomo или VPN-туннель, не отправляя через него всю сеть."
+
+msgid "Its own web interface will be available on port 8080 after installation."
+msgstr "После установки собственный веб-интерфейс будет доступен на порту 8080."
+
+msgid "Later"
+msgstr "Позже"
+
+msgid "Install MagiTrickle"
+msgstr "Установить MagiTrickle"
 
 msgid "Install additional features on demand. Recommended features are suitable for most routers; Advanced networking tools can change traffic processing and are intended for experienced users. Packages come from the router's configured repositories."
 msgstr "Устанавливайте дополнительные функции по необходимости. Рекомендуемые функции подходят большинству роутеров, а расширенные сетевые инструменты могут менять обработку трафика и предназначены для опытных пользователей. Пакеты загружаются из настроенных репозиториев роутера."

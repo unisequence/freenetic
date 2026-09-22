@@ -4872,14 +4872,20 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-mihomo-checks { display: flex; flex-wrap: wrap; gap: 14px 24px; margin: 6px 0 18px; }
 .fn-mihomo-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--fn-text); }
 .fn-mihomo-check input { flex: 0 0 auto; }
-.fn-mihomo-blocks { display: grid; gap: 10px; margin: 8px 0 18px; padding: 12px; border: 1px solid var(--fn-border); border-radius: var(--fn-radius); background: var(--fn-surface-alt); }
+.fn-mihomo-blocks { display: grid; gap: 10px; margin: 8px 0 18px; padding: 12px; border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius); background: var(--fn-surface-alt); }
 .fn-mihomo-blocks .fn-settings-field { margin: 0; }
-.fn-mihomo-blocks .fn-settings-field > label:first-child { min-width: 150px; }
+.fn-mihomo-blocks > strong,
+.fn-mihomo-blocks .fn-settings-field > label:first-child,
+.fn-mihomo-blocks .fn-mihomo-check { color: var(--fn-text); }
+.fn-mihomo-blocks .fn-settings-field > label:first-child { min-width: 150px; font-weight: 600; }
+.fn-mihomo-blocks .fn-settings-field:has(input:disabled) > label:first-child,
+.fn-mihomo-blocks .fn-settings-field:has(input:disabled) .fn-mihomo-check { color: var(--fn-text-disabled); }
 .fn-mihomo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .fn-mihomo-actions .fn-settings-btn { width: auto; }
 .fn-mihomo-effective-input { min-height: 52vh; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.4; }
 .fn-mihomo-effective-note { margin: 0 0 12px; max-width: 900px; }
 .fn-mihomo-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.fn-mihomo-modal-actions .fn-settings-btn { width: auto; }
 .fn-mihomo-service-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .fn-mihomo-compact-btn { padding: 6px 12px; font-size: .86rem; line-height: 1.25; }
 .fn-mihomo-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--fn-text-secondary); font-size: .9rem; }

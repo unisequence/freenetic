@@ -594,10 +594,11 @@ return view.extend({
 				});
 		} }, _('Copy YAML'));
 		const download = E('button', { class: 'fn-settings-btn fn-mihomo-compact-btn', type: 'button', click: () => downloadText('mihomo-effective.yaml', result.text) }, _('Download YAML'));
+		const close = E('button', { class: 'fn-settings-btn fn-mihomo-compact-btn', type: 'button', click: ui.hideModal }, _('Close'));
 		ui.showModal(_('Effective YAML'), [
 			E('p', { class: 'fn-field-hint fn-mihomo-effective-note' }, result.note),
 			textarea,
-			E('div', { class: 'fn-mihomo-modal-actions' }, [ copy, download ])
+			E('div', { class: 'fn-mihomo-modal-actions' }, [ copy, download, close ])
 		]);
 	},
 

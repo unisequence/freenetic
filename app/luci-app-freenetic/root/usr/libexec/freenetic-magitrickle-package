@@ -1,0 +1,229 @@
+#!/bin/sh
+# Install and manage MagiTrickle from its signed, architecture-specific
+# upstream repository.  It is not published in the regular OpenWrt feeds, so
+# the generic package-manager helper cannot install it by name.
+
+set -u
+
+PACKAGE=magitrickle
+APK_REPOSITORY_DIR=/etc/apk/repositories.d
+APK_REPOSITORY_FILE="$APK_REPOSITORY_DIR/magitrickle.list"
+APK_KEY_FILE=/etc/apk/keys/magitrickle.pem
+APK_REPOSITORY_BASE=https://bin.magitrickle.dev/packages/openwrt/snapshots-apk
+APK_KEY_URL="$APK_REPOSITORY_BASE/magitrickle.pub.pem"
+APK_KEY_SHA256=3e49e30a9975c2cf80c270ff40a070dac92d67a25f735a27a7e91ca67d3eb5f5
+
+OPKG_REPOSITORY_FILE=/etc/opkg/magitrickle.conf
+OPKG_KEY_FILE=/etc/opkg/keys/6cef96cd3b8f66b0
+OPKG_REPOSITORY_BASE=https://bin.magitrickle.dev/packages/openwrt/snapshots-ipk
+OPKG_KEY_URL="$OPKG_REPOSITORY_BASE/6cef96cd3b8f66b0.pub"
+OPKG_KEY_SHA256=6ef030b47cd07526f05bfc0599e8e9032ea6abf7cb233edb31f60ebc161f9ca4
+
+stage_dir=
+package_manager=
+package_arch=
+repository_url=
+key_url=
+key_hash=
+
+json_escape() {
+	printf '%s' "$1" | tr '\r\n' '  ' | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+json_reply() {
+	code="$1"
+	ok=false
+	[ "$code" -eq 0 ] && ok=true
+	printf '{"code":%s,"ok":%s' "$code" "$ok"
+	[ -n "${2:-}" ] && printf ',"stdout":"%s"' "$(json_escape "$2")"
+	[ -n "${3:-}" ] && printf ',"stderr":"%s"' "$(json_escape "$3")"
+	[ -n "${4:-}" ] && printf ',"installed":%s' "$4"
+	[ -n "${5:-}" ] && printf ',"running":%s' "$5"
+	[ -n "${6:-}" ] && printf ',"version":"%s"' "$(json_escape "$6")"
+	[ -n "${7:-}" ] && printf ',"repository":"%s"' "$(json_escape "$7")"
+	printf '}\n'
+}
+
+cleanup() {
+	[ -z "$stage_dir" ] || rm -rf "$stage_dir"
+}
+
+fail() {
+	json_reply 1 '' "$1"
+	cleanup
+	exit 0
+}
+
+valid_arch() {
+	case "$1" in
+		aarch64_cortex-a53|aarch64_cortex-a72|aarch64_cortex-a76|aarch64_generic|\
+		arm_arm1176jzf-s_vfp|arm_arm926ej-s|arm_cortex-a15_neon-vfpv4|\
+		arm_cortex-a5_vfpv4|arm_cortex-a7|arm_cortex-a7_neon-vfpv4|\
+		arm_cortex-a7_vfpv4|arm_cortex-a8_vfpv3|arm_cortex-a9|\
+		arm_cortex-a9_neon|arm_cortex-a9_vfpv3-d16|arm_fa526|arm_xscale|\
+		i386_pentium4|i386_pentium-mmx|loongarch64_generic|mips_24kc|mips_4kec|\
+		mips64el_mips64r2|mips64_mips64r2|mips64_octeonplus|mipsel_24kc_24kf|\
+		mipsel_24kc|mipsel_74kc|mipsel_mips32|mips_mips32|riscv64_generic|x86_64)
+			return 0
+			;;
+		*) return 1 ;;
+	esac
+}
+
+detect_manager() {
+	if command -v apk >/dev/null 2>&1; then
+		package_manager=apk
+	elif command -v opkg >/dev/null 2>&1; then
+		package_manager=opkg
+	else
+		fail 'Neither apk nor opkg is installed.'
+	fi
+}
+
+detect_arch() {
+	package_arch=''
+	if [ -r /etc/openwrt_release ]; then
+		package_arch="$(sed -n "s/^DISTRIB_ARCH=['\"]\{0,1\}\([^'\"]*\)['\"]\{0,1\}$/\1/p" /etc/openwrt_release | head -n 1)"
+	fi
+
+	if ! valid_arch "$package_arch" && [ "$package_manager" = opkg ]; then
+		while read -r _ candidate _; do
+			if valid_arch "$candidate"; then
+				package_arch="$candidate"
+				break
+			fi
+		done <<EOF
+$(opkg print-architecture 2>/dev/null || true)
+EOF
+	fi
+
+	valid_arch "$package_arch" || fail "Unsupported OpenWrt architecture: ${package_arch:-unknown}."
+	case "$package_manager" in
+		apk)
+			repository_url="$APK_REPOSITORY_BASE/$package_arch/packages.adb"
+			key_url="$APK_KEY_URL"
+			key_hash="$APK_KEY_SHA256"
+			;;
+		opkg)
+			repository_url="$OPKG_REPOSITORY_BASE/$package_arch"
+			key_url="$OPKG_KEY_URL"
+			key_hash="$OPKG_KEY_SHA256"
+			;;
+	esac
+}
+
+package_installed() {
+	case "$package_manager" in
+		apk) apk info -e "$PACKAGE" >/dev/null 2>&1 ;;
+		opkg) opkg status "$PACKAGE" 2>/dev/null | grep -q '^Status: .* installed$' ;;
+		*) return 1 ;;
+	esac
+}
+
+service_running() {
+	pidof magitrickled >/dev/null 2>&1
+}
+
+package_version() {
+	case "$package_manager" in
+		apk)
+			apk info -a "$PACKAGE" 2>/dev/null |
+				awk -F': ' '$1 == "version" { print $2; exit }'
+			;;
+		opkg)
+			opkg status "$PACKAGE" 2>/dev/null |
+				awk '$1 == "Version:" { print $2; exit }'
+			;;
+		*) printf '%s' '' ;;
+	esac
+}
+
+download_key() {
+	stage_dir="$(mktemp -d /tmp/freenetic-magitrickle.XXXXXX 2>/dev/null || true)"
+	[ -n "$stage_dir" ] || fail 'Cannot create a private staging directory.'
+	chmod 0700 "$stage_dir" || fail 'Cannot protect the staging directory.'
+	wget -qO "$stage_dir/key" "$key_url" || fail 'Cannot download the MagiTrickle repository key.'
+	[ -s "$stage_dir/key" ] || fail 'The MagiTrickle repository key is empty.'
+	actual_hash="$(sha256sum "$stage_dir/key" 2>/dev/null | awk '{ print $1 }')"
+	[ "$actual_hash" = "$key_hash" ] || fail 'MagiTrickle repository key verification failed.'
+}
+
+install_key_and_repository() {
+	download_key
+	case "$package_manager" in
+		apk)
+			mkdir -p "$APK_REPOSITORY_DIR" /etc/apk/keys || fail 'Cannot create APK repository directories.'
+			cp "$stage_dir/key" "$APK_KEY_FILE" || fail 'Cannot install the MagiTrickle APK key.'
+			chmod 0644 "$APK_KEY_FILE" || fail 'Cannot set the MagiTrickle APK key permissions.'
+			printf '%s\n' "$repository_url" > "$APK_REPOSITORY_FILE" || fail 'Cannot configure the MagiTrickle APK repository.'
+			;;
+		opkg)
+			mkdir -p /etc/opkg/keys || fail 'Cannot create opkg key directory.'
+			cp "$stage_dir/key" "$OPKG_KEY_FILE" || fail 'Cannot install the MagiTrickle opkg key.'
+			chmod 0644 "$OPKG_KEY_FILE" || fail 'Cannot set the MagiTrickle opkg key permissions.'
+			printf 'src/gz freenetic_magitrickle %s\n' "$repository_url" > "$OPKG_REPOSITORY_FILE" || fail 'Cannot configure the MagiTrickle opkg repository.'
+			;;
+	esac
+}
+
+start_service() {
+	[ -x /etc/init.d/magitrickle ] || fail 'MagiTrickle service script was not installed.'
+	/etc/init.d/magitrickle start >/dev/null 2>&1 || fail 'MagiTrickle service could not be started.'
+}
+
+install_package() {
+	install_key_and_repository
+	case "$package_manager" in
+		apk)
+			apk update >"$stage_dir/update.out" 2>"$stage_dir/update.err" || fail "$(cat "$stage_dir/update.err")"
+			apk add "$PACKAGE" >"$stage_dir/install.out" 2>"$stage_dir/install.err" || fail "$(cat "$stage_dir/install.err")"
+			;;
+		opkg)
+			opkg update >"$stage_dir/update.out" 2>"$stage_dir/update.err" || fail "$(cat "$stage_dir/update.err")"
+			opkg install "$PACKAGE" >"$stage_dir/install.out" 2>"$stage_dir/install.err" || fail "$(cat "$stage_dir/install.err")"
+			;;
+	esac
+	start_service
+	output="$(tail -n 20 "$stage_dir/install.out" 2>/dev/null || true)"
+	json_reply 0 "$output" '' true "$(service_running && printf true || printf false)" "$(package_version)" "$repository_url"
+}
+
+remove_package() {
+	if package_installed; then
+		[ ! -x /etc/init.d/magitrickle ] || /etc/init.d/magitrickle stop >/dev/null 2>&1 || true
+		case "$package_manager" in
+			apk) apk del "$PACKAGE" >/dev/null 2>&1 || fail 'Cannot remove MagiTrickle.' ;;
+			opkg) opkg remove "$PACKAGE" >/dev/null 2>&1 || fail 'Cannot remove MagiTrickle.' ;;
+		esac
+	fi
+	# Keep /etc/magitrickle so a reinstall never destroys user routing rules.
+	case "$package_manager" in
+		apk) rm -f "$APK_REPOSITORY_FILE" "$APK_KEY_FILE" ;;
+		opkg) rm -f "$OPKG_REPOSITORY_FILE" "$OPKG_KEY_FILE" ;;
+	esac
+	json_reply 0 '' '' false false ''
+}
+
+status() {
+	installed=false
+	running=false
+	package_installed && installed=true
+	service_running && running=true
+	json_reply 0 '' '' "$installed" "$running" "$(package_version)" "$repository_url"
+}
+
+[ "$#" -eq 1 ] || { detect_manager; detect_arch; fail 'Usage: status|install|remove'; }
+case "$1" in
+	status|install|remove) ;;
+	*) detect_manager; detect_arch; fail 'Usage: status|install|remove' ;;
+esac
+
+detect_manager
+detect_arch
+
+case "$1" in
+	status) status ;;
+	install) install_package ;;
+	remove) remove_package ;;
+esac
+cleanup

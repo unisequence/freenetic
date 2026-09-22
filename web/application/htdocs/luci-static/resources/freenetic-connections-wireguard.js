@@ -14,6 +14,10 @@ const notify = uiHelper.notify;
 const notifyLong = uiHelper.notifyLong;
 const applyChanges = uiHelper.applyChanges;
 const network = networkHelper;
+
+function applicationsUrl(appId) {
+	return L.url('admin/system/applications') + '?focus=' + encodeURIComponent(appId);
+}
 const {
 	NETWORK_RESTART_HELPER,
 	WG_PROTO,
@@ -709,8 +713,30 @@ return baseclass.extend({ mixin: {
 				notify(_('AmneziaWG support installed. Network service restarted.'), 'info');
 			}).catch(error => {
 				notify(_('AmneziaWG support installed, but the network service could not be restarted: %s Reboot the router before starting a new AWG interface.').format(error.message || error), 'warning');
-			}).then(() => this.refresh().then(() => { if (after) after(); }));
+			}).then(() => this.refresh().then(() => {
+				if (after)
+					after();
+				else
+					this.offerMagiTrickle();
+			}));
 		}).catch(err => notifyLong(_('AmneziaWG installation failed: %s').format(err.message || err), 'danger'))
 			.finally(() => { button.disabled = false; dom_content(button, _('Connect feed and install')); });
+	},
+
+	offerMagiTrickle() {
+		if (this.magiTrickleOfferShown || (this.packages && this.packages.magitrickle))
+			return;
+		this.magiTrickleOfferShown = true;
+		ui.showModal(_('Install MagiTrickle?'), [
+			E('p', {}, _('MagiTrickle routes selected domains through Mihomo or a VPN tunnel without routing the whole network.')),
+			E('p', {}, _('Its own web interface will be available on port 8080 after installation.')),
+			E('div', { class: 'button-row' }, [
+				E('button', { class: 'btn', click: ui.hideModal }, _('Later')),
+				E('a', {
+					class: 'btn cbi-button-positive',
+					href: applicationsUrl('magitrickle')
+				}, _('Open Applications'))
+			])
+		]);
 	},
 } });

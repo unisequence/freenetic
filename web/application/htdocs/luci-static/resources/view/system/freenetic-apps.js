@@ -22,6 +22,10 @@ const PACKAGE_MANAGER_HELPER = '/usr/libexec/package-manager-call';
 const TAILSCALE_RECOVERY_HELPER = '/usr/libexec/freenetic-tailscale-recover';
 const ZAPRET2_PACKAGE_HELPER = '/usr/libexec/freenetic-zapret2-package';
 const MIHOMO_PACKAGE_HELPER = '/usr/libexec/freenetic-mihomo-package';
+const MAGITRICKLE_PACKAGE_HELPER = '/usr/libexec/freenetic-magitrickle-package';
+const MAGITRICKLE_SUGGESTION_IDS = [
+	'mihomo', 'wireguard', 'amneziawg', 'openvpn', 'pptp', 'l2tp', 'l2tp_ipsec', 'ikev2_ipsec'
+];
 
 /* Keep the catalog universal: "recommended" means safe for a normal router
  * setup, while "advanced" marks tools which can alter routing, firewall, DNS
@@ -188,7 +192,7 @@ const GROUPS = [
 				packages: [ 'mwan3', 'luci-app-mwan3' ],
 				desc: _('Fail over between multiple Internet connections or balance traffic across them.') },
 				{ id: 'pbr', name: _('Policy-based routing'), packages: [ 'pbr' ],
-					desc: _('Route a network segment through a selected WAN or VPN tunnel.') },
+					desc: _('Route an entire network segment or device through a selected WAN or VPN tunnel.') },
 			{ id: 'nfqws2', name: _('Zapret2 (NFQWS2)'), tier: 'advanced',
 				/* Prefer the complete LuCI package already used by OpenWrt builds.
 				 * The signed Freenetic runtime remains a fallback for older feeds
@@ -208,9 +212,10 @@ const GROUPS = [
 				installHelper: MIHOMO_PACKAGE_HELPER, configurePath: [ 'admin', 'network', 'mihomo' ],
 				customStatus: 'mihomo',
 				desc: _('Local proxy core with router-side URI and subscription conversion.') },
-			{ id: 'magitrickle', name: _('MagiTrickle'), tier: 'advanced', restartNetifdOnInstall: true,
-				packages: [ 'magitrickle' ],
-				desc: _('Specialized traffic-routing and filtering tool for experienced users.') }
+			{ id: 'magitrickle', name: _('MagiTrickle'), tier: 'advanced',
+				packages: [ 'magitrickle' ], externallyAvailable: true,
+				installHelper: MAGITRICKLE_PACKAGE_HELPER, configureUrlPort: 8080,
+				desc: _('Route selected domains through Mihomo or any VPN tunnel interface.') }
 		]
 	}
 ];
@@ -241,6 +246,13 @@ function updatePackageIndexes() {
 		}
 		return result;
 	});
+}
+
+function serviceUrl(port) {
+	let host = typeof window !== 'undefined' && window.location && window.location.hostname || '192.168.1.1';
+	if (host.indexOf(':') >= 0 && host.charAt(0) !== '[')
+		host = '[' + host + ']';
+	return 'http://' + host + ':' + port + '/';
 }
 
 function getPackageStatus() {
@@ -286,6 +298,7 @@ return view.extend({
 		});
 		this.focusedAppId = requestedAppId();
 		this.focusedAppScrolled = false;
+		this.magiTrickleOfferShown = false;
 		const focused = catalogItem(this.focusedAppId);
 		this.activeFilter = focused ? this.itemTier(focused.item, focused.group) : 'recommended';
 		this.appTabs = {};
@@ -452,6 +465,10 @@ return view.extend({
 			? item.nativeConfigurePath : item.configurePath;
 	},
 
+	itemConfigureUrl(item) {
+		return item && item.configureUrlPort ? serviceUrl(item.configureUrlPort) : null;
+	},
+
 	itemInstalled(item) {
 		if (item.customStatus && this.externalStatus && this.externalStatus[item.customStatus])
 			return !!this.externalStatus[item.customStatus].installed;
@@ -579,11 +596,19 @@ return view.extend({
 
 		const actions = [ btn ];
 		const configurePath = this.itemConfigurePath(item);
-		if ((installed || existing) && configurePath) {
-			actions.unshift(E('a', {
+		const configureUrl = this.itemConfigureUrl(item);
+		if ((installed || existing) && (configurePath || configureUrl)) {
+			const configureAttrs = {
 				class: 'fn-settings-btn fn-settings-btn-primary',
-				href: L.url.apply(L, configurePath)
-			}, _('Configure')));
+				href: configureUrl || (configurePath ? L.url.apply(L, configurePath) : '#')
+			};
+			if (configureUrl) {
+				configureAttrs.target = '_blank';
+				configureAttrs.rel = 'noopener';
+			}
+			actions.unshift(E('a', {
+				...configureAttrs
+			}, configureUrl ? _('Open interface') : _('Configure')));
 		}
 
 		const row = E('div', {
@@ -614,6 +639,43 @@ return view.extend({
 		return row;
 	},
 
+	shouldOfferMagiTrickle(item, wasInstalled) {
+		if (wasInstalled || !item || MAGITRICKLE_SUGGESTION_IDS.indexOf(item.id) < 0 || this.magiTrickleOfferShown)
+			return false;
+		const entry = catalogItem('magitrickle');
+		return !!(entry && !this.itemInstalled(entry.item));
+	},
+
+	offerMagiTrickle() {
+		const entry = catalogItem('magitrickle');
+		if (!entry || this.itemInstalled(entry.item) || this.magiTrickleOfferShown)
+			return;
+		this.magiTrickleOfferShown = true;
+		ui.showModal(_('Install MagiTrickle?'), [
+			E('p', {}, _('MagiTrickle routes selected domains through Mihomo or a VPN tunnel without routing the whole network.')),
+			E('p', {}, _('Its own web interface will be available on port 8080 after installation.')),
+			E('div', { class: 'button-row' }, [
+				E('button', { class: 'btn', click: ui.hideModal }, _('Later')),
+				E('button', {
+					class: 'btn cbi-button-positive',
+					click: () => {
+						ui.hideModal();
+						this.activeFilter = 'advanced';
+						this.focusedAppId = 'magitrickle';
+						this.focusedAppScrolled = false;
+						this.renderCatalog();
+						window.setTimeout(() => {
+							const row = this.appsCatalog && this.appsCatalog.querySelector('#fn-app-magitrickle');
+							const install = row && row.querySelector('button.fn-settings-btn-primary');
+							if (install)
+								install.click();
+						}, 0);
+					}
+				}, _('Install MagiTrickle'))
+			])
+		]);
+	},
+
 	confirmMwanInstall(item, btn, statusPill, row) {
 		ui.showModal(_('Install Multi-WAN?'), [
 			E('p', {}, _('Multi-WAN adds routing rules and restarts the LuCI session while it is being installed.')),
@@ -635,6 +697,7 @@ return view.extend({
 
 	toggleItem(item, wasInstalled, btn, statusPill, row) {
 		const action = wasInstalled ? 'remove' : 'install';
+		const offerMagiTrickle = this.shouldOfferMagiTrickle(item, wasInstalled);
 		const installSet = wasInstalled ? null : this.itemInstallPackageSet(item);
 		const useInstallHelper = !!item.installHelper && (wasInstalled || this.itemUsesInstallHelper(item, installSet));
 		const operationPackages = item.customStatus ? [] : (wasInstalled ? this.removablePackages(item) : installSet.slice());
@@ -710,8 +773,10 @@ return view.extend({
 				dom_content(btn, nowInstalled ? _('Remove') : _('Install'));
 				/* Rebuild cards with a configuration action after installation so
 				 * their click handlers and action set reflect the new package state. */
-				if (this.activeFilter === 'installed' || item.configurePath)
+				if (this.activeFilter === 'installed' || item.configurePath || item.configureUrlPort)
 					this.renderCatalog();
+				if (offerMagiTrickle && typeof window !== 'undefined')
+					window.setTimeout(() => this.offerMagiTrickle(), 0);
 			});
 		}).catch(err => {
 			/* Installing mwan3 intentionally restarts rpcd. Its in-flight RPC call
