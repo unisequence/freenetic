@@ -159,6 +159,18 @@ function input_lines(raw, mode) {
 	return length(values) ? { values: values } : { error: 'Введите хотя бы одну ссылку или подписку.' };
 }
 
+function provider_override_text() {
+	/* Xray Reality v26.9.8+ requires X25519MLKEM768 in the ClientHello.
+	 * Mihomo keeps that extension disabled by default for old Reality
+	 * servers, and its bundled Firefox fingerprint does not advertise it.
+	 * Apply the compatibility pair only to XHTTP Reality nodes so ordinary
+	 * Reality/TCP and non-Reality providers keep their imported settings. */
+	return '    override:\n' +
+		'      override-expr:\n' +
+		'        - \'(select(.["reality-opts"] != null and .network == "xhttp") | .["reality-opts"]["support-x25519mlkem768"]) = true\'\n' +
+		'        - \'(select(.["reality-opts"] != null and .network == "xhttp" and .["client-fingerprint"] != "chrome") | .["client-fingerprint"]) = "chrome"\'\n';
+}
+
 function config_text(values, mode, port, allow_lan, web_ui) {
 	let text = '';
 	text += `mixed-port: ${port}\n`;
@@ -178,6 +190,7 @@ function config_text(values, mode, port, allow_lan, web_ui) {
 		text += '    path: ./providers/freenetic.txt\n';
 		text += '    format: uri\n';
 		text += '    interval: 3600\n';
+		text += provider_override_text();
 		push(provider_names, 'local');
 	} else {
 		for (let index, url in values) {
@@ -188,6 +201,7 @@ function config_text(values, mode, port, allow_lan, web_ui) {
 			text += `    path: ./providers/${name}.yaml\n`;
 			text += '    format: uri\n';
 			text += '    interval: 3600\n';
+			text += provider_override_text();
 			push(provider_names, name);
 		}
 	}

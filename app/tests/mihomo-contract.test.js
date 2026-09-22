@@ -52,6 +52,10 @@ assert.match(ucode, /return \{ 'mihomo': methods \}/);
 assert.match(ucode, /rollback_stage/);
 assert.match(ucode, /allow_lan, false/);
 assert.match(ucode, /web_ui, false/);
+assert.match(ucode, /support-x25519mlkem768/,
+	'Mihomo provider imports must handle current Reality handshakes');
+assert.match(ucode, /network == "xhttp"/,
+	'Reality compatibility overrides must stay scoped to XHTTP nodes');
 assert.doesNotMatch(ucode, /text \+= '      - DIRECT\\n'/,
 	'DIRECT must not silently become the default instead of the configured provider');
 
