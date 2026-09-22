@@ -132,6 +132,11 @@ function status_data() {
 	};
 }
 
+function config_data() {
+	if (!installed()) return failure('not_installed', 'Mihomo не установлен.');
+	return envelope({ text: read_text(CONFIG, MAX_INPUT), path: CONFIG });
+}
+
 function yaml_quote(value) {
 	let text = `${value ?? ''}`;
 	text = replace(text, /\\/g, '\\\\');
@@ -308,6 +313,62 @@ function apply_config(request) {
 	return envelope({ applied: true, source_mode: mode, count: length(parsed.values), status: status_data() });
 }
 
+function rollback_config_stage(previous) {
+	if (previous)
+		system(`mv ${CONFIG_BACKUP} ${CONFIG}`);
+	else
+		unlink(CONFIG);
+	unlink(CONFIG_BACKUP);
+}
+
+function apply_raw_config(request) {
+	if (!installed()) return failure('not_installed', 'Сначала установите Mihomo в разделе «Приложения».');
+	const raw = request.args?.config;
+	if (type(raw) != 'string' || !trim(raw))
+		return failure('invalid_config', 'Введите конфигурацию Mihomo в формате YAML.');
+	if (length(raw) > MAX_INPUT)
+		return failure('invalid_config', 'Размер конфигурации не должен превышать 1 МБ.');
+
+	const previous = system(`[ -f ${CONFIG} ]`) == 0;
+	cleanup_stage();
+	if (previous && system(`cp -a ${CONFIG} ${CONFIG_BACKUP}`) != 0)
+		return failure('write_failed', 'Не удалось сохранить предыдущую конфигурацию Mihomo.');
+
+	const config_tmp = `${HOME}/.config.yaml.manual.new`;
+	if (!write_file(config_tmp, raw, 0600)) {
+		cleanup_stage();
+		return failure('write_failed', 'Не удалось записать конфигурацию Mihomo.');
+	}
+	const validation = run_capture(`${BINARY} -d ${HOME} -t -f ${config_tmp}`, 16384);
+	if (validation.rc != 0) {
+		unlink(config_tmp);
+		cleanup_stage();
+		return failure('invalid_config', trim(validation.error || validation.output || 'Конфигурация Mihomo не прошла проверку.'));
+	}
+	if (system(`mv ${config_tmp} ${CONFIG}`) != 0) {
+		unlink(config_tmp);
+		rollback_config_stage(previous);
+		return failure('write_failed', 'Не удалось заменить конфигурацию Mihomo.');
+	}
+	try {
+		const config = cursor();
+		config.set('mihomo', 'main', 'enabled', '1');
+		config.commit('mihomo');
+	}
+	catch (error) {
+		rollback_config_stage(previous);
+		return failure('write_failed', error?.message || 'Не удалось сохранить настройки службы Mihomo.');
+	}
+	const action = run_capture(`${INIT} restart`, 8192);
+	if (action.rc != 0) {
+		rollback_config_stage(previous);
+		run_capture(`${INIT} restart`, 8192);
+		return failure('service_failed', trim(action.error || action.output || 'Не удалось перезапустить Mihomo.'));
+	}
+	cleanup_stage();
+	return envelope({ applied: true, mode: 'manual', status: status_data() });
+}
+
 function service_action(request) {
 	if (!installed()) return failure('not_installed', 'Mihomo не установлен.');
 	const action = request.args?.action;
@@ -325,8 +386,13 @@ function logs_data() {
 
 const methods = {
 	status: { args: { api_version: 0 }, call: function(request) { const error = checked(request); return error || envelope(status_data()); } },
+	config: { args: { api_version: 0 }, call: function(request) { const error = checked(request); return error || config_data(); } },
 	apply: { args: { api_version: 0, input: '', source_mode: '', mixed_port: 0, allow_lan: false, web_ui: false }, call: function(request) {
 		try { const error = checked(request); return error || apply_config(request); }
+		catch (error) { return failure('internal_error', error?.message || `${error}`); }
+	} },
+	apply_raw: { args: { api_version: 0, config: '' }, call: function(request) {
+		try { const error = checked(request); return error || apply_raw_config(request); }
 		catch (error) { return failure('internal_error', error?.message || `${error}`); }
 	} },
 	service: { args: { api_version: 0, action: '' }, call: function(request) {

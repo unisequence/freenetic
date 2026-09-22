@@ -4864,17 +4864,20 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-mihomo-page { display: grid; gap: 16px; }
 .fn-mihomo-hero .fn-card-head,
 .fn-mihomo-card .fn-card-head { justify-content: space-between; }
-.fn-mihomo-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 16px; }
+.fn-mihomo-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 16px; align-items: start; }
 .fn-mihomo-card { min-width: 0; }
 .fn-mihomo-card .fn-settings-field { margin-bottom: 16px; }
 .fn-mihomo-input { min-height: 170px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.45; }
+.fn-mihomo-raw-input { min-height: 360px; tab-size: 2; }
 .fn-mihomo-checks { display: flex; flex-wrap: wrap; gap: 14px 24px; margin: 6px 0 18px; }
 .fn-mihomo-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--fn-text); }
 .fn-mihomo-check input { flex: 0 0 auto; }
 .fn-mihomo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .fn-mihomo-actions .fn-settings-btn { width: auto; }
+.fn-mihomo-service-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fn-mihomo-compact-btn { padding: 6px 12px; font-size: .86rem; line-height: 1.25; }
 .fn-mihomo-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--fn-text-secondary); font-size: .9rem; }
-.fn-mihomo-log { max-height: 360px; overflow: auto; margin: 16px 0 0; padding: 12px; border: 1px solid var(--fn-border); border-radius: var(--fn-radius); background: var(--fn-surface-alt); color: var(--fn-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.fn-mihomo-log { max-height: 260px; overflow: auto; margin: 14px 0 0; padding: 10px; border: 1px solid var(--fn-border); border-radius: var(--fn-radius); background: var(--fn-surface-alt); color: var(--fn-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; font-size: .78rem; line-height: 1.4; }
 @media (max-width: 800px) {
 	.fn-mihomo-layout { grid-template-columns: 1fr; }
 }

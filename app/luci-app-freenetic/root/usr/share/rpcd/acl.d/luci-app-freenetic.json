@@ -6,7 +6,7 @@
 			"ubus": {
 				"uci": [ "changes", "get" ],
 				"zapret2": [ "info", "status", "validate", "list_index", "list_get", "log" ],
-				"mihomo": [ "status", "logs" ],
+				"mihomo": [ "status", "config", "logs" ],
 				"mwan3": [ "status" ],
 				"network.interface": [ "status", "dump" ],
 				"network.device": [ "status" ],
@@ -55,7 +55,7 @@
 			"ubus": {
 				"uci": [ "add", "apply", "commit", "confirm", "delete", "order", "rename", "rollback", "set" ],
 				"zapret2": [ "service", "list_put", "list_delete", "list_clear" ],
-				"mihomo": [ "apply", "service" ],
+				"mihomo": [ "apply", "apply_raw", "service" ],
 				"network": [ "reload" ],
 				"luci.wireguard": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],
 				"luci.amneziawg": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],

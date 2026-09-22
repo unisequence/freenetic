@@ -4561,8 +4561,35 @@ msgstr "Разрешить доступ из локальной сети"
 msgid "Open Mihomo Web UI"
 msgstr "Открыть веб-интерфейс Mihomo"
 
+msgid "Editor mode"
+msgstr "Режим редактирования"
+
+msgid "Automatic import"
+msgstr "Автоматический импорт"
+
+msgid "Manual YAML"
+msgstr "Ручной YAML"
+
+msgid "Use links or edit the complete Mihomo YAML manually."
+msgstr "Используйте ссылки или редактируйте полный YAML Mihomo вручную."
+
+msgid "Raw Mihomo configuration"
+msgstr "Полная конфигурация Mihomo"
+
+msgid "Paste a complete Mihomo YAML configuration"
+msgstr "Вставьте полную YAML-конфигурацию Mihomo"
+
+msgid "The YAML is validated by Mihomo before the service is restarted."
+msgstr "Перед перезапуском службы YAML проверяется самим Mihomo."
+
 msgid "Apply configuration"
 msgstr "Применить конфигурацию"
+
+msgid "Validate and apply YAML"
+msgstr "Проверить и применить YAML"
+
+msgid "Validating…"
+msgstr "Проверяем…"
 
 msgid "Restart"
 msgstr "Перезапустить"
@@ -4608,6 +4635,12 @@ msgstr "Конфигурация Mihomo применена."
 
 msgid "Failed to apply Mihomo configuration: %s"
 msgstr "Не удалось применить конфигурацию Mihomo: %s"
+
+msgid "Manual Mihomo configuration applied."
+msgstr "Ручная конфигурация Mihomo применена."
+
+msgid "Failed to apply manual Mihomo configuration: %s"
+msgstr "Не удалось применить ручную конфигурацию Mihomo: %s"
 
 msgid "Mihomo service updated."
 msgstr "Служба Mihomo обновлена."

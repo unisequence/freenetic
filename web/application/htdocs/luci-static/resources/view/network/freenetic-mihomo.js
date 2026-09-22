@@ -42,7 +42,8 @@ return view.extend({
 	load() {
 		return Promise.all([
 			apiCall('status').catch(() => null),
-			fs.exec_direct(PACKAGE_HELPER, [ 'status' ], 'json').catch(() => null)
+			fs.exec_direct(PACKAGE_HELPER, [ 'status' ], 'json').catch(() => null),
+			apiCall('config').catch(() => null)
 		]);
 	},
 
@@ -50,6 +51,7 @@ return view.extend({
 		const packageStatus = data && data[1];
 		const status = packageStatus && packageStatus.installed ? data[0] : null;
 		this.status = status || {};
+		this.configText = data && data[2] && data[2].text || '';
 		if (!packageStatus || !packageStatus.installed)
 			return this.renderMissing();
 		return this.renderInstalled();
@@ -69,6 +71,10 @@ return view.extend({
 	renderInstalled() {
 		const status = this.status || {};
 		const sourceMode = status.source_mode === 'subscriptions' ? 'subscriptions' : 'links';
+		const editMode = E('select', { class: 'fn-settings-input fn-mihomo-edit-mode' }, [
+			E('option', { value: 'automatic' }, _('Automatic import')),
+			E('option', { value: 'manual' }, _('Manual YAML'))
+		]);
 		const mode = E('select', { class: 'fn-settings-input' }, [
 			E('option', { value: 'links' }, _('Proxy links')),
 			E('option', { value: 'subscriptions' }, _('Subscriptions'))
@@ -83,20 +89,48 @@ return view.extend({
 		const port = E('input', { class: 'fn-settings-input', type: 'number', min: 1, max: 65535, value: status.mixed_port || 7890 });
 		const allowLan = checkbox(_('Allow access from LAN'), !!status.allow_lan);
 		const webUi = checkbox(_('Open Mihomo Web UI'), !!status.web_ui);
+		const manualConfig = E('textarea', {
+			class: 'fn-settings-input fn-mihomo-input fn-mihomo-raw-input',
+			rows: 18,
+			wrap: 'off',
+			spellcheck: 'false',
+			placeholder: _('Paste a complete Mihomo YAML configuration')
+		}, this.configText || '');
 		const apply = E('button', { class: 'fn-settings-btn fn-settings-btn-primary', type: 'button' }, _('Apply configuration'));
 		const serviceButtons = [ 'start', 'stop', 'restart' ].map(action => E('button', {
-			class: 'fn-settings-btn', type: 'button', click: () => this.service(action)
+			class: 'fn-settings-btn fn-mihomo-compact-btn', type: 'button', click: () => this.service(action)
 		}, { start: _('Start'), stop: _('Stop'), restart: _('Restart') }[action]));
-		const logButton = E('button', { class: 'fn-settings-btn', type: 'button', click: () => this.showLogs() }, _('Logs'));
+		const logButton = E('button', { class: 'fn-settings-btn fn-mihomo-compact-btn', type: 'button', click: () => this.showLogs() }, _('Logs'));
 		const log = E('pre', { class: 'fn-mihomo-log', hidden: true });
+		const autoFields = E('div', { class: 'fn-mihomo-auto-fields' }, [
+			inputField(_('Source type'), mode, _('Mihomo parses links and remote subscriptions itself.')),
+			inputField(_('Sources'), input, _('One item per line. Existing local links are loaded when available.')),
+			inputField(_('Mixed port'), port, _('Port exposed by Mihomo for local clients.')),
+			E('div', { class: 'fn-mihomo-checks' }, [ allowLan, webUi ])
+		]);
+		const manualFields = E('div', { class: 'fn-mihomo-manual-fields', hidden: true }, [
+			inputField(_('Raw Mihomo configuration'), manualConfig,
+				_('The YAML is validated by Mihomo before the service is restarted.'))
+		]);
+
+		const syncEditor = () => {
+			const manual = editMode.value === 'manual';
+			autoFields.hidden = manual;
+			manualFields.hidden = !manual;
+			uiHelper.content(apply, manual ? _('Validate and apply YAML') : _('Apply configuration'));
+		};
 
 		mode.addEventListener('change', () => {
 			input.placeholder = mode.value === 'links'
 				? _('vless://, vmess://, ss:// or trojan:// — one per line')
 				: _('https://example.com/subscription — one URL per line');
 		});
-		apply.addEventListener('click', () => this.applyConfig({ mode, input, port, allowLan, webUi, apply }));
-		this.mihomoFields = { mode, input, port, allowLan, webUi, apply, log };
+		editMode.addEventListener('change', syncEditor);
+		apply.addEventListener('click', () => editMode.value === 'manual'
+			? this.applyRawConfig({ config: manualConfig, apply })
+			: this.applyConfig({ mode, input, port, allowLan, webUi, apply }));
+		this.mihomoFields = { editMode, mode, input, port, allowLan, webUi, manualConfig, apply, log };
+		syncEditor();
 
 		return E('div', { class: 'fn-mihomo-page' }, [
 			E('div', { class: 'fn-card fn-mihomo-hero' }, [
@@ -113,17 +147,16 @@ return view.extend({
 				E('section', { class: 'fn-card fn-mihomo-card' }, [
 					E('div', { class: 'fn-card-head' }, [ E('h3', {}, _('Configuration')) ]),
 					E('div', { class: 'fn-card-body' }, [
-						inputField(_('Source type'), mode, _('Mihomo parses links and remote subscriptions itself.')),
-						inputField(_('Sources'), input, _('One item per line. Existing local links are loaded when available.')),
-						inputField(_('Mixed port'), port, _('Port exposed by Mihomo for local clients.')),
-						E('div', { class: 'fn-mihomo-checks' }, [ allowLan, webUi ]),
+						inputField(_('Editor mode'), editMode, _('Use links or edit the complete Mihomo YAML manually.')),
+						autoFields,
+						manualFields,
 						E('div', { class: 'fn-mihomo-actions' }, [ apply ])
 					])
 				]),
 				E('section', { class: 'fn-card fn-mihomo-card' }, [
 					E('div', { class: 'fn-card-head' }, [ E('h3', {}, _('Service')), statusPill(status) ]),
 					E('div', { class: 'fn-card-body' }, [
-						E('div', { class: 'fn-mihomo-actions' }, serviceButtons.concat([ logButton ])),
+						E('div', { class: 'fn-mihomo-service-actions' }, serviceButtons.concat([ logButton ])),
 						log
 					])
 				])
@@ -152,6 +185,24 @@ return view.extend({
 			});
 	},
 
+	applyRawConfig(fields) {
+		const button = fields.apply;
+		button.disabled = true;
+		uiHelper.content(button, _('Validating…'));
+		return apiCall('apply_raw', { config: fields.config.value })
+			.then(result => {
+				this.status = result.status || this.status;
+				this.configText = fields.config.value;
+				notify(_('Manual Mihomo configuration applied.'), 'info');
+				return this.refreshStatus();
+			})
+			.catch(error => notify(_('Failed to apply manual Mihomo configuration: %s').format(error.message || error), 'danger'))
+			.finally(() => {
+				button.disabled = false;
+				uiHelper.content(button, _('Validate and apply YAML'));
+			});
+	},
+
 	service(action) {
 		return apiCall('service', { action: action })
 			.then(result => {
@@ -176,7 +227,10 @@ return view.extend({
 	refreshStatus() {
 		return apiCall('status').then(status => {
 			this.status = status;
-			return status;
+			return apiCall('config').then(data => {
+				this.configText = data && data.text || this.configText || '';
+				return status;
+			}).catch(() => status);
 		});
 	},
 
