@@ -4663,6 +4663,48 @@ msgstr "Смешанный порт"
 msgid "Port exposed by Mihomo for local clients."
 msgstr "Порт Mihomo для локальных клиентов."
 
+msgid "Built-in blocks"
+msgstr "Встроенные блоки"
+
+msgid "Secure DNS through https-dns-proxy"
+msgstr "Защищённый DNS через https-dns-proxy"
+
+msgid "Transparent TUN mode"
+msgstr "Прозрачный режим TUN"
+
+msgid "Default DNS policy"
+msgstr "Обычная политика DNS"
+
+msgid "Split DNS for local domains"
+msgstr "Раздельный DNS для локальных доменов"
+
+msgid "Secure DNS"
+msgstr "Защищённый DNS"
+
+msgid "Transparent mode"
+msgstr "Прозрачный режим"
+
+msgid "DNS policy"
+msgstr "Политика DNS"
+
+msgid "The local DoH proxy will use Mihomo as its HTTP upstream."
+msgstr "Локальный DoH-прокси будет использовать Mihomo как HTTP-шлюз."
+
+msgid "Install https-dns-proxy from "
+msgstr "Установите https-dns-proxy через раздел "
+
+msgid " to enable this block."
+msgstr ", чтобы включить этот блок."
+
+msgid "The router has no /dev/net/tun device. Install or enable kmod-tun first."
+msgstr "На роутере нет устройства /dev/net/tun. Сначала установите или включите kmod-tun."
+
+msgid "Routes client traffic through Mihomo and hijacks DNS requests."
+msgstr "Направляет трафик клиентов через Mihomo и перехватывает DNS-запросы."
+
+msgid "Split policy keeps local domains on the router resolver."
+msgstr "Раздельная политика оставляет локальные домены на DNS роутера."
+
 msgid "Mihomo configuration applied."
 msgstr "Конфигурация Mihomo применена."
 

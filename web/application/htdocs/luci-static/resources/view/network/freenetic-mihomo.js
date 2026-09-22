@@ -8,8 +8,8 @@
 const PACKAGE_HELPER = '/usr/libexec/freenetic-mihomo-package';
 const notify = uiHelper.notify;
 
-function applicationsUrl() {
-	return L.url('admin/system/applications') + '?focus=mihomo';
+function applicationsUrl(focus) {
+	return L.url('admin/system/applications') + '?focus=' + (focus || 'mihomo');
 }
 
 function apiCall(method, args) {
@@ -425,6 +425,26 @@ return view.extend({
 		const port = E('input', { class: 'fn-settings-input', type: 'number', min: 1, max: 65535, value: status.mixed_port || 7890 });
 		const allowLan = checkbox(_('Allow access from LAN'), !!status.allow_lan);
 		const webUi = checkbox(_('Open Mihomo Web UI'), !!status.web_ui);
+		const blockStatus = status.blocks || {};
+		const secureDns = checkbox(_('Secure DNS through https-dns-proxy'), !!blockStatus.secure_dns);
+		const tun = checkbox(_('Transparent TUN mode'), !!blockStatus.tun);
+		const dnsPolicy = E('select', { class: 'fn-settings-input' }, [
+			E('option', { value: 'default' }, _('Default DNS policy')),
+			E('option', { value: 'split' }, _('Split DNS for local domains'))
+		]);
+		dnsPolicy.value = blockStatus.dns_policy === 'split' ? 'split' : 'default';
+		const secureDnsInput = secureDns.querySelector('input');
+		const tunInput = tun.querySelector('input');
+		if (!blockStatus.https_dns_proxy_installed && !blockStatus.secure_dns)
+			secureDnsInput.disabled = true;
+		if (blockStatus.tun_available === false && !blockStatus.tun)
+			tunInput.disabled = true;
+		const secureDnsHint = blockStatus.https_dns_proxy_installed
+			? _('The local DoH proxy will use Mihomo as its HTTP upstream.')
+			: E([], [ _('Install https-dns-proxy from '), E('a', { href: applicationsUrl('dot_doh') }, _('Applications')), _(' to enable this block.') ]);
+		const tunHint = blockStatus.tun_available === false
+			? _('The router has no /dev/net/tun device. Install or enable kmod-tun first.')
+			: _('Routes client traffic through Mihomo and hijacks DNS requests.');
 		const manualConfig = E('textarea', {
 			class: 'fn-settings-input fn-mihomo-input fn-mihomo-raw-input',
 			rows: 18,
@@ -443,7 +463,13 @@ return view.extend({
 			inputField(_('Source type'), mode, _('Mihomo parses links and remote subscriptions itself.')),
 			inputField(_('Sources'), input, _('One item per line. Existing local links are loaded when available.')),
 			inputField(_('Mixed port'), port, _('Port exposed by Mihomo for local clients.')),
-			E('div', { class: 'fn-mihomo-checks' }, [ allowLan, webUi ])
+			E('div', { class: 'fn-mihomo-checks' }, [ allowLan, webUi ]),
+			E('div', { class: 'fn-mihomo-blocks' }, [
+				E('strong', {}, _('Built-in blocks')),
+				inputField(_('Secure DNS'), secureDns, secureDnsHint),
+				inputField(_('Transparent mode'), tun, tunHint),
+				inputField(_('DNS policy'), dnsPolicy, _('Split policy keeps local domains on the router resolver.'))
+			])
 		]);
 		const manualFields = E('div', { class: 'fn-mihomo-manual-fields', hidden: true }, [
 			inputField(_('Raw Mihomo configuration'), manualConfig,
@@ -465,8 +491,8 @@ return view.extend({
 		editMode.addEventListener('change', syncEditor);
 		apply.addEventListener('click', () => editMode.value === 'manual'
 			? this.applyRawConfig({ config: manualConfig, apply })
-			: this.applyConfig({ mode, input, port, allowLan, webUi, apply }));
-		this.mihomoFields = { editMode, mode, input, port, allowLan, webUi, manualConfig, apply, log };
+			: this.applyConfig({ mode, input, port, allowLan, webUi, secureDns, tun, dnsPolicy, apply }));
+		this.mihomoFields = { editMode, mode, input, port, allowLan, webUi, secureDns, tun, dnsPolicy, manualConfig, apply, log };
 		syncEditor();
 
 		return E('div', { class: 'fn-mihomo-page' }, [
@@ -510,7 +536,10 @@ return view.extend({
 			input: fields.input.value,
 			mixed_port: Number(fields.port.value),
 			allow_lan: fields.allowLan.querySelector('input').checked,
-			web_ui: fields.webUi.querySelector('input').checked
+			web_ui: fields.webUi.querySelector('input').checked,
+			secure_dns: fields.secureDns.querySelector('input').checked,
+			tun: fields.tun.querySelector('input').checked,
+			dns_policy: fields.dnsPolicy.value
 		}).then(result => {
 			this.status = result.status || this.status;
 			notify(_('Mihomo configuration applied.'), 'info');

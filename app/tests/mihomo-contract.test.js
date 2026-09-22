@@ -55,6 +55,11 @@ assert.match(ucode, /-t -f/);
 assert.match(ucode, /config_data/);
 assert.match(ucode, /allow_lan, false/);
 assert.match(ucode, /web_ui, false/);
+assert.match(ucode, /secure_dns: false/);
+assert.match(ucode, /dns_policy: ''/);
+assert.match(ucode, /https-dns-proxy/);
+assert.match(ucode, /auto-redirect: true/);
+assert.match(ucode, /dns-hijack/);
 assert.match(ucode, /support-x25519mlkem768/,
 	'Mihomo provider imports must handle current Reality handshakes');
 assert.match(ucode, /network == "xhttp"/,
@@ -71,6 +76,8 @@ assert.match(view, /fields\.manualConfig\.value = this\.configText/);
 assert.match(view, /showEffectiveConfig/);
 assert.match(view, /proxy-providers:/);
 assert.match(view, /Download YAML/);
+assert.match(view, /Secure DNS through https-dns-proxy/);
+assert.match(view, /Transparent TUN mode/);
 assert.match(view, /apiCall\('service'/);
 assert.match(view, /Open Applications/);
 assert.match(applications, /id: 'mihomo'/);

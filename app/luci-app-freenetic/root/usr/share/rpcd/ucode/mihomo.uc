@@ -14,6 +14,10 @@ const PROVIDERS = `${HOME}/providers`;
 const LOCAL_PROVIDER = `${PROVIDERS}/freenetic.txt`;
 const INIT = '/etc/init.d/mihomo';
 const BINARY = '/usr/bin/mihomo';
+const HTTPS_DNS_CONFIG = '/etc/config/https-dns-proxy';
+const HTTPS_DNS_INIT = '/etc/init.d/https-dns-proxy';
+const TUN_DEVICE = '/dev/net/tun';
+const HTTPS_DNS_PORT = 5053;
 const CONFIG_BACKUP = `${HOME}/.config.yaml.previous`;
 const PROVIDER_BACKUP = `${PROVIDERS}/.freenetic.txt.previous`;
 const ubus = connect();
@@ -94,6 +98,115 @@ function config_value(text, name, fallback) {
 	return fallback;
 }
 
+function path_exists(path) {
+	return system(`[ -e ${path} ]`) == 0;
+}
+
+function executable(path) {
+	return system(`[ -x ${path} ]`) == 0;
+}
+
+function block_values(args) {
+	args = args || {};
+	const policy = args.dns_policy == 'split' ? 'split' : 'default';
+	return {
+		secure_dns: bool_value(args.secure_dns, false),
+		tun: bool_value(args.tun, false),
+		dns_policy: policy
+	};
+}
+
+function blocks_from_config(text) {
+	const dns = !!match(text || '', /(^|\n)dns:\s*($|\n)/);
+	const tun = !!match(text || '', /(^|\n)tun:\s*\n[ \t]+enable:\s+true/);
+	return {
+		secure_dns: dns && !!match(text || '', /127\.0\.0\.1:5053/),
+		tun: tun,
+		dns_policy: !!match(text || '', /(^|\n)[ \t]+nameserver-policy:\s*($|\n)/) ? 'split' : 'default'
+	};
+}
+
+function block_status(text) {
+	const blocks = blocks_from_config(text);
+	blocks.https_dns_proxy_installed = path_exists(HTTPS_DNS_CONFIG) && executable(HTTPS_DNS_INIT);
+	blocks.tun_available = system(`[ -c ${TUN_DEVICE} ]`) == 0;
+	blocks.https_dns_port = HTTPS_DNS_PORT;
+	return blocks;
+}
+
+function block_error(blocks) {
+	if (blocks.secure_dns && !path_exists(HTTPS_DNS_CONFIG))
+		return failure('dependency_missing', 'Установите пакет https-dns-proxy в разделе «Приложения».');
+	if (blocks.secure_dns && !executable(HTTPS_DNS_INIT))
+		return failure('dependency_missing', 'Служба https-dns-proxy недоступна на этом образе OpenWrt.');
+	if (blocks.tun && system(`[ -c ${TUN_DEVICE} ]`) != 0)
+		return failure('dependency_missing', 'Для TUN-режима нужен загруженный /dev/net/tun (пакет kmod-tun).');
+	return null;
+}
+
+function https_dns_stage(enabled, port) {
+	if (!path_exists(HTTPS_DNS_CONFIG) || !executable(HTTPS_DNS_INIT))
+		return { changed: false };
+	try {
+		const config = cursor();
+		const current_proxy = config.get('https-dns-proxy', 'config', 'proxy_server') || '';
+		const current_listen = config.get('https-dns-proxy', 'config', 'listen_addr') || '';
+		const managed = config.get('mihomo', 'main', 'freenetic_dns_proxy_managed') == '1';
+		const previous_proxy = managed ? (config.get('mihomo', 'main', 'freenetic_dns_proxy_previous') || '') : current_proxy;
+		const previous_listen = managed ? (config.get('mihomo', 'main', 'freenetic_dns_listen_previous') || '') : current_listen;
+		if (enabled) {
+			config.set('https-dns-proxy', 'config', 'proxy_server', `http://127.0.0.1:${port}`);
+			config.set('https-dns-proxy', 'config', 'listen_addr', '127.0.0.1');
+			config.set('mihomo', 'main', 'freenetic_dns_proxy_managed', '1');
+			config.set('mihomo', 'main', 'freenetic_dns_proxy_previous', previous_proxy);
+			config.set('mihomo', 'main', 'freenetic_dns_listen_previous', previous_listen);
+		}
+		else if (managed) {
+			config.set('https-dns-proxy', 'config', 'proxy_server', previous_proxy);
+			config.set('https-dns-proxy', 'config', 'listen_addr', previous_listen);
+			config.set('mihomo', 'main', 'freenetic_dns_proxy_managed', '0');
+		}
+		else {
+			return { changed: false };
+		}
+		config.commit('https-dns-proxy');
+		config.commit('mihomo');
+		return {
+			changed: true,
+			proxy: current_proxy,
+			listen: current_listen,
+			managed: managed,
+			stored_proxy: config.get('mihomo', 'main', 'freenetic_dns_proxy_previous') || '',
+			stored_listen: config.get('mihomo', 'main', 'freenetic_dns_listen_previous') || ''
+		};
+	}
+	catch (error) {
+		return failure('write_failed', error?.message || 'Не удалось настроить https-dns-proxy.');
+	}
+}
+
+function https_dns_rollback(stage) {
+	if (!stage || !stage.changed)
+		return;
+	try {
+		const config = cursor();
+		config.set('https-dns-proxy', 'config', 'proxy_server', stage.proxy || '');
+		config.set('https-dns-proxy', 'config', 'listen_addr', stage.listen || '');
+		config.set('mihomo', 'main', 'freenetic_dns_proxy_managed', stage.managed ? '1' : '0');
+		config.set('mihomo', 'main', 'freenetic_dns_proxy_previous', stage.stored_proxy || '');
+		config.set('mihomo', 'main', 'freenetic_dns_listen_previous', stage.stored_listen || '');
+		config.commit('https-dns-proxy');
+		config.commit('mihomo');
+	}
+	catch (error) {}
+}
+
+function https_dns_restart() {
+	if (!path_exists(HTTPS_DNS_CONFIG) || !executable(HTTPS_DNS_INIT))
+		return { rc: 0 };
+	return run_capture(`${HTTPS_DNS_INIT} restart`, 8192);
+}
+
 function subscription_values(text) {
 	const values = [];
 	for (let line in split(text, '\n')) {
@@ -115,6 +228,7 @@ function status_data() {
 	const provider_input = read_text(LOCAL_PROVIDER, MAX_INPUT);
 	const config = read_text(CONFIG, 32768);
 	const subscription_input = subscription_values(config);
+	const blocks = block_status(config);
 	return {
 		installed: installed(),
 		running: !!pid,
@@ -128,7 +242,8 @@ function status_data() {
 		web_ui: !!match(config, /external-ui:\s+/),
 		config_path: CONFIG,
 		provider_path: LOCAL_PROVIDER,
-		controller: '127.0.0.1:9090'
+		controller: '127.0.0.1:9090',
+		blocks: blocks
 	};
 }
 
@@ -176,7 +291,49 @@ function provider_override_text() {
 		'        - \'(select(.["reality-opts"] != null and .network == "xhttp" and .["client-fingerprint"] != "chrome") | .["client-fingerprint"]) = "chrome"\'\n';
 }
 
-function config_text(values, mode, port, allow_lan, web_ui) {
+function blocks_text(blocks) {
+	const dns_enabled = blocks.secure_dns || blocks.dns_policy == 'split' || blocks.tun;
+	let text = '';
+	if (dns_enabled) {
+		text += 'dns:\n';
+		text += '  enable: true\n';
+		text += '  enhanced-mode: fake-ip\n';
+		text += '  fake-ip-filter:\n';
+		text += '    - "*.lan"\n';
+		text += '    - "*.local"\n';
+		text += '    - "localhost"\n';
+		text += '  nameserver:\n';
+		text += blocks.secure_dns ? '    - 127.0.0.1:5053\n' : '    - 127.0.0.1:53\n';
+		text += '  proxy-server-nameserver:\n';
+		text += '    - 1.1.1.1\n';
+		if (blocks.dns_policy == 'split') {
+			text += '  nameserver-policy:\n';
+			text += '    "geosite:private": 127.0.0.1:53\n';
+			text += '    "geosite:cn": 127.0.0.1:53\n';
+		}
+	}
+	if (blocks.tun) {
+		text += 'tun:\n';
+		text += '  enable: true\n';
+		text += '  stack: mixed\n';
+		text += '  auto-route: true\n';
+		text += '  auto-redirect: true\n';
+		text += '  auto-detect-interface: true\n';
+		text += '  device: mitun0\n';
+		text += '  dns-hijack:\n';
+		text += '    - any:53\n';
+		text += '  route-exclude-address:\n';
+		text += '    - 10.0.0.0/8\n';
+		text += '    - 172.16.0.0/12\n';
+		text += '    - 192.168.0.0/16\n';
+		text += '    - 127.0.0.0/8\n';
+		text += '    - 169.254.0.0/16\n';
+		text += '    - fc00::/7\n';
+	}
+	return text;
+}
+
+function config_text(values, mode, port, allow_lan, web_ui, blocks) {
 	let text = '';
 	text += `mixed-port: ${port}\n`;
 	text += `allow-lan: ${allow_lan ? 'true' : 'false'}\n`;
@@ -187,6 +344,7 @@ function config_text(values, mode, port, allow_lan, web_ui) {
 		text += 'external-ui: ui\n';
 		text += 'external-ui-url: https://github.com/MetaCubeX/metacubexd/releases/latest/download/compressed-dist.tgz\n';
 	}
+	text += blocks_text(blocks || { secure_dns: false, tun: false, dns_policy: 'default' });
 	text += 'proxy-providers:\n';
 	const provider_names = [];
 	if (mode == 'links') {
@@ -242,7 +400,7 @@ function rollback_stage(previous) {
 	cleanup_stage();
 }
 
-function stage_and_replace(values, mode, port, allow_lan, web_ui) {
+function stage_and_replace(values, mode, port, allow_lan, web_ui, blocks) {
 	if (system(`mkdir -m 0700 -p ${HOME} ${PROVIDERS}`) != 0)
 		return failure('storage_unavailable', 'Не удалось подготовить каталог Mihomo.');
 	const previous = {
@@ -258,7 +416,7 @@ function stage_and_replace(values, mode, port, allow_lan, web_ui) {
 	}
 	const config_tmp = `${HOME}/.config.yaml.new`;
 	const provider_tmp = `${HOME}/providers/.freenetic.txt.new`;
-	const text = config_text(values, mode, port, allow_lan, web_ui);
+	const text = config_text(values, mode, port, allow_lan, web_ui, blocks);
 	if (!write_file(config_tmp, text, 0600)) {
 		cleanup_stage();
 		return failure('write_failed', 'Не удалось записать конфигурацию Mihomo.');
@@ -289,7 +447,12 @@ function stage_and_replace(values, mode, port, allow_lan, web_ui) {
 		rollback_stage(previous);
 		return failure('write_failed', error?.message || 'Не удалось сохранить настройки службы Mihomo.');
 	}
-	return previous;
+	const dns_stage = https_dns_stage(blocks && blocks.secure_dns, port);
+	if (dns_stage && dns_stage.ok === false) {
+		rollback_stage(previous);
+		return dns_stage;
+	}
+	return { config: previous.config, provider: previous.provider, dns: dns_stage };
 }
 
 function apply_config(request) {
@@ -302,15 +465,26 @@ function apply_config(request) {
 	if (parsed.error) return failure('invalid_input', parsed.error);
 	const port = int(args.mixed_port || 7890);
 	if (!port || port < 1 || port > 65535) return failure('invalid_port', 'Порт должен быть от 1 до 65535.');
-	const stage = stage_and_replace(parsed.values, mode, port, bool_value(args.allow_lan, false), bool_value(args.web_ui, false));
+	const blocks = block_values(args);
+	const dependency = block_error(blocks);
+	if (dependency) return dependency;
+	const stage = stage_and_replace(parsed.values, mode, port, bool_value(args.allow_lan, false), bool_value(args.web_ui, false), blocks);
 	if (stage && stage.ok === false) return stage;
 	const action = run_capture(`${INIT} restart`, 8192);
 	if (action.rc != 0) {
+		https_dns_rollback(stage && stage.dns);
 		rollback_stage(stage);
 		return failure('service_failed', trim(action.error || action.output || 'Не удалось перезапустить Mihomo.'));
 	}
+	const dns_action = https_dns_restart();
+	if (dns_action.rc != 0) {
+		https_dns_rollback(stage && stage.dns);
+		rollback_stage(stage);
+		run_capture(`${INIT} restart`, 8192);
+		return failure('service_failed', trim(dns_action.error || dns_action.output || 'Не удалось перезапустить https-dns-proxy.'));
+	}
 	cleanup_stage();
-	return envelope({ applied: true, source_mode: mode, count: length(parsed.values), status: status_data() });
+	return envelope({ applied: true, source_mode: mode, count: length(parsed.values), blocks: blocks, status: status_data() });
 }
 
 function rollback_config_stage(previous) {
@@ -387,7 +561,7 @@ function logs_data() {
 const methods = {
 	status: { args: { api_version: 0 }, call: function(request) { const error = checked(request); return error || envelope(status_data()); } },
 	config: { args: { api_version: 0 }, call: function(request) { const error = checked(request); return error || config_data(); } },
-	apply: { args: { api_version: 0, input: '', source_mode: '', mixed_port: 0, allow_lan: false, web_ui: false }, call: function(request) {
+	apply: { args: { api_version: 0, input: '', source_mode: '', mixed_port: 0, allow_lan: false, web_ui: false, secure_dns: false, tun: false, dns_policy: '' }, call: function(request) {
 		try { const error = checked(request); return error || apply_config(request); }
 		catch (error) { return failure('internal_error', error?.message || `${error}`); }
 	} },
