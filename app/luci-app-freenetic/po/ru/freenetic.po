@@ -4588,6 +4588,39 @@ msgstr "Применить конфигурацию"
 msgid "Validate and apply YAML"
 msgstr "Проверить и применить YAML"
 
+msgid "Show effective YAML"
+msgstr "Показать эффективный YAML"
+
+msgid "Effective YAML"
+msgstr "Эффективный YAML"
+
+msgid "Subscriptions and manual profiles remain provider-based; the saved YAML is shown as-is."
+msgstr "Подписки и ручные профили остаются провайдерными; сохранённый YAML показан без изменений."
+
+msgid "No supported local proxy links were found; the saved YAML is shown as-is."
+msgstr "Поддерживаемые локальные ссылки прокси не найдены; сохранённый YAML показан без изменений."
+
+msgid "The saved YAML is not an automatic provider profile, so it is shown as-is."
+msgstr "Сохранённый YAML не является профилем автоматического провайдера, поэтому он показан без изменений."
+
+msgid "The snapshot expands supported URI links. Unsupported links are kept as comments at the bottom."
+msgstr "Снимок разворачивает поддерживаемые URI-ссылки. Неподдерживаемые ссылки оставлены комментариями внизу."
+
+msgid "The snapshot expands local URI links into proxies. It is for review/export; automatic mode keeps the provider file."
+msgstr "Снимок разворачивает локальные URI-ссылки в прокси. Он предназначен для просмотра и экспорта; автоматический режим использует файл провайдера."
+
+msgid "Copy YAML"
+msgstr "Копировать YAML"
+
+msgid "Download YAML"
+msgstr "Скачать YAML"
+
+msgid "Effective YAML copied."
+msgstr "Эффективный YAML скопирован."
+
+msgid "Clipboard access is unavailable."
+msgstr "Доступ к буферу обмена недоступен."
+
 msgid "Validating…"
 msgstr "Проверяем…"
 

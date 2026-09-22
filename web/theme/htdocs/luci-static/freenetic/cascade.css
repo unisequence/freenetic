@@ -4874,6 +4874,9 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-mihomo-check input { flex: 0 0 auto; }
 .fn-mihomo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .fn-mihomo-actions .fn-settings-btn { width: auto; }
+.fn-mihomo-effective-input { min-height: 52vh; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.4; }
+.fn-mihomo-effective-note { margin: 0 0 12px; max-width: 900px; }
+.fn-mihomo-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .fn-mihomo-service-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .fn-mihomo-compact-btn { padding: 6px 12px; font-size: .86rem; line-height: 1.25; }
 .fn-mihomo-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--fn-text-secondary); font-size: .9rem; }
