@@ -67,6 +67,7 @@ assert.match(view, /subscriptions/i);
 assert.match(view, /apiCall\('apply'/);
 assert.match(view, /apiCall\('apply_raw'/);
 assert.match(view, /apiCall\('config'/);
+assert.match(view, /fields\.manualConfig\.value = this\.configText/);
 assert.match(view, /apiCall\('service'/);
 assert.match(view, /Open Applications/);
 assert.match(applications, /id: 'mihomo'/);

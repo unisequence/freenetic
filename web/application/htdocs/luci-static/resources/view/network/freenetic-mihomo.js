@@ -227,8 +227,15 @@ return view.extend({
 	refreshStatus() {
 		return apiCall('status').then(status => {
 			this.status = status;
+			const previousConfig = this.configText || '';
 			return apiCall('config').then(data => {
-				this.configText = data && data.text || this.configText || '';
+				const text = data && data.text || '';
+				const fields = this.mihomoFields;
+				const manual = fields && fields.editMode && fields.editMode.value === 'manual';
+				const untouched = fields && fields.manualConfig && fields.manualConfig.value === previousConfig;
+				this.configText = text || this.configText || '';
+				if (fields && fields.manualConfig && (!manual || untouched))
+					fields.manualConfig.value = this.configText;
 				return status;
 			}).catch(() => status);
 		});
