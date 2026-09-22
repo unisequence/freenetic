@@ -5,6 +5,63 @@
 'require poll';
 'require ui';
 'require view';
+'require fs';
+
+const MENU_CACHE_RECOVERY_KEY = 'freenetic-menu-cache-recovery';
+const FREENETIC_MENU_PATHS = [
+	[ 'admin', 'status', 'dashboard' ],
+	[ 'admin', 'network', 'internet' ],
+	[ 'admin', 'network', 'home_network' ],
+	[ 'admin', 'system', 'applications' ]
+];
+
+function menuNode(tree, path) {
+	let node = tree;
+	for (const part of path) {
+		if (!node || !node.children || !node.children[part])
+			return null;
+		node = node.children[part];
+	}
+	return node;
+}
+
+/* LuCI's resolved menu cache is keyed by menu-file hash, not by the UCI
+ * values used by depends.uci.  If a user switched from Bootstrap back to
+ * Freenetic through Bootstrap's own settings page, the cache can therefore
+ * still contain the previous "satisfied: false" results.  Recover once on
+ * the client, then reload with a freshly resolved menu tree. */
+function recoverStaleMenu(tree) {
+	const stale = FREENETIC_MENU_PATHS.some(path => {
+		const node = menuNode(tree, path);
+		return node && node.satisfied === false;
+	});
+
+	try {
+		if (!stale) {
+			sessionStorage.removeItem(MENU_CACHE_RECOVERY_KEY);
+			return Promise.resolve(false);
+		}
+		if (sessionStorage.getItem(MENU_CACHE_RECOVERY_KEY) === '1')
+			return Promise.resolve(false);
+		sessionStorage.setItem(MENU_CACHE_RECOVERY_KEY, '1');
+	}
+	catch (e) {
+		/* A storage-disabled browser should still render the current page. */
+		return Promise.resolve(false);
+	}
+
+	return fs.exec('/usr/libexec/freenetic-clear-luci-cache', []).then(result => {
+		if (result && result.code === 0) {
+			location.reload();
+			return true;
+		}
+		try { sessionStorage.removeItem(MENU_CACHE_RECOVERY_KEY); } catch (e) {}
+		return false;
+	}).catch(() => {
+		try { sessionStorage.removeItem(MENU_CACHE_RECOVERY_KEY); } catch (e) {}
+		return false;
+	});
+}
 
 /*
  * Freenetic keeps the familiar LuCI dispatcher URLs, but the pages belonging
@@ -139,11 +196,13 @@ return baseclass.extend({
 
 		/* menu-freenetic builds the sidebar asynchronously.  Synchronize once
 		 * after its menu cache is ready as well as immediately for a cached menu. */
-		Promise.resolve(ui.menu.load()).then(() => {
+		Promise.resolve(ui.menu.load()).then(tree => recoverStaleMenu(tree).then(reloaded => {
+			if (reloaded)
+				return;
 			if (this.currentRoute)
 				this.setEnvironment(this.currentRoute);
 			this.syncSidebar(this.currentRoute && this.currentRoute.key);
-		});
+		}));
 		this.syncSidebar(this.currentRoute && this.currentRoute.key);
 	},
 
