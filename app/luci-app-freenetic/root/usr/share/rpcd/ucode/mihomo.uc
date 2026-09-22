@@ -196,8 +196,11 @@ function config_text(values, mode, port, allow_lan, web_ui) {
 	text += '    type: select\n';
 	text += '    use:\n';
 	for (let name in provider_names) text += `      - ${name}\n`;
-	text += '    proxies:\n';
-	text += '      - DIRECT\n';
+	/* Do not put DIRECT first here. Mihomo selects the first available
+	 * member in a select group on startup; keeping DIRECT in this group
+	 * made a newly applied proxy configuration silently bypass every
+	 * provider until somebody manually changed the selection in the
+	 * controller. MATCH,PROXY must use the configured provider by default. */
 	text += 'rules:\n';
 	text += '  - MATCH,PROXY\n';
 	return text;

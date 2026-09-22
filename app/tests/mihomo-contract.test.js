@@ -52,6 +52,8 @@ assert.match(ucode, /return \{ 'mihomo': methods \}/);
 assert.match(ucode, /rollback_stage/);
 assert.match(ucode, /allow_lan, false/);
 assert.match(ucode, /web_ui, false/);
+assert.doesNotMatch(ucode, /text \+= '      - DIRECT\\n'/,
+	'DIRECT must not silently become the default instead of the configured provider');
 
 assert.match(view, /proxy links/i);
 assert.match(view, /subscriptions/i);
