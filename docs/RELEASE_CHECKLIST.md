@@ -8,8 +8,8 @@ with an explicitly documented preview scope.
 
 - [ ] The change belongs in the target release line and maturity stage.
 - [ ] The release commit contains the complete change and the worktree is clean.
-- [ ] `make check` passes, including both supported CLI ABIs when their
-      toolchains are present.
+- [ ] `make check` passes for every supported CLI target whose toolchain is
+      present.
 - [ ] `git diff --check` passes.
 - [ ] Any ownership or helper change has a regression/contract test.
 - [ ] The changelog describes the user-visible behavior and compatibility
@@ -125,7 +125,7 @@ notification:
       commit; never move or recreate a published release tag;
 - [ ] build artifacts from the tag, not from a local dirty tree;
 - [ ] let the tagged GitHub Actions run complete static checks, its package
-      matrix, generated installer and 21-asset validation;
+      matrix, generated installer and 36-asset validation;
 - [ ] verify the generated installer, APK signing key, `SHA256SUMS.txt` and
       GitHub/Sigstore provenance attestation;
 - [ ] verify that the matching changelog section is present in the release
