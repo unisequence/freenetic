@@ -10,8 +10,10 @@ assert(installer.startsWith('#!/bin/sh'), 'installer must be POSIX sh');
 for (const marker of [
 	"mediatek/filogic",
 	"ramips/mt7621",
+	"x86/64",
 	"aarch64_cortex-a53",
 	"mipsel_24kc",
+	"x86_64",
 	"luci-theme-freenetic-${ASSET_VERSION}-${target_suffix}.apk",
 	"luci-app-freenetic-${ASSET_VERSION}-${target_suffix}.apk",
 	"luci-i18n-theme-freenetic-ru-${ASSET_VERSION}-${target_suffix}.apk",
@@ -46,7 +48,8 @@ assert.match(installer, /^ASSET_VERSION="[0-9]{2}\.[0-9]{3}\.[0-9]+\.[0-9a-f]+"$
 	'release installer must carry the OpenWrt-derived asset version');
 for (const name of [ 'theme_sha256', 'app_sha256', 'theme_ru_sha256', 'app_ru_sha256',
 	'fnc_sha256_apk', 'fnc_sha256_ipk' ]) {
-	assert.strictEqual((installer.match(new RegExp(`${name}="[0-9a-f]{64}"`, 'g')) || []).length, 2,
+	const expected = name.startsWith('fnc_sha256_') ? 3 : 2;
+	assert.strictEqual((installer.match(new RegExp(`${name}="[0-9a-f]{64}"`, 'g')) || []).length, expected,
 		`${name} must be pinned for APK and IPK/target variants`);
 }
 assert.match(installer, /apk_key_sha256="[0-9a-f]{64}"/,

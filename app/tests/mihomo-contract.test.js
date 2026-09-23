@@ -31,8 +31,11 @@ assert.match(helper, /\[ -e "\$MIHOMO_CONFIG" \]/);
 assert.match(helper, /partial runtime so a later retry is safe/);
 assert.match(helper, /mediatek\/filogic/);
 assert.match(helper, /ramips\/mt7621/);
+assert.match(helper, /x86\/64/);
+assert.match(helper, /mihomo-linux-amd64-compatible-v1\.19\.31\.gz/);
 assert.match(helper, /9e0f11afbf38426b8bd88fdc594678f8161c57eccb4e1b77acb12b493904f1d/);
 assert.match(helper, /9061daa6a6b8cbb0491387e5de59663441b637eff0e3d295cec6949478752192/);
+assert.match(helper, /04cf9f09671704f839ddbee2e93069dc831a4123a75281e725d1d96ab9ac1afc/);
 assert.doesNotMatch(helper, /\binstall -m\b/, 'The router image may not ship the install applet');
 
 assert.match(uci, /option freenetic_managed '1'/);

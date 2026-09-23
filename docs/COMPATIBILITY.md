@@ -23,6 +23,8 @@ every device in that target family being tested.
 | 24.10.8 | `ramips/mt7621` | IPK / `opkg` | SDK package/CLI compatibility job and mipsel CLI build |
 | 25.12.5 | `mediatek/filogic` | APK / `apk` | official SDK package build, package contents/index, aarch64 CLI build |
 | 25.12.5 | `ramips/mt7621` | APK / `apk` | official SDK package/CLI compatibility job and mipsel CLI build |
+| 24.10.8 | `x86/64` | IPK / `opkg` | official SDK package/CLI compatibility job and x86_64 CLI build |
+| 25.12.5 | `x86/64` | APK / `apk` | official SDK package/CLI compatibility job and x86_64 CLI build |
 | local 24.10 buildroot | `mediatek/filogic` | IPK / `opkg` | complete `make release` including index validation |
 | local 25.12 buildroot | `mediatek/filogic` | APK / `apk` | complete `make release`, MT7621 mirror and index validation |
 
@@ -44,6 +46,8 @@ device in that family.
   `opkg`, a supported ABI and the package preflight resource minimums.
 - OpenWrt 25.12.x on published APK target profiles, with the matching `fnc`
   ABI artifact and the package preflight resource minimums.
+- OpenWrt 24.10.x and 25.12.x on `x86/64`, with the matching `x86_64` `fnc`
+  artifact and the package preflight resource minimums.
 - Other OpenWrt targets are not part of the `0.3.x` release promise, even if
   their LuCI JavaScript happens to render.
 

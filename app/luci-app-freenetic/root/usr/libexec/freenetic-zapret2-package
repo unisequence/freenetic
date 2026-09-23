@@ -83,6 +83,7 @@ target="$(printf '%s\n' "$board_json" | jsonfilter -e '@.release.target' 2>/dev/
 case "$target" in
 	mediatek/filogic) asset_arch=aarch64_cortex-a53 ;;
 	ramips/mt7621) asset_arch=mipsel_24kc ;;
+	x86/64) asset_arch=x86_64 ;;
 	*)
 		reply 1 "" "Unsupported OpenWrt target: ${target:-unknown}"
 		exit 0

@@ -71,6 +71,28 @@ jobs:
             publish_packages: false
             sdk_archive: openwrt-sdk-25.12.5-ramips-mt7621_gcc-14.3.0_musl.Linux-x86_64.tar.zst
             sdk_sha256: 9962084f4131610e90e48bc864c6ceade0b238f15f335de5f672910532b20e9c
+          - name: OpenWrt 24.10.8 x86/64 (IPK + fnc)
+            release: 24.10.8
+            target: x86
+            subtarget: 64
+            format: ipk
+            cli_target: x86_64
+            asset_arch: x86_64
+            include_fnc: true
+            publish_packages: false
+            sdk_archive: openwrt-sdk-24.10.8-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
+            sdk_sha256: ac4a0405d2eea821b06f93c14ba13ffa90ad0457648903df7dde02570027ab21
+          - name: OpenWrt 25.12.5 x86/64 (APK + fnc)
+            release: 25.12.5
+            target: x86
+            subtarget: 64
+            format: apk
+            cli_target: x86_64
+            asset_arch: x86_64
+            include_fnc: true
+            publish_packages: false
+            sdk_archive: openwrt-sdk-25.12.5-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+            sdk_sha256: 0c8df0151a1e88feb7c03d694d61f6a18d51872815b7c811d76e2b77504d5e9c
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -314,6 +336,18 @@ jobs:
           name: freenetic-ramips-mt7621-apk
           path: artifacts/ramips-mt7621-apk
 
+      - name: Download 24.10 x86/64 fnc build
+        uses: actions/download-artifact@v4
+        with:
+          name: freenetic-x86-64-ipk
+          path: artifacts/x86-64-ipk
+
+      - name: Download 25.12 x86/64 fnc build
+        uses: actions/download-artifact@v4
+        with:
+          name: freenetic-x86-64-apk
+          path: artifacts/x86-64-apk
+
       - name: Assemble and validate release assets
         id: release
         env:
@@ -338,24 +372,30 @@ jobs:
             luci-i18n-freenetic-ru; do
             source="$release_dir/$package-$asset_version-aarch64_cortex-a53.apk"
             test -f "$source"
-            cp -f "$source" "$release_dir/$package-$asset_version-mipsel_24kc.apk"
+            for mirror_arch in mipsel_24kc x86_64; do
+              cp -f "$source" "$release_dir/$package-$asset_version-$mirror_arch.apk"
+            done
             test -f "$release_dir/$package-$asset_version-all.ipk"
           done
           for zapret_target in \
             aarch64_cortex-a53.apk \
             mipsel_24kc.apk \
+            x86_64.apk \
             aarch64_cortex-a53.ipk \
-            mipsel_24kc.ipk; do
+            mipsel_24kc.ipk \
+            x86_64.ipk; do
             test "$(find "$release_dir" -maxdepth 1 -type f \
               -name "freenetic-zapret2-*-$zapret_target" | wc -l)" -eq 1
           done
-          for zapret_arch in aarch64_cortex-a53 mipsel_24kc; do
+          for zapret_arch in aarch64_cortex-a53 mipsel_24kc x86_64; do
             test -f "$release_dir/freenetic-zapret2-apk-key-$zapret_arch-$asset_version.pem"
           done
           test -f "$release_dir/fnc-$asset_version-aarch64_cortex-a53-apk"
           test -f "$release_dir/fnc-$asset_version-aarch64_cortex-a53-ipk"
           test -f "$release_dir/fnc-$asset_version-mipsel_24kc-apk"
           test -f "$release_dir/fnc-$asset_version-mipsel_24kc-ipk"
+          test -f "$release_dir/fnc-$asset_version-x86_64-apk"
+          test -f "$release_dir/fnc-$asset_version-x86_64-ipk"
           # Keep the old architecture-only names so routers running the
           # pre-0.2.6 dashboard can discover this release. The generated
           # installer itself always selects the manager-specific asset.
@@ -376,7 +416,7 @@ jobs:
             "$asset_version"
 
           asset_count="$(find "$release_dir" -maxdepth 1 -type f | wc -l)"
-          test "$asset_count" -eq 27
+          test "$asset_count" -eq 36
           echo "asset_version=$asset_version" >> "$GITHUB_OUTPUT"
           echo "release_dir=$release_dir" >> "$GITHUB_OUTPUT"
           echo "release_notes=$notes_file" >> "$GITHUB_OUTPUT"

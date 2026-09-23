@@ -84,6 +84,10 @@ assert.match(helper, /json_add_string ram_mib/,
 	'self-update status must report available RAM');
 assert.match(helper, /json_add_string cpu_cores/,
 	'self-update status must report available CPU cores');
+assert.match(helper, /x86\/64\) asset_suffix=x86_64/,
+	'self-update must select x86_64 release assets for OpenWrt x86/64');
+assert.match(helper, /x86\/64\) overlay_min_mib=32/,
+	'self-update must apply the x86/64 overlay reserve');
 assert.match(helper, /previous_tag="\$\(uci -q get freenetic\.updates\.installed_release/,
 	'self-update must capture the previous release before changing packages');
 assert.match(helper, /json_add_boolean rollback_attempted/,

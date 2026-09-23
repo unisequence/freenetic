@@ -61,8 +61,12 @@ assert.match(makefile, /check-package-contents\.js/,
 	'the package flow must invoke the package content checker');
 assert.match(makefile, /^stage-mt7621-packages:/m,
 	'the release flow must stage noarch APKs for the MT7621 feed');
+assert.match(makefile, /^stage-x86_64-packages:/m,
+	'the release flow must stage noarch APKs for the x86_64 feed');
 assert.match(makefile, /FREENETIC_MT7621_PACKAGE_ARCH := mipsel_24kc/,
 	'MT7621 packages must use the mipsel_24kc feed directory');
+assert.match(makefile, /FREENETIC_X86_64_PACKAGE_ARCH := x86_64/,
+	'x86/64 packages must use the x86_64 feed directory');
 assert.match(makefile, /CONFIG_PACKAGE_luci-i18n-theme-freenetic-ru=m/,
 	'package checks must build the theme translation APK');
 assert.match(makefile, /CONFIG_PACKAGE_luci-i18n-freenetic-ru=m/,
@@ -75,5 +79,7 @@ assert.match(makefile, /\$\(MAKE\) check-package OPENWRT_DIR=/,
 	'the release target must compile packages after clearing stale staging');
 assert.match(makefile, /stage-mt7621-packages OPENWRT_DIR=/,
 	'the release target must generate the MT7621 package index');
+assert.match(makefile, /stage-x86_64-packages OPENWRT_DIR=/,
+	'the release target must generate the x86_64 package index');
 
 console.log('release integrity contract: ok');

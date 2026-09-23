@@ -1016,6 +1016,30 @@ msgstr "Позже"
 msgid "Install MagiTrickle"
 msgstr "Установить MagiTrickle"
 
+msgid "Install Internet Helper list?"
+msgstr "Установить список от Internet Helper?"
+
+msgid "Internet Helper provides a ready-made MagiTrickle domain list."
+msgstr "Internet Helper предоставляет готовый список доменов для MagiTrickle."
+
+msgid "The list will be downloaded to the router and applied to MagiTrickle."
+msgstr "Список будет загружен на роутер и применён в MagiTrickle."
+
+msgid "Installing Internet Helper list…"
+msgstr "Устанавливаем список Internet Helper…"
+
+msgid "The list is being downloaded and applied to MagiTrickle."
+msgstr "Список загружается и применяется в MagiTrickle."
+
+msgid "Install list"
+msgstr "Установить список"
+
+msgid "Internet Helper list installed."
+msgstr "Список Internet Helper установлен."
+
+msgid "Failed to install the Internet Helper list: %s"
+msgstr "Не удалось установить список Internet Helper: %s"
+
 msgid "Install additional features on demand. Recommended features are suitable for most routers; Advanced networking tools can change traffic processing and are intended for experienced users. Packages come from the router's configured repositories."
 msgstr "Устанавливайте дополнительные функции по необходимости. Рекомендуемые функции подходят большинству роутеров, а расширенные сетевые инструменты могут менять обработку трафика и предназначены для опытных пользователей. Пакеты загружаются из настроенных репозиториев роутера."
 
@@ -4755,3 +4779,12 @@ msgstr "Управляется отдельно"
 
 msgid "Mihomo is already installed outside Freenetic. Use the existing LuCI interface or remove it first."
 msgstr "Mihomo уже установлен вне Freenetic. Используйте существующий интерфейс LuCI или сначала удалите его."
+
+msgid "MagiTrickle is served over HTTP"
+msgstr "MagiTrickle работает через HTTP"
+
+msgid "The embedded interface cannot be loaded from an HTTPS LuCI session because the browser blocks mixed content."
+msgstr "Встроенный интерфейс нельзя загрузить из HTTPS-сессии LuCI: браузер блокирует смешанное содержимое."
+
+msgid "Open MagiTrickle"
+msgstr "Открыть MagiTrickle"

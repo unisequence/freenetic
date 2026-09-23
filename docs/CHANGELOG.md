@@ -13,6 +13,44 @@ The surface remains familiar.
 Beneath it, packets are learning new habits:
 split, reorder, and take a different route.
 
+## [0.4.0-alpha.6] — 2026-09-23
+
+### Added
+
+- Added router-side Mihomo installation and management, including proxy-link
+  and subscription conversion, a manual YAML editor, effective-configuration
+  export, and optional protected-DNS and TUN blocks.
+- Added MagiTrickle as an optional application with its native web interface
+  embedded in LuCI and a post-install offer for the Internet Helper domain
+  list.
+- Added OpenWrt x86/64 support to installer preflight, self-update, dashboard
+  release selection, `fnc`, and Zapret2/Mihomo architecture handling.
+- Added x86/64 APK and IPK builds to the release matrix, with mirrored noarch
+  LuCI packages and pinned OpenWrt SDK checksums.
+
+### Improved
+
+- Applications now offer MagiTrickle after Mihomo or a supported VPN client
+  is installed.
+- MagiTrickle package setup verifies the repository key, handles the current
+  OpenWrt NAT dependency layout, and can retry downloads through the WAN DNS
+  resolver when a local encrypted resolver is unavailable.
+- The optional Internet Helper list is checked before installation, and an
+  existing MagiTrickle configuration is backed up first.
+
+### Verification
+
+- Added x86/64 release-asset, installer-hash and dashboard compatibility
+  contracts while retaining the existing ARM64 and MIPSLE release paths.
+- Added package, LuCI menu, ACL and post-install list-offer contracts for
+  MagiTrickle and expanded Mihomo and release-workflow checks.
+
+### Alpha scope
+
+- The Internet Helper list remains optional and is downloaded only after the
+  user accepts the offer. Mihomo and MagiTrickle are installed separately
+  from their upstream sources.
+
 ## [0.4.0-alpha.5] — 2026-09-20
 
 ### Fixed

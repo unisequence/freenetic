@@ -17,16 +17,19 @@ UCI/ubus/rpcd underneath.
 > Keenetic + frenetic), not an attempt to pass as the original product.
 
 Current development hardware is a BT RB300, flashed with plain upstream
-OpenWrt — mainline U-Boot, no proprietary components.
+OpenWrt — mainline U-Boot, no proprietary components. The release matrix
+also builds a generic OpenWrt x86/64 profile.
 
 ## Supported hardware
 
-The release packages are deliberately limited to two tested MediaTek families:
+The release packages cover two tested MediaTek families and a generic
+OpenWrt x86/64 profile:
 
 | OpenWrt target | CPU ABI | Minimum profile |
 |---|---|---|
 | `mediatek/filogic` | `aarch64` | 2 cores, 128 MiB RAM, 32 MiB free overlay |
 | `ramips/mt7621` | `mipsel_24kc` | 2 cores, 128 MiB RAM, 16 MiB free overlay |
+| `x86/64` | `x86_64` | 2 cores, 128 MiB RAM, 32 MiB free overlay |
 
 Other targets are rejected by the package pre-install guard. Before a
 development deployment, run the same read-only check over SSH:
@@ -38,7 +41,8 @@ app/check-router.sh root@192.168.1.1
 The thresholds can be raised for a particular environment with
 `FREENETIC_MIN_RAM_MIB`, `FREENETIC_MIN_CPU_CORES`,
 `FREENETIC_MIN_OVERLAY_MIB_FILOGIC` and
-`FREENETIC_MIN_OVERLAY_MIB_MT7621`.
+`FREENETIC_MIN_OVERLAY_MIB_MT7621`, and
+`FREENETIC_MIN_OVERLAY_MIB_X86_64` for x86/64.
 
 ## Quick install
 

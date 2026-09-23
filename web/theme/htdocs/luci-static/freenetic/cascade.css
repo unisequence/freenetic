@@ -4862,6 +4862,10 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-zapret-title-row .fn-status-pill { margin-top: 8px; flex: 0 0 auto; }
 .fn-zapret-layout { display: grid; gap: 16px; margin-top: 20px; }
 .fn-mihomo-page { display: grid; gap: 16px; }
+.fn-magitrickle-page { width: 100%; min-height: calc(100vh - 150px); overflow: hidden; }
+.fn-magitrickle-frame { display: block; width: 100%; min-height: 720px; height: calc(100vh - 150px); border: 0; border-radius: var(--fn-radius); background: var(--fn-surface); }
+.fn-magitrickle-https { padding: 24px; }
+.fn-magitrickle-https p { max-width: 720px; color: var(--fn-text-muted); }
 .fn-mihomo-hero .fn-card-head,
 .fn-mihomo-card .fn-card-head { justify-content: space-between; }
 .fn-mihomo-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 16px; align-items: start; }

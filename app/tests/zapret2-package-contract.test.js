@@ -52,8 +52,8 @@ assert.match(helper, /apk --keys-dir "\$keys_dir" add/,
 	'Zapret2 APK installation must use the Freenetic release signing key');
 assert.match(helper, /freenetic-zapret2-apk-key-\$asset_arch-/,
 	'Zapret2 APK installation must select the key belonging to the target build');
-assert.match(helper, /mediatek\/filogic[\s\S]*aarch64_cortex-a53[\s\S]*ramips\/mt7621[\s\S]*mipsel_24kc/,
-	'Zapret2 installer must map both supported targets to their package architectures');
+assert.match(helper, /mediatek\/filogic[\s\S]*aarch64_cortex-a53[\s\S]*ramips\/mt7621[\s\S]*mipsel_24kc[\s\S]*x86\/64[\s\S]*x86_64/,
+	'Zapret2 installer must map all supported targets to their package architectures');
 assert.match(apps, /packages: \[ 'zapret2', 'luci-app-zapret2' \][\s\S]*?\[ 'freenetic-zapret2' \][\s\S]*?externallyAvailable: true, installHelper: ZAPRET2_PACKAGE_HELPER/,
 	'Applications must prefer the native Zapret2 LuCI pair and retain the signed Freenetic fallback');
 assert.ok(acl.write.file['/usr/libexec/freenetic-zapret2-package install'],

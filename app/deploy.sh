@@ -175,6 +175,7 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/view/status/freenetic-wifimonitor.js \
              /www/luci-static/resources/view/system/freenetic-apps.js \
              /www/luci-static/resources/view/network/freenetic-mihomo.js \
+             /www/luci-static/resources/view/magitrickle/magitrickle.js \
              /www/luci-static/resources/view/system/freenetic-diagnostics.js \
              /www/luci-static/resources/view/system/freenetic-system.js \
              /usr/lib/lua/luci/i18n/freenetic.ru.lmo \
@@ -185,6 +186,7 @@ $SSH_CMD "$ROUTER" '
              /usr/share/rpcd/ucode/mihomo.uc \
              /usr/share/freenetic/mihomo \
              /usr/share/freenetic/keys \
+             /usr/share/luci/menu.d/freenetic-magitrickle.json \
              /usr/libexec/freenetic-backup-call /usr/libexec/freenetic-clear-luci-cache \
              /usr/libexec/freenetic-diagnostics-bundle \
              /usr/libexec/freenetic-diagnostics-call /usr/libexec/freenetic-awg-feed \

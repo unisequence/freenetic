@@ -43,8 +43,13 @@ case "$$target" in
 		case "$$machine" in mips|mipsel) ;; *) freenetic_fail "$$model requires mips/mipsel, got $$machine" ;; esac
 		case "$$release_arch" in ''|mipsel*) ;; *) freenetic_fail "$$model reports incompatible architecture $$release_arch" ;; esac
 		;;
+	x86/64)
+		min_overlay_kib=32768
+		[ "$$machine" = x86_64 ] || freenetic_fail "$$model requires x86_64, got $$machine"
+		case "$$release_arch" in ''|x86_64*) ;; *) freenetic_fail "$$model reports incompatible architecture $$release_arch" ;; esac
+		;;
 	*)
-		freenetic_fail "$$model uses unsupported OpenWrt target $${target:-unknown}; supported targets are mediatek/filogic and ramips/mt7621"
+		freenetic_fail "$$model uses unsupported OpenWrt target $${target:-unknown}; supported targets are mediatek/filogic, ramips/mt7621 and x86/64"
 		;;
 esac
 

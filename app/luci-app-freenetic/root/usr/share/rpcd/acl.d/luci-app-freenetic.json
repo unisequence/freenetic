@@ -86,6 +86,7 @@
 				"/usr/libexec/freenetic-mihomo-package install": [ "exec" ],
 				"/usr/libexec/freenetic-mihomo-package remove": [ "exec" ],
 				"/usr/libexec/freenetic-magitrickle-package install": [ "exec" ],
+				"/usr/libexec/freenetic-magitrickle-package install-ih-list": [ "exec" ],
 				"/usr/libexec/freenetic-magitrickle-package remove": [ "exec" ],
 				"/usr/libexec/freenetic-zapret2 apply *": [ "exec" ],
 				"/usr/libexec/freenetic-avahi-reflector enable": [ "exec" ],

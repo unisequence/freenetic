@@ -175,6 +175,15 @@ assert.equal(apkPlan.comparison, 1);
 assert.equal(apkPlan.required.length, 5);
 assert.ok(apkPlan.required.every(name => name.endsWith('-aarch64_cortex-a53.apk') || name.startsWith('fnc-')));
 
+const x86Plan = helpers.freeneticReleasePlan(
+	release('apk', 'x86_64'),
+	updater('apk', 'x86_64'),
+	installed('26.255.53418~deb4b84')
+);
+assert.equal(x86Plan.compatible, true,
+	'x86_64 APK releases must be accepted by the dashboard updater');
+assert.ok(x86Plan.required.every(name => name.endsWith('-x86_64.apk') || name.startsWith('fnc-')));
+
 const ipkPlan = helpers.freeneticReleasePlan(
 	release('opkg', 'mipsel_24kc'),
 	updater('opkg', 'mipsel_24kc'),

@@ -17,6 +17,12 @@ OPKG_REPOSITORY_FILE=/etc/opkg/magitrickle.conf
 OPKG_KEY_FILE=/etc/opkg/keys/6cef96cd3b8f66b0
 OPKG_REPOSITORY_BASE=https://bin.magitrickle.dev/packages/openwrt/snapshots-ipk
 OPKG_KEY_URL="$OPKG_REPOSITORY_BASE/6cef96cd3b8f66b0.pub"
+MAGITRICKLE_COMPAT_DIR=/etc/magitrickle
+MAGITRICKLE_NAT_COMPAT_MARKER="$MAGITRICKLE_COMPAT_DIR/.freenetic-kmod-ipt-nat-compat"
+MAGITRICKLE_STATE_DIR="$MAGITRICKLE_COMPAT_DIR/state"
+MAGITRICKLE_CONFIG_FILE="$MAGITRICKLE_STATE_DIR/config.yaml"
+MAGITRICKLE_IH_CONFIG_URL=https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml
+LUCI_MENU_FILE=/usr/share/luci/menu.d/freenetic-magitrickle.json
 OPKG_KEY_SHA256=6ef030b47cd07526f05bfc0599e8e9032ea6abf7cb233edb31f60ebc161f9ca4
 
 stage_dir=
@@ -25,6 +31,8 @@ package_arch=
 repository_url=
 key_url=
 key_hash=
+resolver_backup=
+resolver_changed=false
 
 json_escape() {
 	printf '%s' "$1" | tr '\r\n' '  ' | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -45,6 +53,10 @@ json_reply() {
 }
 
 cleanup() {
+	if [ "$resolver_changed" = true ] && [ -n "$resolver_backup" ] && [ -s "$resolver_backup" ]; then
+		cp "$resolver_backup" /etc/resolv.conf 2>/dev/null || true
+		resolver_changed=false
+	fi
 	[ -z "$stage_dir" ] || rm -rf "$stage_dir"
 }
 
@@ -138,11 +150,68 @@ package_version() {
 	esac
 }
 
+use_direct_resolver() {
+	[ "$resolver_changed" = true ] && return 0
+	[ -s /tmp/resolv.conf.d/resolv.conf.auto ] || return 1
+	grep -q '^[[:space:]]*nameserver[[:space:]]' /tmp/resolv.conf.d/resolv.conf.auto || return 1
+	resolver_backup="$stage_dir/resolv.conf.backup"
+	cp /etc/resolv.conf "$resolver_backup" || return 1
+	cp /tmp/resolv.conf.d/resolv.conf.auto /etc/resolv.conf || {
+		cp "$resolver_backup" /etc/resolv.conf 2>/dev/null || true
+		resolver_backup=
+		return 1
+	}
+	# The router may route its normal resolver through an optional local
+	# encrypted-DNS service.  For the signed package transaction, retry with
+	# the WAN-provided resolver if that local service is unavailable.  HTTPS
+	# plus the pinned repository key still protect the transaction.
+	resolver_changed=true
+}
+
+run_package_command() {
+	command_output="$1"
+	command_error="$2"
+	shift 2
+	"$@" >"$command_output" 2>"$command_error"
+	command_rc=$?
+	if [ "$command_rc" -ne 0 ] && [ "$resolver_changed" = false ] && use_direct_resolver; then
+		"$@" >"$command_output" 2>"$command_error"
+		command_rc=$?
+	fi
+	return "$command_rc"
+}
+
+ensure_apk_compat_dependencies() {
+	[ "$package_manager" = apk ] || return 0
+	if apk search -e kmod-ipt-nat >/dev/null 2>&1; then
+		return 0
+	fi
+	# OpenWrt 25.12 moved the NAT kernel functionality into the nftables
+	# modules, while the current upstream MagiTrickle APK still names the old
+	# kmod-ipt-nat package.  An empty virtual package is safe only when the
+	# running kernel already exposes a working NAT table.
+	if command -v iptables >/dev/null 2>&1; then
+		iptables -t nat -L -n >/dev/null 2>&1 || fail 'MagiTrickle requires NAT kernel support (kmod-ipt-nat is unavailable).'
+	elif command -v nft >/dev/null 2>&1; then
+		nft list table inet fw4 >/dev/null 2>&1 ||
+			[ -e /sys/module/nf_nat ] || [ -e /sys/module/nft_nat ] ||
+			fail 'MagiTrickle requires NAT kernel support (kmod-ipt-nat is unavailable).'
+	else
+		fail 'MagiTrickle requires NAT kernel support (kmod-ipt-nat is unavailable).'
+	fi
+	mkdir -p "$MAGITRICKLE_COMPAT_DIR" || fail 'Cannot create MagiTrickle compatibility state.'
+	apk --no-network add --virtual kmod-ipt-nat >"$stage_dir/compat.out" 2>"$stage_dir/compat.err" || fail "$(cat "$stage_dir/compat.err")"
+	: > "$MAGITRICKLE_NAT_COMPAT_MARKER" || fail 'Cannot record the MagiTrickle compatibility package.'
+}
+
 download_key() {
 	stage_dir="$(mktemp -d /tmp/freenetic-magitrickle.XXXXXX 2>/dev/null || true)"
 	[ -n "$stage_dir" ] || fail 'Cannot create a private staging directory.'
 	chmod 0700 "$stage_dir" || fail 'Cannot protect the staging directory.'
-	wget -qO "$stage_dir/key" "$key_url" || fail 'Cannot download the MagiTrickle repository key.'
+	if ! wget -qO "$stage_dir/key" "$key_url"; then
+		use_direct_resolver || fail 'Cannot download the MagiTrickle repository key.'
+		wget -qO "$stage_dir/key" "$key_url" || fail 'Cannot download the MagiTrickle repository key.'
+	fi
 	[ -s "$stage_dir/key" ] || fail 'The MagiTrickle repository key is empty.'
 	actual_hash="$(sha256sum "$stage_dir/key" 2>/dev/null | awk '{ print $1 }')"
 	[ "$actual_hash" = "$key_hash" ] || fail 'MagiTrickle repository key verification failed.'
@@ -171,19 +240,76 @@ start_service() {
 	/etc/init.d/magitrickle start >/dev/null 2>&1 || fail 'MagiTrickle service could not be started.'
 }
 
+install_ih_list() {
+	package_installed || fail 'MagiTrickle is not installed.'
+	stage_dir="$(mktemp -d /tmp/freenetic-magitrickle-list.XXXXXX 2>/dev/null || true)"
+	[ -n "$stage_dir" ] || fail 'Cannot create a private staging directory.'
+	chmod 0700 "$stage_dir" || fail 'Cannot protect the staging directory.'
+	list_tmp="$stage_dir/config.yaml"
+	if ! wget -qO "$list_tmp" "$MAGITRICKLE_IH_CONFIG_URL"; then
+		use_direct_resolver || fail 'Cannot download the Internet Helper list.'
+		wget -qO "$list_tmp" "$MAGITRICKLE_IH_CONFIG_URL" || fail 'Cannot download the Internet Helper list.'
+	fi
+	[ -s "$list_tmp" ] || fail 'The Internet Helper list is empty.'
+	grep -q '^configVersion:' "$list_tmp" || fail 'The downloaded Internet Helper list is not a MagiTrickle configuration.'
+	grep -q '^app:' "$list_tmp" || fail 'The downloaded Internet Helper list is not a MagiTrickle configuration.'
+	mkdir -p "$MAGITRICKLE_STATE_DIR" || fail 'Cannot create the MagiTrickle state directory.'
+	if [ -s "$MAGITRICKLE_CONFIG_FILE" ] && [ ! -e "$MAGITRICKLE_CONFIG_FILE.freenetic-backup" ]; then
+		cp "$MAGITRICKLE_CONFIG_FILE" "$MAGITRICKLE_CONFIG_FILE.freenetic-backup" || fail 'Cannot back up the existing MagiTrickle configuration.'
+	fi
+	cp "$list_tmp" "$MAGITRICKLE_CONFIG_FILE.new" || fail 'Cannot stage the Internet Helper list.'
+	chmod 0600 "$MAGITRICKLE_CONFIG_FILE.new" || fail 'Cannot protect the Internet Helper list.'
+	mv "$MAGITRICKLE_CONFIG_FILE.new" "$MAGITRICKLE_CONFIG_FILE" || fail 'Cannot install the Internet Helper list.'
+	if [ -x /etc/init.d/magitrickle ]; then
+		/etc/init.d/magitrickle enable >/dev/null 2>&1 || true
+		/etc/init.d/magitrickle reload >/dev/null 2>&1 || true
+		/etc/init.d/magitrickle restart >/dev/null 2>&1 || fail 'MagiTrickle could not be restarted with the Internet Helper list.'
+	fi
+	json_reply 0 'Internet Helper list installed.' '' true "$(service_running && printf true || printf false)" '' "$MAGITRICKLE_IH_CONFIG_URL"
+}
+
+install_luci_menu() {
+	mkdir -p "$(dirname "$LUCI_MENU_FILE")" || fail 'Cannot create the MagiTrickle LuCI menu directory.'
+	cat > "$LUCI_MENU_FILE" <<'EOF' || fail 'Cannot install the MagiTrickle LuCI menu entry.'
+{
+	"admin/services/magitrickle": {
+		"title": "MagiTrickle",
+		"order": 60,
+		"action": {
+			"type": "view",
+			"path": "magitrickle/magitrickle"
+		},
+		"depends": {
+			"acl": [ "luci-app-freenetic" ]
+		}
+	}
+}
+EOF
+	rm -f /tmp/luci-indexcache* 2>/dev/null || true
+	rm -rf /tmp/luci-modulecache 2>/dev/null || true
+}
+
+remove_luci_menu() {
+	rm -f "$LUCI_MENU_FILE"
+	rm -f /tmp/luci-indexcache* 2>/dev/null || true
+	rm -rf /tmp/luci-modulecache 2>/dev/null || true
+}
+
 install_package() {
 	install_key_and_repository
 	case "$package_manager" in
 		apk)
-			apk update >"$stage_dir/update.out" 2>"$stage_dir/update.err" || fail "$(cat "$stage_dir/update.err")"
-			apk add "$PACKAGE" >"$stage_dir/install.out" 2>"$stage_dir/install.err" || fail "$(cat "$stage_dir/install.err")"
+			run_package_command "$stage_dir/update.out" "$stage_dir/update.err" apk update || fail "$(cat "$stage_dir/update.err")"
+			ensure_apk_compat_dependencies
+			run_package_command "$stage_dir/install.out" "$stage_dir/install.err" apk add "$PACKAGE" || fail "$(cat "$stage_dir/install.err")"
 			;;
 		opkg)
-			opkg update >"$stage_dir/update.out" 2>"$stage_dir/update.err" || fail "$(cat "$stage_dir/update.err")"
-			opkg install "$PACKAGE" >"$stage_dir/install.out" 2>"$stage_dir/install.err" || fail "$(cat "$stage_dir/install.err")"
+			run_package_command "$stage_dir/update.out" "$stage_dir/update.err" opkg update || fail "$(cat "$stage_dir/update.err")"
+			run_package_command "$stage_dir/install.out" "$stage_dir/install.err" opkg install "$PACKAGE" || fail "$(cat "$stage_dir/install.err")"
 			;;
 	esac
 	start_service
+	install_luci_menu
 	output="$(tail -n 20 "$stage_dir/install.out" 2>/dev/null || true)"
 	json_reply 0 "$output" '' true "$(service_running && printf true || printf false)" "$(package_version)" "$repository_url"
 }
@@ -198,9 +324,16 @@ remove_package() {
 	fi
 	# Keep /etc/magitrickle so a reinstall never destroys user routing rules.
 	case "$package_manager" in
-		apk) rm -f "$APK_REPOSITORY_FILE" "$APK_KEY_FILE" ;;
+		apk)
+			rm -f "$APK_REPOSITORY_FILE" "$APK_KEY_FILE"
+			if [ -f "$MAGITRICKLE_NAT_COMPAT_MARKER" ]; then
+				apk --no-network del kmod-ipt-nat >/dev/null 2>&1 || true
+				rm -f "$MAGITRICKLE_NAT_COMPAT_MARKER"
+			fi
+			;;
 		opkg) rm -f "$OPKG_REPOSITORY_FILE" "$OPKG_KEY_FILE" ;;
 	esac
+	remove_luci_menu
 	json_reply 0 '' '' false false ''
 }
 
@@ -212,10 +345,10 @@ status() {
 	json_reply 0 '' '' "$installed" "$running" "$(package_version)" "$repository_url"
 }
 
-[ "$#" -eq 1 ] || { detect_manager; detect_arch; fail 'Usage: status|install|remove'; }
+[ "$#" -eq 1 ] || { detect_manager; detect_arch; fail 'Usage: status|install|remove|install-ih-list'; }
 case "$1" in
-	status|install|remove) ;;
-	*) detect_manager; detect_arch; fail 'Usage: status|install|remove' ;;
+	status|install|remove|install-ih-list) ;;
+	*) detect_manager; detect_arch; fail 'Usage: status|install|remove|install-ih-list' ;;
 esac
 
 detect_manager
@@ -225,5 +358,6 @@ case "$1" in
 	status) status ;;
 	install) install_package ;;
 	remove) remove_package ;;
+	install-ih-list) install_ih_list ;;
 esac
 cleanup

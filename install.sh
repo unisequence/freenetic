@@ -17,6 +17,7 @@ MIN_RAM_MIB=128
 MIN_CPU_CORES=2
 MIN_OVERLAY_MIB_FILOGIC=32
 MIN_OVERLAY_MIB_MT7621=16
+MIN_OVERLAY_MIB_X86_64=32
 
 fail() {
 	echo "Freenetic installer: FAIL: $*" >&2
@@ -140,8 +141,32 @@ case "$target" in
 			*) fail "$model reports $target but DISTRIB_ARCH is $release_arch" ;;
 		esac
 		;;
+	x86/64)
+		target_suffix="x86_64"
+		min_overlay_mib="$MIN_OVERLAY_MIB_X86_64"
+		# These placeholders are replaced by app/prepare-release.js for each
+		# published release after the x86_64 fnc artifacts are built.
+		fnc_sha256_apk="0000000000000000000000000000000000000000000000000000000000000000"
+		fnc_sha256_ipk="0000000000000000000000000000000000000000000000000000000000000000"
+		fnc_ubus_lib_apk="libubus.so.20251202"
+		fnc_ubox_lib_apk="libubox.so.20260213"
+		fnc_blobmsg_lib_apk="libblobmsg_json.so.20260213"
+		fnc_ubus_lib_ipk="libubus.so.20250102"
+		fnc_ubox_lib_ipk="libubox.so.20240329"
+		fnc_blobmsg_lib_ipk="libblobmsg_json.so.20240329"
+		fnc_uci_lib="libuci.so.20250120"
+		fnc_jsonc_lib="libjson-c.so.5"
+		case "$machine" in
+			x86_64) ;;
+			*) fail "$model reports $target but uname -m is $machine, expected x86_64" ;;
+		esac
+		case "$release_arch" in
+			''|x86_64*) ;;
+			*) fail "$model reports $target but DISTRIB_ARCH is $release_arch" ;;
+		esac
+		;;
 	*)
-		fail "$model uses unsupported OpenWrt target ${target:-unknown}; supported targets are mediatek/filogic and ramips/mt7621"
+		fail "$model uses unsupported OpenWrt target ${target:-unknown}; supported targets are mediatek/filogic, ramips/mt7621 and x86/64"
 		;;
 esac
 

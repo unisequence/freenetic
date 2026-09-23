@@ -53,7 +53,7 @@ function freeneticReleasePlan(release, updater, installedPackages) {
 	const packageManager = updater.package_manager;
 	const assetSuffix = updater.asset_suffix;
 	if ((packageManager !== 'apk' && packageManager !== 'opkg') ||
-		(assetSuffix !== 'aarch64_cortex-a53' && assetSuffix !== 'mipsel_24kc'))
+		(assetSuffix !== 'aarch64_cortex-a53' && assetSuffix !== 'mipsel_24kc' && assetSuffix !== 'x86_64'))
 		return { compatible: false, reason: 'target' };
 
 	const names = new Set((Array.isArray(release.assets) ? release.assets : [])

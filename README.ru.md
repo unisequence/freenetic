@@ -16,16 +16,19 @@ KeeneticOS/NDM — отдельный слой, который воспроиз�
 > frenetic), не попытка выдать себя за оригинальный продукт.
 
 Текущая аппаратная база разработки — BT RB300, прошитый чистым upstream
-OpenWrt: mainline U-Boot, без проприетарных компонентов.
+OpenWrt: mainline U-Boot, без проприетарных компонентов. Дополнительно
+релизная матрица собирает универсальный профиль OpenWrt x86/64.
 
 ## Поддерживаемое железо
 
-Релизные пакеты намеренно ограничены двумя проверенными семействами MediaTek:
+Релизные пакеты включают два проверенных семейства MediaTek и универсальный
+профиль OpenWrt x86/64:
 
 | OpenWrt target | CPU ABI | Минимальный профиль |
 |---|---|---|
 | `mediatek/filogic` | `aarch64` | 2 ядра, 128 MiB RAM, 32 MiB свободного overlay |
 | `ramips/mt7621` | `mipsel_24kc` | 2 ядра, 128 MiB RAM, 16 MiB свободного overlay |
+| `x86/64` | `x86_64` | 2 ядра, 128 MiB RAM, 32 MiB свободного overlay |
 
 Остальные target'ы блокируются pre-install-проверкой пакета. Перед
 тестовым деплоем ту же read-only проверку по SSH можно запустить отдельно:
@@ -37,7 +40,8 @@ app/check-router.sh root@192.168.1.1
 Пороги для конкретной среды можно увеличить переменными
 `FREENETIC_MIN_RAM_MIB`, `FREENETIC_MIN_CPU_CORES`,
 `FREENETIC_MIN_OVERLAY_MIB_FILOGIC` и
-`FREENETIC_MIN_OVERLAY_MIB_MT7621`.
+`FREENETIC_MIN_OVERLAY_MIB_MT7621`, а для x86/64 —
+`FREENETIC_MIN_OVERLAY_MIB_X86_64`.
 
 ## Быстрая установка
 

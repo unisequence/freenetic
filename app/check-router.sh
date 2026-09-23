@@ -11,7 +11,7 @@ usage() {
     echo "Usage: $0 [root@router]" >&2
     echo "Environment: FREENETIC_ROUTER, FREENETIC_SSH_CMD, FREENETIC_MIN_RAM_MIB," >&2
     echo "             FREENETIC_MIN_CPU_CORES, FREENETIC_MIN_OVERLAY_MIB_FILOGIC," >&2
-    echo "             FREENETIC_MIN_OVERLAY_MIB_MT7621" >&2
+    echo "             FREENETIC_MIN_OVERLAY_MIB_MT7621, FREENETIC_MIN_OVERLAY_MIB_X86_64" >&2
 }
 
 if [ "$#" -gt 1 ]; then
@@ -25,6 +25,7 @@ MIN_RAM_MIB="${FREENETIC_MIN_RAM_MIB:-128}"
 MIN_CPU_CORES="${FREENETIC_MIN_CPU_CORES:-2}"
 MIN_OVERLAY_MIB_FILOGIC="${FREENETIC_MIN_OVERLAY_MIB_FILOGIC:-32}"
 MIN_OVERLAY_MIB_MT7621="${FREENETIC_MIN_OVERLAY_MIB_MT7621:-16}"
+MIN_OVERLAY_MIB_X86_64="${FREENETIC_MIN_OVERLAY_MIB_X86_64:-32}"
 
 valid_uint() {
     case "$1" in
@@ -33,7 +34,8 @@ valid_uint() {
 }
 
 for value in "$MIN_RAM_MIB" "$MIN_CPU_CORES" \
-    "$MIN_OVERLAY_MIB_FILOGIC" "$MIN_OVERLAY_MIB_MT7621"; do
+    "$MIN_OVERLAY_MIB_FILOGIC" "$MIN_OVERLAY_MIB_MT7621" \
+    "$MIN_OVERLAY_MIB_X86_64"; do
     valid_uint "$value" || {
         echo "Freenetic preflight: thresholds must be non-negative integers." >&2
         exit 2
@@ -44,13 +46,15 @@ done
 # shell and only uses base OpenWrt utilities.
 $SSH_CMD "$ROUTER" sh -s -- \
     "$MIN_RAM_MIB" "$MIN_CPU_CORES" \
-    "$MIN_OVERLAY_MIB_FILOGIC" "$MIN_OVERLAY_MIB_MT7621" <<'REMOTE'
+    "$MIN_OVERLAY_MIB_FILOGIC" "$MIN_OVERLAY_MIB_MT7621" \
+    "$MIN_OVERLAY_MIB_X86_64" <<'REMOTE'
 set -eu
 
 min_ram_mib="$1"
 min_cpu_cores="$2"
 min_overlay_mib_filogic="$3"
 min_overlay_mib_mt7621="$4"
+min_overlay_mib_x86_64="$5"
 
 fail() {
     echo "Freenetic preflight: FAIL: $*" >&2
@@ -105,8 +109,19 @@ case "$target" in
             *) fail "$model reports $target but DISTRIB_ARCH is $release_arch" ;;
         esac
         ;;
+    x86/64)
+        min_overlay_mib="$min_overlay_mib_x86_64"
+        case "$machine" in
+            x86_64) ;;
+            *) fail "$model reports $target but uname -m is $machine, expected x86_64" ;;
+        esac
+        case "$release_arch" in
+            ''|x86_64*) ;;
+            *) fail "$model reports $target but DISTRIB_ARCH is $release_arch" ;;
+        esac
+        ;;
     *)
-        fail "$model uses unsupported OpenWrt target ${target:-unknown}; supported targets are mediatek/filogic and ramips/mt7621"
+        fail "$model uses unsupported OpenWrt target ${target:-unknown}; supported targets are mediatek/filogic, ramips/mt7621 and x86/64"
         ;;
 esac
 

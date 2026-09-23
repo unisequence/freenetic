@@ -1,5 +1,5 @@
 # Кросс-сборка fnc против либ таргета из openwrt-upstream buildroot
-# (target=mediatek/filogic или ramips/mt7621) — те же libubus/libuci/
+# (target=mediatek/filogic, ramips/mt7621 или x86/64) — те же libubus/libuci/
 # libubox/libblobmsg_json, что уже стоят на роутере, никаких новых
 # рантайм-зависимостей.
 
@@ -7,7 +7,7 @@ ifndef OPENWRT_DIR
 $(error OPENWRT_DIR is not set — point it at your OpenWrt buildroot, e.g. make OPENWRT_DIR=/path/to/openwrt)
 endif
 # The web packages are architecture-independent, but fnc links to OpenWrt's
-# target libraries. Keep both supported hardware profiles buildable.
+# target libraries. Keep every supported hardware profile buildable.
 FREENETIC_TARGET ?= filogic
 ifeq ($(FREENETIC_TARGET),filogic)
 TOOLCHAIN_ARCH := aarch64_cortex-a53
@@ -15,8 +15,11 @@ TARGET_TRIPLE  := aarch64-openwrt-linux
 else ifeq ($(FREENETIC_TARGET),mt7621)
 TOOLCHAIN_ARCH := mipsel_24kc
 TARGET_TRIPLE  := mipsel-openwrt-linux
+else ifeq ($(FREENETIC_TARGET),x86_64)
+TOOLCHAIN_ARCH := x86_64
+TARGET_TRIPLE  := x86_64-openwrt-linux
 else
-$(error unsupported FREENETIC_TARGET '$(FREENETIC_TARGET)' — use filogic or mt7621)
+$(error unsupported FREENETIC_TARGET '$(FREENETIC_TARGET)' — use filogic, mt7621 or x86_64)
 endif
 
 TOOLCHAIN   ?= $(shell find "$(OPENWRT_DIR)/staging_dir" -maxdepth 1 -type d \

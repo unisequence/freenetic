@@ -230,6 +230,7 @@ status() {
 	case "$target" in
 		mediatek/filogic) asset_suffix=aarch64_cortex-a53 ;;
 		ramips/mt7621) asset_suffix=mipsel_24kc ;;
+		x86/64) asset_suffix=x86_64 ;;
 	esac
 	overlay_min_mib=
 	preflight_min_ram_mib=128
@@ -237,6 +238,7 @@ status() {
 	case "$target" in
 		mediatek/filogic) overlay_min_mib=32 ;;
 		ramips/mt7621) overlay_min_mib=16 ;;
+		x86/64) overlay_min_mib=32 ;;
 	esac
 	preflight_resources
 	preflight_overlay

@@ -15,6 +15,20 @@ assert.match(workflow, /name: OpenWrt 25\.12\.5 ramips\/mt7621 \(APK \+ fnc\)/,
 assert.match(workflow, /fnc-\$asset_version-\$ASSET_ARCH-\$PACKAGE_FORMAT/,
 	'fnc assets must identify their package-manager ABI');
 assert.match(workflow, /asset_arch: mipsel_24kc/, 'the MT7621 build must declare its release architecture');
+assert.match(workflow, /name: OpenWrt 24\.10\.8 x86\/64 \(IPK \+ fnc\)/,
+	'the matrix must build an x86_64 fnc binary for the IPK ABI');
+assert.match(workflow, /name: OpenWrt 25\.12\.5 x86\/64 \(APK \+ fnc\)/,
+	'the matrix must build an x86_64 fnc binary for the APK ABI');
+assert.match(workflow, /asset_arch: x86_64/, 'the x86/64 builds must declare their release architecture');
+assert.match(workflow, /cli_target: x86_64/, 'the x86/64 builds must use the x86_64 CLI toolchain');
+assert.match(workflow, /openwrt-sdk-24\.10\.8-x86-64_gcc-13\.3\.0_musl\.Linux-x86_64\.tar\.zst/,
+	'the x86/64 IPK job must use the official 24.10 SDK');
+assert.match(workflow, /openwrt-sdk-25\.12\.5-x86-64_gcc-14\.3\.0_musl\.Linux-x86_64\.tar\.zst/,
+	'the x86/64 APK job must use the official 25.12 SDK');
+assert.match(workflow, /sdk_sha256: ac4a0405d2eea821b06f93c14ba13ffa90ad0457648903df7dde02570027ab21/,
+	'the x86/64 IPK SDK checksum must be pinned');
+assert.match(workflow, /sdk_sha256: 0c8df0151a1e88feb7c03d694d61f6a18d51872815b7c811d76e2b77504d5e9c/,
+	'the x86/64 APK SDK checksum must be pinned');
 assert.match(workflow, /scripts\/feeds\" update packages/, 'the SDK must refresh the packages feed for Zapret2 dependencies');
 assert.match(workflow, /scripts\/feeds\" install firewall4 nftables/, 'the SDK must install firewall4 and nftables for Zapret2');
 assert.match(workflow, /scripts\/feeds\" install curl/, 'the SDK must install curl for Zapret2');
@@ -37,7 +51,7 @@ assert.match(workflow, /--verify-tag/, 'release publication must verify the push
 assert.match(workflow, /app\/prepare-release\.js/, 'release publication must generate installer metadata from final assets');
 assert.match(workflow, /\$GITHUB_WORKSPACE\/docs\/CHANGELOG\.md/,
 	'release publication must read release notes from the documentation directory');
-assert.match(workflow, /asset_count.*-eq 27/, 'the release must contain core packages, Zapret2 builds and signing keys, binaries, installer and manifest');
+assert.match(workflow, /asset_count.*-eq 36/, 'the release must contain core packages, Zapret2 builds and signing keys, binaries, installer and manifest');
 assert.match(workflow, /freenetic-zapret2-\$zapret_version-\$ASSET_ARCH\.\$PACKAGE_FORMAT/,
 	'the release must publish a Zapret2 package for every supported target and package manager');
 assert.match(workflow, /freenetic-zapret2-apk-key-\$ASSET_ARCH-\$asset_version\.pem/,

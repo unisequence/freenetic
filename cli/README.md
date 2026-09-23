@@ -8,14 +8,15 @@ Keenetic-style CLI поверх чистого OpenWrt. Написана на C,
 ## Сборка
 
 Кросс-компилируется тулчейном из `openwrt-upstream` buildroot (тот же
-таргет, что и устройство — `mediatek/filogic`,
-`aarch64_cortex-a53_musl`):
+таргет, что и устройство — `mediatek/filogic`, `ramips/mt7621` или
+`x86/64`; соответственно `aarch64_cortex-a53_musl`, `mipsel_24kc_musl`
+или `x86_64_musl`):
 
 ```sh
 make OPENWRT_DIR=/path/to/openwrt-upstream
 ```
 
-Результат — `fnc`, ARM64/musl, динамически линкован (нужны стоящие на
+Результат — `fnc`, динамически линкованный под выбранный target/musl (нужны стоящие на
 устройстве `libubus`/`libuci`/`libubox`/`libblobmsg_json`, других
 зависимостей нет). Релизный installer умеет подхватить совместимые версии
 этих библиотек с другими SONAME-дейтами через приватные alias’ы; системные

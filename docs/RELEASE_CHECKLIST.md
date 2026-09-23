@@ -44,7 +44,7 @@ For every build, verify that:
 - [ ] the package index advertises exactly the archives beside it;
 - [ ] all four packages use one source revision and release version;
 - [ ] the CLI links against the intended OpenWrt ABI;
-- [ ] the MT7621 mirror is present when the release uses APK.
+- [ ] the MT7621 and x86_64 noarch mirrors are present when the release uses APK.
 
 The ABI compatibility shim for `fnc` remains an intentional OpenWrt integration
 detail. APK releases must publish their build public key; the generated

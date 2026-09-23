@@ -299,6 +299,7 @@ return view.extend({
 		this.focusedAppId = requestedAppId();
 		this.focusedAppScrolled = false;
 		this.magiTrickleOfferShown = false;
+		this.magiTrickleListOfferShown = false;
 		const focused = catalogItem(this.focusedAppId);
 		this.activeFilter = focused ? this.itemTier(focused.item, focused.group) : 'recommended';
 		this.appTabs = {};
@@ -676,6 +677,41 @@ return view.extend({
 		]);
 	},
 
+	offerMagiTrickleList() {
+		if (this.magiTrickleListOfferShown)
+			return;
+		this.magiTrickleListOfferShown = true;
+		ui.showModal(_('Install Internet Helper list?'), [
+			E('p', {}, _('Internet Helper provides a ready-made MagiTrickle domain list.')),
+			E('p', {}, _('The list will be downloaded to the router and applied to MagiTrickle.')),
+			E('div', { class: 'button-row' }, [
+				E('button', { class: 'btn', click: ui.hideModal }, _('Later')),
+				E('button', {
+					class: 'btn cbi-button-positive',
+					click: () => {
+						ui.showModal(_('Installing Internet Helper list…'), [
+							E('p', { class: 'spinning' }, _('The list is being downloaded and applied to MagiTrickle.'))
+						]);
+						fs.exec_direct(MAGITRICKLE_PACKAGE_HELPER, [ 'install-ih-list' ], 'json')
+							.then(result => {
+								ui.hideModal();
+								if (!result || result.code !== 0) {
+									const detail = (result && (result.stderr || result.stdout)) || _('unknown error');
+									notify(_('Failed to install the Internet Helper list: %s').format(detail), 'danger');
+									return;
+								}
+								notify(_('Internet Helper list installed.'), 'info');
+							})
+							.catch(error => {
+								ui.hideModal();
+								notify(_('Failed to install the Internet Helper list: %s').format(error.message || error), 'danger');
+							});
+					}
+				}, _('Install list'))
+			])
+		]);
+	},
+
 	confirmMwanInstall(item, btn, statusPill, row) {
 		ui.showModal(_('Install Multi-WAN?'), [
 			E('p', {}, _('Multi-WAN adds routing rules and restarts the LuCI session while it is being installed.')),
@@ -777,6 +813,8 @@ return view.extend({
 					this.renderCatalog();
 				if (offerMagiTrickle && typeof window !== 'undefined')
 					window.setTimeout(() => this.offerMagiTrickle(), 0);
+				if (!wasInstalled && item.id === 'magitrickle' && typeof window !== 'undefined')
+					window.setTimeout(() => this.offerMagiTrickleList(), 0);
 			});
 		}).catch(err => {
 			/* Installing mwan3 intentionally restarts rpcd. Its in-flight RPC call

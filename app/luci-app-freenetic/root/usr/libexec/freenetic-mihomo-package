@@ -87,6 +87,10 @@ target_asset() {
 			asset_name="mihomo-linux-mipsle-softfloat-v1.19.31.gz"
 			asset_hash="9061daa6a6b8cbb0491387e5de59663441b637eff0e3d295cec6949478752192"
 			;;
+		x86/64)
+			asset_name="mihomo-linux-amd64-compatible-v1.19.31.gz"
+			asset_hash="04cf9f09671704f839ddbee2e93069dc831a4123a75281e725d1d96ab9ac1afc"
+			;;
 		*)
 			printf '%s\n' "Unsupported OpenWrt target: ${target:-unknown}" >&2
 			return 1

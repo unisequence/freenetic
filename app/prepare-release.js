@@ -12,7 +12,8 @@ const PACKAGE_NAMES = [
 ];
 const TARGETS = {
 	filogic: 'aarch64_cortex-a53',
-	mt7621: 'mipsel_24kc'
+	mt7621: 'mipsel_24kc',
+	x86_64: 'x86_64'
 };
 
 function fail(message) {
@@ -67,13 +68,19 @@ function releaseHashes(releaseDir, assetVersion) {
 		mt7621: {
 			apk: fileHash(releaseDir, `fnc-${assetVersion}-${TARGETS.mt7621}-apk`),
 			ipk: fileHash(releaseDir, `fnc-${assetVersion}-${TARGETS.mt7621}-ipk`)
+		},
+		x86_64: {
+			apk: fileHash(releaseDir, `fnc-${assetVersion}-${TARGETS.x86_64}-apk`),
+			ipk: fileHash(releaseDir, `fnc-${assetVersion}-${TARGETS.x86_64}-ipk`)
 		}
 	};
 
 	for (const name of PACKAGE_NAMES) {
-		const mirror = fileHash(releaseDir, `${name}-${assetVersion}-${TARGETS.mt7621}.apk`);
-		if (mirror !== apk[name])
-			fail(`APK target mirror differs for ${name}`);
+		for (const target of [ TARGETS.mt7621, TARGETS.x86_64 ]) {
+			const mirror = fileHash(releaseDir, `${name}-${assetVersion}-${target}.apk`);
+			if (mirror !== apk[name])
+				fail(`APK target mirror differs for ${name} (${target})`);
+		}
 	}
 
 	const apkKey = fileHash(releaseDir, `freenetic-apk-release-key-${assetVersion}.pem`);
@@ -88,6 +95,8 @@ function patchInstaller(template, tag, assetVersion, hashes) {
 	installer = replaceTargetAssignment(installer, 'mediatek/filogic', 'fnc_sha256_ipk', hashes.fnc.filogic.ipk);
 	installer = replaceTargetAssignment(installer, 'ramips/mt7621', 'fnc_sha256_apk', hashes.fnc.mt7621.apk);
 	installer = replaceTargetAssignment(installer, 'ramips/mt7621', 'fnc_sha256_ipk', hashes.fnc.mt7621.ipk);
+	installer = replaceTargetAssignment(installer, 'x86/64', 'fnc_sha256_apk', hashes.fnc.x86_64.apk);
+	installer = replaceTargetAssignment(installer, 'x86/64', 'fnc_sha256_ipk', hashes.fnc.x86_64.ipk);
 	installer = replaceTargetAssignment(installer, 'apk', 'apk_key_sha256', hashes.apkKey);
 
 	for (const name of PACKAGE_NAMES) {
