@@ -83,6 +83,15 @@
 	font-style: normal;
 	font-display: swap;
 }
+/* Carter One (SIL OFL 1.1 — see fonts/CarterOne-OFL.txt) is the display face
+   for the Oxidice release codename. Keep the original font file unchanged. */
+@font-face {
+	font-family: "CarterOne";
+	src: url("fonts/CarterOne-Regular.ttf") format("truetype");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
 
 /* ---------- design tokens ---------- */
 
@@ -3480,6 +3489,11 @@ body[data-page="admin-system-package-manager"] #maincontent #view > .controls > 
 	font-family: "CherryBombOne", var(--fn-font-system);
 	font-size: 1.05rem;
 	transform: skewX(-6deg);
+}
+.fn-update-codename-oxidice {
+	font-family: "CarterOne", var(--fn-font-system);
+	font-size: 1.05rem;
+	letter-spacing: .005em;
 }
 .fn-update-codename-separator {
 	color: var(--fn-text-disabled);

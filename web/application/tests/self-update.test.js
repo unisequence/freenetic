@@ -16,7 +16,9 @@ for (const fontAsset of [
 	'Anta-Regular.woff2',
 	'Anta-OFL.txt',
 	'CherryBombOne-Latin.woff2',
-	'CherryBombOne-OFL.txt'
+	'CherryBombOne-OFL.txt',
+	'CarterOne-Regular.ttf',
+	'CarterOne-OFL.txt'
 ]) {
 	assert.ok(fs.statSync(path.join(themeFontDir, fontAsset)).size > 0,
 		fontAsset + ' must be present and non-empty');
@@ -83,6 +85,10 @@ assert.match(css, /@font-face\s*\{[\s\S]*?font-family: "Anta";[\s\S]*?Anta-Regul
 	'the release codename display font must be bundled with the theme');
 assert.match(css, /@font-face\s*\{[\s\S]*?font-family: "CherryBombOne";[\s\S]*?CherryBombOne-Latin\.woff2/,
 	'the Onyx display font must be bundled with the theme');
+assert.match(css, /@font-face\s*\{[\s\S]*?font-family: "CarterOne";[\s\S]*?CarterOne-Regular\.ttf/,
+	'the Oxidice display font must be bundled with the theme');
+assert.match(css, /\.fn-update-codename-oxidice\s*\{[\s\S]*?font-family: "CarterOne"/,
+	'the Oxidice codename must use its selected display font');
 assert.match(css, /\.fn-update-codename-noxium\s*\{[\s\S]*?transform: skewX\(-8deg\)/,
 	'the regular-only Anta font must receive the intentional codename slant');
 assert.match(css, /\.fn-update-version:disabled[\s\S]*?background-image: none/,

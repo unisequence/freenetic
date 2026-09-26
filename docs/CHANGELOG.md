@@ -62,6 +62,7 @@ a different route.
 - Moved Mihomo into Services and clarified the distinction between managed
   applications and software configured outside Freenetic.
 - Fixed theme persistence and restored the LuCI menu after switching themes.
+- Added the bundled Carter One display face for the Oxidice codename.
 - Refreshed the English product screenshots used by the project’s README.
 
 ### Installation and compatibility
