@@ -8,9 +8,9 @@ which they became user-visible.
 
 ## [0.4.0] — 2026-09-26
 
-### Introducing Signal
+### Introducing Oxidice
 
-Freenetic 0.4.0 Signal is a release about choice: more than one way to reach
+Freenetic 0.4.0 Oxidice is a release about choice: more than one way to reach
 the Internet, more control over where traffic goes, and a much richer set of
 network tools—all managed from the router’s own interface.
 
@@ -80,7 +80,7 @@ a different route.
 ### Release notes
 
 - Prerelease names remain concealed in alpha and beta release titles; the
-  Signal codename is revealed with this stable release.
+  Oxidice codename is revealed with this stable release.
 - The 0.4.0 release includes four LuCI packages and the matching `fnc` binary
   in each compatible release set, so self-update can reject incomplete asset
   uploads instead of installing a mixed revision.

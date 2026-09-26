@@ -10,7 +10,7 @@ const expected = {
 	'0.1': 'Misery',
 	'0.2': 'Onyx',
 	'0.3': 'Noxium',
-	'0.4': 'Signal'
+	'0.4': 'Oxidice'
 };
 
 assert.deepEqual(releases.RELEASE_CODENAMES, expected);
@@ -29,8 +29,8 @@ assert.equal(releases.releaseTitle('v0.4.0-alpha.1'), 'Freenetic 0.4.0a-1');
 assert.equal(releases.releaseTitle('v0.4.0-alpha.6'), 'Freenetic 0.4.0a-6');
 assert.equal(releases.releaseTitle('v0.4.0-beta.1'), 'Freenetic 0.4.0b-1');
 assert.equal(releases.releaseTitle('v0.4.0-beta.2'), 'Freenetic 0.4.0b-2');
-assert.equal(releases.releaseTitle('v0.4.0'), 'Introducing Freenetic 0.4.0 Signal');
-assert.equal(releases.releaseTitle('v0.4.1'), 'Freenetic 0.4.1 — Signal');
+assert.equal(releases.releaseTitle('v0.4.0'), 'Introducing Freenetic 0.4.0 Oxidice');
+assert.equal(releases.releaseTitle('v0.4.1'), 'Freenetic 0.4.1 — Oxidice');
 assert.throws(() => releases.releaseTitle('v0.4.0-alpha1'), /unsupported prerelease version/,
 	'nonstandard alpha tags must not bypass concealed prerelease naming');
 assert.equal(releases.concealedAlphaTitle('0.3.0-beta.1'), null);

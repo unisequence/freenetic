@@ -19,7 +19,7 @@ const FREENETIC_DISPLAY_VERSION = 'v0.2.x-dev';
 const FREENETIC_RELEASE_CODENAMES = Object.freeze({
 	'0.2': 'Onyx',
 	'0.3': 'Noxium',
-	'0.4': 'Signal'
+	'0.4': 'Oxidice'
 });
 const FREENETIC_RELEASE_PACKAGES = [
 	'luci-theme-freenetic',
