@@ -13,6 +13,19 @@ The surface remains familiar.
 Beneath it, packets are learning new habits:
 split, reorder, and take a different route.
 
+## [0.4.0-beta.2] — 2026-09-26
+
+### Fixed
+
+- Corrected the generated release installer’s overlay preflight: it now uses
+  the 16 MiB Filogic/MT7981 and 8 MiB MT7621 limits. Beta.1 could reject a
+  Filogic router with 29 MiB free even though the supported threshold is 16 MiB.
+
+### Verification
+
+- Added installer and release-generation contracts to keep these thresholds
+  aligned in future release assets.
+
 ## [0.4.0-beta.1] — 2026-09-26
 
 ### Added

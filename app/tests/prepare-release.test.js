@@ -85,6 +85,10 @@ try {
 	assert.match(installer, /RELEASE_TAG="v9\.8\.7"/);
 	assert.match(installer, /ASSET_VERSION="26\.257\.51426\.deadbee"/);
 	assert.match(installer, /releases\/download\/v9\.8\.7\/install\.sh/);
+	assert.match(installer, /^MIN_OVERLAY_MIB_FILOGIC=16$/m,
+		'release generation must preserve the 16 MiB MT7981/Filogic overlay threshold');
+	assert.match(installer, /^MIN_OVERLAY_MIB_MT7621=8$/m,
+		'release generation must preserve the 8 MiB MT7621 overlay threshold');
 	assert.match(installer, new RegExp(`apk_key_sha256="${hash(path.join(releaseDir, `freenetic-apk-release-key-${assetVersion}.pem`))}"`));
 	const repatched = prepare.patchInstaller(installer, 'v9.8.8', assetVersion, prepare.releaseHashes(releaseDir, assetVersion));
 	assert.match(repatched, /releases\/download\/v9\.8\.8\/install\.sh/,

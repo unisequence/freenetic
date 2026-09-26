@@ -46,6 +46,10 @@ assert.match(installer, /^RELEASE_TAG="v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9][A-
 	'release installer must carry a semver release tag');
 assert.match(installer, /^ASSET_VERSION="[0-9]{2}\.[0-9]{3}\.[0-9]+\.[0-9a-f]+"$/m,
 	'release installer must carry the OpenWrt-derived asset version');
+assert.match(installer, /^MIN_OVERLAY_MIB_FILOGIC=16$/m,
+	'the generated installer must allow the 16 MiB MT7981/Filogic overlay threshold');
+assert.match(installer, /^MIN_OVERLAY_MIB_MT7621=8$/m,
+	'the generated installer must allow the 8 MiB MT7621 overlay threshold');
 for (const name of [ 'theme_sha256', 'app_sha256', 'theme_ru_sha256', 'app_ru_sha256',
 	'fnc_sha256_apk', 'fnc_sha256_ipk' ]) {
 	const expected = name.startsWith('fnc_sha256_') ? 3 : 2;
