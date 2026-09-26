@@ -149,8 +149,10 @@ assert.equal(freeneticReleaseCodename('v0.3.0-alpha.4'), '',
 	'prerelease builds must keep the stable codename hidden');
 assert.equal(freeneticReleaseCodename('v0.3.1'), 'Noxium',
 	'patch releases in the stable 0.3 line must retain the Noxium codename');
-assert.equal(freeneticReleaseCodename('v0.4.0'), '',
-	'unrevealed release lines must not expose a codename');
+assert.equal(freeneticReleaseCodename('v0.4.0'), 'Signal',
+	'the stable 0.4.0 release must expose its public codename');
+assert.equal(freeneticReleaseCodename('v0.4.0-beta.2'), '',
+	'prerelease builds must keep the stable 0.4 codename hidden');
 assert.equal(helpers.freeneticReleaseLine('v0.3.1'), '0.3');
 assert.equal(helpers.freeneticReleaseLine('v0.3.0-beta.2'), '0.3');
 assert.equal(helpers.freeneticReleaseLine('not-a-release'), '');

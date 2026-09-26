@@ -18,7 +18,8 @@ const FREENETIC_PACKAGE_NAMES = [ 'luci-theme-freenetic', 'luci-app-freenetic' ]
 const FREENETIC_DISPLAY_VERSION = 'v0.2.x-dev';
 const FREENETIC_RELEASE_CODENAMES = Object.freeze({
 	'0.2': 'Onyx',
-	'0.3': 'Noxium'
+	'0.3': 'Noxium',
+	'0.4': 'Signal'
 });
 const FREENETIC_RELEASE_PACKAGES = [
 	'luci-theme-freenetic',

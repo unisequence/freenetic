@@ -6,12 +6,84 @@ which they became user-visible.
 
 ## [Unreleased]
 
-### Signal
+## [0.4.0] — 2026-09-26
 
-The surface remains familiar.
+### Introducing Signal
 
-Beneath it, packets are learning new habits:
-split, reorder, and take a different route.
+Freenetic 0.4.0 Signal is a release about choice: more than one way to reach
+the Internet, more control over where traffic goes, and a much richer set of
+network tools—all managed from the router’s own interface.
+
+The surface remains familiar. Beneath it, packets can split, reorder, and take
+a different route.
+
+### Connectivity and routing
+
+- Added a guided Multi-WAN workspace with single-connection, automatic
+  failover, and flow-balancing modes.
+- Added setup for secondary Ethernet and nearby Wi-Fi connections, with clear
+  connection health and active/standby state in both the dashboard and traffic
+  diagram.
+- Expanded the managed-uplink model to seven connections across Ethernet,
+  Wi-Fi, and modem-backed interfaces.
+- Made Multi-WAN changes transactional: Freenetic scopes its UCI changes to
+  owned sections, snapshots state, verifies the result, and rolls back failed
+  changes without taking over unrelated mwan3 policies.
+- Added route-metric isolation for managed uplinks and checks for DHCP,
+  conflicting subnets, and Internet reachability before accepting a Wi-Fi
+  backup link.
+
+### Network tools and services
+
+- Added the official Zapret2 runtime and a native LuCI workspace for DPI
+  strategies, service settings, scripts, lists, Blockcheck2, and debug logs.
+  The service is installed inactive; enabling it and selecting strategies
+  remain explicit actions.
+- Added router-side Mihomo configuration and management: convert proxy links
+  and subscriptions locally, edit the YAML directly, inspect and export the
+  effective configuration, and control the service and its logs.
+- Added optional Mihomo blocks for protected DNS through https-dns-proxy and
+  transparent TUN routing. Existing config-only installations can be adopted
+  by the managed application without discarding their configuration.
+- Added MagiTrickle as an optional application, including its LuCI entry point
+  and a post-install offer for an Internet Helper domain list. The list is
+  offered separately and is never enabled without the user’s choice.
+- Added x86/64 architecture support across installation checks, self-update,
+  `fnc`, Zapret2 and Mihomo packaging, and release assets.
+
+### Interface and day-to-day use
+
+- Added a responsive reboot page with an explicit confirmation and a reminder
+  to save configuration before restarting the router.
+- Added administrator-password changes under System management, with
+  confirmation and clear result feedback.
+- Improved system and kernel logs, package-manager actions, service screens,
+  mobile layouts, and in-place navigation across Freenetic views.
+- Moved Mihomo into Services and clarified the distinction between managed
+  applications and software configured outside Freenetic.
+- Fixed theme persistence and restored the LuCI menu after switching themes.
+- Refreshed the English product screenshots used by the project’s README.
+
+### Installation and compatibility
+
+- Reduced the required free overlay space to 16 MiB on MT7981/Filogic and
+  8 MiB on MT7621, consistently across installer preflight, package guards,
+  self-update, and documentation.
+- Fixed self-update downloads for networks with broken IPv6 routes or blocked
+  GitHub asset redirects by preferring IPv4 and resolving pinned assets via
+  the GitHub Releases API.
+- Improved OpenWrt SDK dependency setup and package-content checks for both
+  IPK and APK package formats.
+- Verified the OpenWrt 24.10.8 and 25.12.5 release matrix on Filogic, MT7621,
+  and x86/64, including package checks for both supported package formats.
+
+### Release notes
+
+- Prerelease names remain concealed in alpha and beta release titles; the
+  Signal codename is revealed with this stable release.
+- The 0.4.0 release includes four LuCI packages and the matching `fnc` binary
+  in each compatible release set, so self-update can reject incomplete asset
+  uploads instead of installing a mixed revision.
 
 ## [0.4.0-beta.2] — 2026-09-26
 
