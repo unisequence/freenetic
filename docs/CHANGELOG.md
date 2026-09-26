@@ -15,20 +15,33 @@ split, reorder, and take a different route.
 
 ## [0.4.0-beta.1] — 2026-09-26
 
+### Added
+
+- Added a dedicated, responsive router-reboot page with an explicit
+  confirmation step and a reminder to save configuration changes.
+- Added router administrator password changes to System management, with
+  password confirmation and clear success/error feedback.
+
 ### Improved
 
-- Refined the responsive system interface, including the reboot page,
-  system and kernel logs, package actions, and settings navigation. Router
-  password changes now live under System management.
-- Moved Mihomo into Services and improved handling of existing
-  configuration-only installations.
-- Reduced minimum free overlay requirements to 16 MiB for MT7981 and 8 MiB
-  for MT7621.
+- Restyled the system and kernel log pages, improved mobile layouts, and fixed
+  package-manager action buttons so their labels no longer wrap or get cut off.
+- Moved Mihomo from Network to Services. The application catalog now
+  distinguishes an existing config-only Mihomo setup from an unmanaged
+  installation; installing the managed core preserves and adopts that config.
+- Lowered the minimum free overlay requirement to 16 MiB for MT7981/Filogic
+  and 8 MiB for MT7621, consistently across installer checks, package guards,
+  self-update, and documentation.
+- Clarified the theme-switch action label and included the reboot page in the
+  in-place navigation and deployment paths.
 
 ### Verification
 
-- Passed the OpenWrt 24.10.8 and 25.12.5 package matrix for filogic, mt7621,
-  and x86/64, including IPK/APK package checks.
+- Passed the OpenWrt 24.10.8 and 25.12.5 build matrix across Filogic, MT7621,
+  and x86/64, including IPK/APK package checks (six target/release
+  combinations).
+- Added UI-polish and expanded Mihomo, package-boundary, and self-update
+  contract tests for the new behavior.
 
 ## [0.4.0-alpha.6] — 2026-09-23
 
