@@ -13,6 +13,23 @@ The surface remains familiar.
 Beneath it, packets are learning new habits:
 split, reorder, and take a different route.
 
+## [0.4.0-beta.1] — 2026-09-26
+
+### Improved
+
+- Refined the responsive system interface, including the reboot page,
+  system and kernel logs, package actions, and settings navigation. Router
+  password changes now live under System management.
+- Moved Mihomo into Services and improved handling of existing
+  configuration-only installations.
+- Reduced minimum free overlay requirements to 16 MiB for MT7981 and 8 MiB
+  for MT7621.
+
+### Verification
+
+- Passed the OpenWrt 24.10.8 and 25.12.5 package matrix for filogic, mt7621,
+  and x86/64, including IPK/APK package checks.
+
 ## [0.4.0-alpha.6] — 2026-09-23
 
 ### Added
