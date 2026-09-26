@@ -34,12 +34,12 @@ machine="$$(uname -m 2>/dev/null || true)"
 
 case "$$target" in
 	mediatek/filogic)
-		min_overlay_kib=32768
+		min_overlay_kib=16384
 		[ "$$machine" = aarch64 ] || freenetic_fail "$$model requires aarch64, got $$machine"
 		case "$$release_arch" in ''|aarch64*) ;; *) freenetic_fail "$$model reports incompatible architecture $$release_arch" ;; esac
 		;;
 	ramips/mt7621)
-		min_overlay_kib=16384
+		min_overlay_kib=8192
 		case "$$machine" in mips|mipsel) ;; *) freenetic_fail "$$model requires mips/mipsel, got $$machine" ;; esac
 		case "$$release_arch" in ''|mipsel*) ;; *) freenetic_fail "$$model reports incompatible architecture $$release_arch" ;; esac
 		;;

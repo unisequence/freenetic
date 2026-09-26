@@ -65,6 +65,9 @@ msgstr "Отмена"
 msgid "Switch"
 msgstr "Переключить"
 
+msgid "Switch interface"
+msgstr "Сменить интерфейс"
+
 msgid "Expand menu"
 msgstr "Развернуть меню"
 
@@ -4777,6 +4780,12 @@ msgstr "Установлен вне Freenetic"
 msgid "Managed elsewhere"
 msgstr "Управляется отдельно"
 
+msgid "Configuration found"
+msgstr "Найдена конфигурация"
+
+msgid "%s An existing Mihomo configuration will be preserved when the core is installed."
+msgstr "%s Существующая конфигурация Mihomo будет сохранена при установке ядра."
+
 msgid "Mihomo is already installed outside Freenetic. Use the existing LuCI interface or remove it first."
 msgstr "Mihomo уже установлен вне Freenetic. Используйте существующий интерфейс LuCI или сначала удалите его."
 
@@ -4788,3 +4797,56 @@ msgstr "Встроенный интерфейс нельзя загрузить 
 
 msgid "Open MagiTrickle"
 msgstr "Открыть MagiTrickle"
+
+msgid "Administrator password"
+msgstr "Пароль администратора"
+
+msgid "Change the administrator password used to access this device."
+msgstr "Измените пароль администратора для доступа к устройству."
+
+msgid "New router password"
+msgstr "Новый пароль роутера"
+
+msgid "Repeat new router password"
+msgstr "Повторите новый пароль роутера"
+
+msgid "Change password"
+msgstr "Изменить пароль"
+
+msgid "Passwords do not match."
+msgstr "Пароли не совпадают."
+
+msgid "Router password changed successfully."
+msgstr "Пароль роутера успешно изменён."
+
+#, javascript-format
+msgid "Could not change router password: %s"
+msgstr "Не удалось изменить пароль роутера: %s"
+
+msgid "Restart router"
+msgstr "Перезагрузить роутер"
+
+msgid "Restart the router to reload the operating system and its services."
+msgstr "Перезагрузите роутер, чтобы заново запустить систему и её службы."
+
+msgid "Internet access and the web interface will be temporarily unavailable while the router restarts. Your saved settings will remain unchanged."
+msgstr "Во время перезагрузки интернет и веб-интерфейс будут временно недоступны. Сохранённые настройки не изменятся."
+
+msgid "Make sure configuration changes are saved before restarting."
+msgstr "Перед перезагрузкой убедитесь, что изменения конфигурации сохранены."
+
+msgid "Restart the router?"
+msgstr "Перезагрузить роутер?"
+
+msgid "Restarting router…"
+msgstr "Перезагрузка роутера…"
+
+msgid "All active connections will be interrupted briefly while the router restarts."
+msgstr "Во время перезагрузки все активные подключения ненадолго прервутся."
+
+msgid "The router is restarting. Wait a moment, then reconnect to the web interface."
+msgstr "Роутер перезагружается. Подождите немного и подключитесь к веб-интерфейсу снова."
+
+#, javascript-format
+msgid "Could not restart the router: %s"
+msgstr "Не удалось перезагрузить роутер: %s"

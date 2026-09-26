@@ -38,7 +38,7 @@ var SIDEBAR_GROUPS = [
 	// from the active LuCI menu tree at runtime.
 	{ title: 'Services', icon: 'services', paths: [] },
 	{ title: 'Management', icon: 'system', paths: [
-		'system/system', 'system/diagnostics', 'system/package-manager',
+		'system/system', 'system/reboot', 'system/diagnostics', 'system/package-manager',
 		'system/applications'
 	] }
 ];

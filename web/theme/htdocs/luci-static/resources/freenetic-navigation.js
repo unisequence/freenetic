@@ -87,6 +87,7 @@ const ROUTES = {
 	'admin/network/firewall':       { view: 'network/freenetic-firewall', title: 'Firewall' },
 	'admin/network/routes':         { view: 'network/freenetic-routing', title: 'Routing' },
 	'admin/system/system':          { view: 'system/freenetic-system', title: 'System' },
+	'admin/system/reboot':           { view: 'system/freenetic-reboot', title: 'Reboot' },
 	'admin/system/diagnostics':     { view: 'system/freenetic-diagnostics', title: 'Diagnostics' },
 	'admin/system/applications':    { view: 'system/freenetic-apps', title: 'Applications' }
 };

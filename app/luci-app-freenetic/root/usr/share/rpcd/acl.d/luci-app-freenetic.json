@@ -62,7 +62,8 @@
 				"luci.amneziawg": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],
 				"wireguard": [ "genkey", "genpsk", "pubkey" ],
 				"file": [ "exec", "write", "remove" ],
-				"system": [ "validate_firmware_image" ]
+				"system": [ "reboot", "validate_firmware_image" ],
+				"luci": [ "setPassword" ]
 			},
 			"file": {
 				"/tmp/freenetic-openvpn-*": [ "write" ],

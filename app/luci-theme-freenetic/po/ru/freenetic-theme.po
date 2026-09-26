@@ -68,6 +68,9 @@ msgstr "Отмена"
 msgid "Switch"
 msgstr "Переключить"
 
+msgid "Switch interface"
+msgstr "Сменить интерфейс"
+
 msgid "Expand menu"
 msgstr "Развернуть меню"
 

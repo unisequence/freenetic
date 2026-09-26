@@ -221,7 +221,7 @@ return baseclass.extend({
 										location.href = L.url('admin/status/overview');
 								});
 						})
-					}, _('Switch'))
+					}, _('Switch interface'))
 				])
 			]);
 		});

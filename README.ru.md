@@ -26,8 +26,8 @@ OpenWrt: mainline U-Boot, без проприетарных компоненто
 
 | OpenWrt target | CPU ABI | Минимальный профиль |
 |---|---|---|
-| `mediatek/filogic` | `aarch64` | 2 ядра, 128 MiB RAM, 32 MiB свободного overlay |
-| `ramips/mt7621` | `mipsel_24kc` | 2 ядра, 128 MiB RAM, 16 MiB свободного overlay |
+| `mediatek/filogic` (MT7981) | `aarch64` | 2 ядра, 128 MiB RAM, 16 MiB свободного overlay |
+| `ramips/mt7621` | `mipsel_24kc` | 2 ядра, 128 MiB RAM, 8 MiB свободного overlay |
 | `x86/64` | `x86_64` | 2 ядра, 128 MiB RAM, 32 MiB свободного overlay |
 
 Остальные target'ы блокируются pre-install-проверкой пакета. Перед

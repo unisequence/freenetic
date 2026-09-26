@@ -27,8 +27,8 @@ OpenWrt x86/64 profile:
 
 | OpenWrt target | CPU ABI | Minimum profile |
 |---|---|---|
-| `mediatek/filogic` | `aarch64` | 2 cores, 128 MiB RAM, 32 MiB free overlay |
-| `ramips/mt7621` | `mipsel_24kc` | 2 cores, 128 MiB RAM, 16 MiB free overlay |
+| `mediatek/filogic` (MT7981) | `aarch64` | 2 cores, 128 MiB RAM, 16 MiB free overlay |
+| `ramips/mt7621` | `mipsel_24kc` | 2 cores, 128 MiB RAM, 8 MiB free overlay |
 | `x86/64` | `x86_64` | 2 cores, 128 MiB RAM, 32 MiB free overlay |
 
 Other targets are rejected by the package pre-install guard. Before a

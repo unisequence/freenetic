@@ -6,9 +6,9 @@
 'require freenetic-view-guard as guard';
 'require freenetic-rpc as rpc';
 
-/* System ("Настройки системы"): starts with a single "System files" card,
-   Keenetic-style — one compact row per file instead of stock LuCI's
-   sprawling two-column backup/flash form. First (and so far only) row:
+/* System ("Настройки системы"): adds focused Freenetic controls for
+   router access and system files, using one compact row per file instead of
+   stock LuCI's sprawling two-column backup/flash form. First file row:
    "firmware" — download the whole running UBI partition, or flash a new
    sysupgrade image in place, reusing the exact same backend primitives
    stock luci-mod-system's flash.js uses (cgi-download for the raw mtdblock
@@ -30,6 +30,7 @@ const ICON_DOWNLOAD = 'M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 
 const ICON_SWAP = 'M17 3 21 7l-4 4M3 7h18M7 21 3 17l4-4M21 17H3';
 const ICON_FILE = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6';
 const ICON_TRASH = 'M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7';
+const ICON_LOCK = 'M5 10h14v11H5zM8 10V7a4 4 0 1 1 8 0v3';
 
 /* /proc/mtd's numbering isn't guaranteed stable across devices/reflashes —
    look partitions up by name rather than hardcoding "mtd4" etc. Returns
@@ -126,6 +127,7 @@ return view.extend({
 		const release = board.release || {};
 
 		return E('div', { class: 'fn-dash' }, [
+			this.renderPasswordCard(),
 			E('div', { class: 'fn-card', style: 'grid-column: 1 / -1' }, [
 				E('div', { class: 'fn-card-head' }, [ E('h3', {}, _('System files')) ]),
 				E('div', { class: 'fn-card-body' }, [
@@ -144,6 +146,75 @@ return view.extend({
 			]),
 			this.renderUninstallCard()
 		]);
+	},
+
+	renderPasswordCard() {
+		const password = E('input', {
+			type: 'password', id: 'fn-router-password', name: 'password',
+			class: 'fn-password-input', autocomplete: 'new-password', required: true
+		});
+		const confirmation = E('input', {
+			type: 'password', id: 'fn-router-password-confirm', name: 'password-confirm',
+			class: 'fn-password-input', autocomplete: 'new-password', required: true
+		});
+		const status = E('p', { class: 'fn-password-status', role: 'status', hidden: true });
+		const submit = E('button', {
+			type: 'submit', class: 'fn-settings-btn fn-settings-btn-primary'
+		}, _('Change password'));
+		const form = E('form', {
+			class: 'fn-password-form',
+			submit: ev => {
+				ev.preventDefault();
+				this.saveRouterPassword(password, confirmation, submit, status);
+			}
+		}, [
+			E('label', { for: password.id }, [ _('New router password'), password ]),
+			E('label', { for: confirmation.id }, [ _('Repeat new router password'), confirmation ]),
+			status,
+			E('div', { class: 'fn-password-actions' }, submit)
+		]);
+
+		return E('section', { class: 'fn-card fn-password-card', style: 'grid-column: 1 / -1' }, [
+			E('div', { class: 'fn-card-head' }, [
+				svgIcon(ICON_LOCK, 19),
+				E('h3', {}, _('Administrator password'))
+			]),
+			E('div', { class: 'fn-card-body' }, [
+				E('p', { class: 'fn-password-intro' }, _('Change the administrator password used to access this device.')),
+				form
+			])
+		]);
+	},
+
+	saveRouterPassword(password, confirmation, submit, status) {
+		if (!password.value) {
+			password.focus();
+			return;
+		}
+
+		if (password.value !== confirmation.value) {
+			status.classList.remove('fn-password-success', 'fn-password-error');
+			status.hidden = false;
+			status.classList.add('fn-password-error');
+			status.textContent = _('Passwords do not match.');
+			confirmation.focus();
+			return;
+		}
+
+		status.hidden = true;
+		status.classList.remove('fn-password-error', 'fn-password-success');
+		submit.disabled = true;
+		ubusCall('luci', 'setPassword', { username: 'root', password: password.value }).then(() => {
+			password.value = '';
+			confirmation.value = '';
+			status.classList.add('fn-password-success');
+			status.textContent = _('Router password changed successfully.');
+			status.hidden = false;
+		}).catch(error => {
+			status.classList.add('fn-password-error');
+			status.textContent = _('Could not change router password: %s').format(error.message || error);
+			status.hidden = false;
+		}).finally(() => { submit.disabled = false; });
 	},
 
 	renderUninstallCard() {

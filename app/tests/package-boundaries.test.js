@@ -71,8 +71,12 @@ assert.match(routerPreflight, /ramips\/mt7621/, 'host preflight must support MT7
 assert.match(routerPreflight, /FREENETIC_MIN_OVERLAY_MIB_MT7621/, 'MT7621 threshold must be configurable');
 assert.match(preflightMakefile, /mediatek\/filogic/, 'preflight must support the primary MediaTek target');
 assert.match(preflightMakefile, /ramips\/mt7621/, 'preflight must support MT7621');
-assert.match(preflightMakefile, /min_overlay_kib=32768/, 'Filogic needs the larger overlay reserve');
-assert.match(preflightMakefile, /min_overlay_kib=16384/, 'MT7621 needs its own overlay reserve');
+assert.match(routerPreflight, /FREENETIC_MIN_OVERLAY_MIB_FILOGIC:-16/,
+	'MT7981/Filogic preflight must default to 16 MiB');
+assert.match(routerPreflight, /FREENETIC_MIN_OVERLAY_MIB_MT7621:-8/,
+	'MT7621 preflight must default to 8 MiB');
+assert.match(preflightMakefile, /min_overlay_kib=16384/, 'Filogic must require 16 MiB free overlay');
+assert.match(preflightMakefile, /min_overlay_kib=8192/, 'MT7621 must require 8 MiB free overlay');
 assert.match(preflightMakefile, /at least 128 MiB RAM/, 'preflight must reject low-memory routers');
 assert.match(preflightMakefile, /command -v opkg/, 'preflight must support OpenWrt 24.10 opkg installs');
 assert.match(backupHelper, /opkg list-installed/,
@@ -101,8 +105,8 @@ for (const entry of Object.values(menu))
 
 const navigationSource = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs',
 	'luci-static', 'resources', 'menu-freenetic.js'), 'utf8');
-assert.match(navigationSource, /'system\/system', 'system\/diagnostics'/,
-	'diagnostics must stay inside the Management sidebar group');
+assert.match(navigationSource, /'system\/system', 'system\/reboot', 'system\/diagnostics'/,
+	'reboot and diagnostics must stay inside the Management sidebar group');
 assert.match(navigationSource, /'system\/diagnostics', 'system\/package-manager',\s*'system\/applications'/,
 	'Software and the Freenetic application catalog must stay inside Management');
 assert.match(navigationSource, /title: 'Services', icon: 'services', paths: \[\]/,

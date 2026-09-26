@@ -174,6 +174,7 @@ $SSH_CMD "$ROUTER" '
              /www/luci-static/resources/view/status/freenetic-traffic.js \
              /www/luci-static/resources/view/status/freenetic-wifimonitor.js \
              /www/luci-static/resources/view/system/freenetic-apps.js \
+             /www/luci-static/resources/view/system/freenetic-reboot.js \
              /www/luci-static/resources/view/network/freenetic-mihomo.js \
              /www/luci-static/resources/view/magitrickle/magitrickle.js \
              /www/luci-static/resources/view/system/freenetic-diagnostics.js \

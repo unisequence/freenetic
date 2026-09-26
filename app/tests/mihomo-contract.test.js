@@ -14,8 +14,10 @@ const uci = read('app/luci-app-freenetic/root/usr/share/freenetic/mihomo/config'
 const defaults = read('app/luci-app-freenetic/root/usr/share/freenetic/mihomo/default-config.yaml');
 const view = read('web/application/htdocs/luci-static/resources/view/network/freenetic-mihomo.js');
 const applications = read('web/application/htdocs/luci-static/resources/view/system/freenetic-apps.js');
+const russian = read('app/luci-app-freenetic/po/ru/freenetic.po');
 const acl = JSON.parse(read('app/luci-app-freenetic/root/usr/share/rpcd/acl.d/luci-app-freenetic.json'))['luci-app-freenetic'];
-const menu = JSON.parse(read('app/luci-app-freenetic/root/usr/share/luci/menu.d/zz-luci-freenetic.json'))['admin/network/mihomo'];
+const menuEntries = JSON.parse(read('app/luci-app-freenetic/root/usr/share/luci/menu.d/zz-luci-freenetic.json'));
+const menu = menuEntries['admin/services/mihomo'];
 
 assert.ok(fs.statSync(helperPath).mode & 0o111, 'Mihomo installer must be executable');
 assert.match(helper, /MIHOMO_VERSION=1\.19\.31/, 'Mihomo version must be pinned');
@@ -27,8 +29,15 @@ assert.match(helper, /status\|install\|remove/);
 assert.match(helper, /already installed outside Freenetic/);
 assert.match(helper, /\[ -e "\$MIHOMO_BIN" \]/);
 assert.match(helper, /\[ -e "\$MIHOMO_INIT" \]/);
-assert.match(helper, /\[ -e "\$MIHOMO_CONFIG" \]/);
-assert.match(helper, /partial runtime so a later retry is safe/);
+assert.match(helper, /json_add_boolean config_only/);
+assert.match(helper, /config_only=1/);
+assert.match(helper, /Keep a pre-existing config-only setup intact/);
+assert.match(helper, /Cannot adopt the existing Mihomo configuration/);
+const installFunction = helper.match(/install_runtime\(\) \{([\s\S]*?)\n\}/)[1];
+const installGuard = installFunction.split('target_asset')[0];
+assert.match(installGuard, /if \[ -e "\$MIHOMO_BIN" \] \|\| \[ -e "\$MIHOMO_INIT" \]/,
+	'A config-only remnant must not block installation');
+assert.match(helper, /uci -q set mihomo\.main\.freenetic_managed='1'/);
 assert.match(helper, /mediatek\/filogic/);
 assert.match(helper, /ramips\/mt7621/);
 assert.match(helper, /x86\/64/);
@@ -85,9 +94,15 @@ assert.match(view, /apiCall\('service'/);
 assert.match(view, /Open Applications/);
 assert.match(applications, /id: 'mihomo'/);
 assert.match(applications, /freenetic-mihomo-package/);
+assert.match(applications, /configurePath: \[ 'admin', 'services', 'mihomo' \]/);
 assert.match(applications, /Installed outside Freenetic/);
 assert.match(applications, /Managed elsewhere/);
+assert.match(applications, /Configuration found/);
+assert.match(applications, /An existing Mihomo configuration will be preserved/);
+assert.match(russian, /msgid "Configuration found"\nmsgstr "Найдена конфигурация"/);
+assert.match(russian, /msgid "%s An existing Mihomo configuration will be preserved when the core is installed\."\nmsgstr "%s Существующая конфигурация Mihomo будет сохранена при установке ядра\."/);
 
+assert.ok(!menuEntries['admin/network/mihomo'], 'Mihomo must no longer appear under Network');
 assert.deepEqual(menu.action, { type: 'view', path: 'network/freenetic-mihomo' });
 assert.deepEqual(menu.depends.acl, [ 'luci-app-freenetic' ]);
 assert.equal(menu.depends.uci.mihomo.main.freenetic_managed, '1');

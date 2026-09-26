@@ -2210,7 +2210,7 @@ body[data-page="admin-system-package-manager"] #maincontent #packages > tbody {
 }
 body[data-page="admin-system-package-manager"] #maincontent #packages .tr {
 	display: grid;
-	grid-template-columns: minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(320px, 4fr) 120px;
+	grid-template-columns: minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(320px, 4fr) 160px;
 	align-items: center;
 	min-width: 900px;
 	border-bottom: 1px solid var(--fn-border);
@@ -2245,11 +2245,15 @@ body[data-page="admin-system-package-manager"] #maincontent #packages .td.size {
 }
 body[data-page="admin-system-package-manager"] #maincontent #packages .cbi-section-actions {
 	text-align: right;
+	white-space: nowrap;
 }
 body[data-page="admin-system-package-manager"] #maincontent #packages .cbi-section-actions .btn {
-	width: 100%;
-	min-width: 0;
+	width: auto;
+	min-width: 138px;
+	max-width: none;
 	text-align: center;
+	white-space: nowrap;
+	overflow-wrap: normal;
 }
 body[data-page="admin-system-package-manager"] #maincontent #view > .controls > .pager {
 	display: grid;
@@ -6001,6 +6005,13 @@ body[data-page="admin-services-zapret2"] #view > .cbi-page-actions {
 	display: none !important;
 }
 
+/* The Freenetic reboot page has its own explicit confirmation/action.  The
+   generic LuCI Save/Apply/Reset footer is unrelated there and must not imply
+   that rebooting saves or changes configuration. */
+body[data-page="admin-system-reboot"] #view > .cbi-page-actions {
+	display: none !important;
+}
+
 /* CBI's tab controller toggles data-tab-active.  The stock theme used to
    leave every pane in normal flow, which made the page look like one giant
    settings dump and also hid the fact that the tab links were interactive. */
@@ -7229,6 +7240,163 @@ body[data-page="admin-services-zapret2"] #freenetic-zapret2-apply {
 body[data-page="admin-services-zapret2"] #freenetic-zapret2-apply:focus-visible,
 body[data-page="admin-services-zapret2"] #freenetic-zapret2-apply:hover {
 	box-shadow: 0 0 0 2px var(--fn-accent-soft), 0 1px 0 rgba(0, 0, 0, .12);
+}
+
+/* ---------- system polish: reboot, logs and compact settings ---------- */
+
+.fn-reboot-page { grid-template-columns: minmax(0, 1fr); }
+.fn-reboot-card { width: 100%; }
+.fn-reboot-card .fn-card-head { padding: 20px 24px; }
+.fn-reboot-icon {
+	width: 46px;
+	height: 46px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	border-radius: 50%;
+	background: var(--fn-accent-soft);
+	color: var(--fn-accent);
+}
+.fn-reboot-body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(190px, auto);
+	align-items: center;
+	gap: 28px;
+	padding: 26px 28px;
+}
+.fn-reboot-copy { width: 100%; max-width: 820px; min-width: 0; }
+.fn-reboot-copy p { margin: 0 0 10px; color: var(--fn-text-secondary); }
+.fn-reboot-copy .fn-reboot-lead { color: var(--fn-text); font-size: 1.08rem; font-weight: 600; }
+.fn-reboot-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin-top: 18px;
+	padding: 12px 14px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text-secondary);
+	font-size: .92rem;
+}
+.fn-reboot-note-mark {
+	width: 20px;
+	height: 20px;
+	flex: 0 0 20px;
+	border-radius: 50%;
+	background: var(--fn-accent-soft);
+	color: var(--fn-accent);
+	font-weight: 700;
+	line-height: 20px;
+	text-align: center;
+}
+.fn-reboot-action { display: inline-block; width: auto; justify-self: end; min-width: 190px; min-height: 46px; }
+
+.fn-password-card .fn-card-body { padding: 18px 22px 22px; }
+.fn-password-intro { margin: 0 0 16px; color: var(--fn-text-secondary); }
+.fn-password-form {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px 18px;
+	max-width: 1050px;
+}
+.fn-password-form > label { display: grid; gap: 6px; color: var(--fn-text-secondary); font-size: .9rem; font-weight: 600; }
+.fn-password-input {
+	width: 100%;
+	min-width: 0;
+	min-height: 40px;
+	padding: 8px 11px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface-alt);
+	color: var(--fn-text);
+	font: inherit;
+}
+.fn-password-input:focus { outline: 2px solid var(--fn-accent); outline-offset: 1px; }
+.fn-password-status { grid-column: 1 / -1; margin: 0; color: var(--fn-status-ok); }
+.fn-password-status.fn-password-error { color: var(--fn-danger); }
+.fn-password-status.fn-password-success { color: var(--fn-status-ok); }
+.fn-password-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+.fn-password-actions .fn-settings-btn { width: auto; min-height: 38px; }
+
+body[data-page="admin-status-logs-syslog"] #content_syslog,
+body[data-page="admin-status-logs-dmesg"] #content_syslog {
+	padding: 20px;
+	border: 1px solid var(--fn-border-strong);
+	border-radius: var(--fn-radius-lg);
+	background: var(--fn-surface);
+	box-shadow: var(--fn-shadow-1);
+}
+body[data-page="admin-status-logs-syslog"] #content_syslog h2,
+body[data-page="admin-status-logs-dmesg"] #content_syslog h2 {
+	margin: 0 0 16px;
+	font-size: 1.12rem;
+	font-weight: 700;
+}
+body[data-page="admin-status-logs-syslog"] #content_syslog label,
+body[data-page="admin-status-logs-dmesg"] #content_syslog label {
+	color: var(--fn-text-secondary);
+	font-size: .9rem;
+}
+body[data-page="admin-status-logs-syslog"] #content_syslog input[type="text"],
+body[data-page="admin-status-logs-syslog"] #content_syslog input[type="number"],
+body[data-page="admin-status-logs-syslog"] #content_syslog input[type="datetime-local"],
+body[data-page="admin-status-logs-syslog"] #content_syslog select,
+body[data-page="admin-status-logs-dmesg"] #content_syslog input[type="text"],
+body[data-page="admin-status-logs-dmesg"] #content_syslog input[type="number"],
+body[data-page="admin-status-logs-dmesg"] #content_syslog input[type="datetime-local"],
+body[data-page="admin-status-logs-dmesg"] #content_syslog select {
+	min-height: 38px;
+	padding: 7px 10px;
+	border: 1px solid var(--fn-border-strong) !important;
+	border-radius: var(--fn-radius-sm);
+	background: var(--fn-surface-alt) !important;
+	color: var(--fn-text) !important;
+	color-scheme: light dark;
+}
+body[data-page="admin-status-logs-syslog"] #content_syslog textarea#syslog,
+body[data-page="admin-status-logs-dmesg"] #content_syslog textarea#syslog {
+	display: block;
+	width: 100%;
+	min-height: 54vh;
+	margin-top: 14px;
+	padding: 14px;
+	border: 1px solid var(--fn-border-strong) !important;
+	border-radius: var(--fn-radius);
+	background: var(--fn-surface-alt) !important;
+	color: var(--fn-text) !important;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: .82rem;
+	line-height: 1.55;
+	white-space: pre;
+	tab-size: 4;
+}
+body[data-page="admin-status-logs-syslog"] #content_syslog textarea#syslog:focus,
+body[data-page="admin-status-logs-dmesg"] #content_syslog textarea#syslog:focus {
+	outline: 2px solid var(--fn-accent);
+	outline-offset: 1px;
+}
+body[data-page="admin-status-logs-syslog"] #content_syslog .btn,
+body[data-page="admin-status-logs-dmesg"] #content_syslog .btn {
+	min-height: 36px;
+	padding: 7px 12px;
+	border-radius: var(--fn-radius-sm);
+}
+
+@media (max-width: 700px) {
+	.fn-reboot-card .fn-card-head { padding: 16px; }
+	.fn-reboot-body { grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 18px; padding: 18px 16px; }
+	.fn-reboot-action { display: block; width: 100%; justify-self: stretch; min-width: 0; }
+	.fn-password-card .fn-card-body { padding: 16px; }
+	.fn-password-form { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+	.fn-password-status { grid-column: 1; }
+	.fn-password-actions { grid-column: 1; }
+	.fn-password-actions .fn-settings-btn { width: 100%; }
+	body[data-page="admin-status-logs-syslog"] #content_syslog,
+	body[data-page="admin-status-logs-dmesg"] #content_syslog { padding: 14px; }
+	body[data-page="admin-status-logs-syslog"] #content_syslog textarea#syslog,
+	body[data-page="admin-status-logs-dmesg"] #content_syslog textarea#syslog { min-height: 52vh; padding: 10px; font-size: .76rem; }
 }
 
 @media (max-width: 700px) {

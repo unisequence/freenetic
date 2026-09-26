@@ -35,6 +35,7 @@ json_reply() {
 		[ -n "${3:-}" ] && json_add_string version "$3"
 		[ -n "${4:-}" ] && json_add_boolean installed "$4"
 		[ -n "${5:-}" ] && json_add_boolean existing "$5"
+		[ -n "${6:-}" ] && json_add_boolean config_only "$6"
 		json_dump
 	else
 		printf '{"ok":%s}\n' "$([ "$1" = 1 ] && printf true || printf false)"
@@ -65,13 +66,17 @@ is_installed() {
 status() {
 	version=$(runtime_version || true)
 	existing=0
-	if [ -e "$MIHOMO_BIN" ] || [ -e "$MIHOMO_INIT" ] || [ -e "$MIHOMO_CONFIG" ]; then
+	if [ -e "$MIHOMO_BIN" ] || [ -e "$MIHOMO_INIT" ]; then
 		existing=1
 	fi
+	config_only=0
+	if [ "$existing" = 0 ] && [ -f "$MIHOMO_CONFIG" ]; then
+		config_only=1
+	fi
 	if is_installed; then
-		json_reply 1 "" "$version" 1 "$existing"
+		json_reply 1 "" "$version" 1 "$existing" 0
 	else
-		json_reply 1 "" "$version" 0 "$existing"
+		json_reply 1 "" "$version" 0 "$existing" "$config_only"
 	fi
 }
 
@@ -134,10 +139,24 @@ install_runtime_files() {
 	return 0
 }
 
+mark_managed() {
+	command -v uci >/dev/null 2>&1 || return 1
+	section_type=$(uci -q get mihomo.main 2>/dev/null || true)
+	if [ -z "$section_type" ]; then
+		uci -q set mihomo.main='mihomo' || return 1
+	elif [ "$section_type" != "mihomo" ]; then
+		return 1
+	fi
+	uci -q set mihomo.main.freenetic_managed='1' || return 1
+	uci -q commit mihomo
+}
+
 install_runtime() {
-	if [ -x "$MIHOMO_BIN" ] || [ -x "$MIHOMO_INIT" ] || [ -f "$MIHOMO_CONFIG" ]; then
+	if [ -e "$MIHOMO_BIN" ] || [ -e "$MIHOMO_INIT" ]; then
 		fail "Mihomo is already installed outside Freenetic; remove it first or use its existing LuCI interface."
 	fi
+	had_config=0
+	[ -f "$MIHOMO_CONFIG" ] && had_config=1
 	target_asset || fail "Unsupported OpenWrt target"
 	stage_dir=$(mktemp -d /tmp/freenetic-mihomo.XXXXXX 2>/dev/null || true)
 	[ -n "$stage_dir" ] || fail "Cannot create a private staging directory"
@@ -160,13 +179,17 @@ install_runtime() {
 	mkdir -p /usr/bin || fail "Cannot create /usr/bin"
 	mv "$stage_dir/mihomo" "$MIHOMO_BIN" || fail "Cannot install Mihomo binary"
 	if ! install_runtime_files; then
-		# The guard above established that these paths were not present before
-		# installation. Remove the partial runtime so a later retry is safe.
-		rm -f "$MIHOMO_BIN" "$MIHOMO_INIT" "$MIHOMO_CONFIG"
+		# Keep a pre-existing config-only setup intact when adding the runtime.
+		rm -f "$MIHOMO_BIN" "$MIHOMO_INIT"
+		[ "$had_config" = 1 ] || rm -f "$MIHOMO_CONFIG"
 		fail "Cannot install Mihomo service files"
 	fi
+	if [ "$had_config" = 1 ] && ! mark_managed; then
+		rm -f "$MIHOMO_BIN" "$MIHOMO_INIT"
+		fail "Cannot adopt the existing Mihomo configuration"
+	fi
 	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
-	json_reply 1 "" "$(runtime_version || true)" 1
+	json_reply 1 "" "$(runtime_version || true)" 1 1 0
 }
 
 remove_runtime() {

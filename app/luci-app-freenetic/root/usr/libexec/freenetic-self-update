@@ -236,8 +236,8 @@ status() {
 	preflight_min_ram_mib=128
 	preflight_min_cpu_cores=2
 	case "$target" in
-		mediatek/filogic) overlay_min_mib=32 ;;
-		ramips/mt7621) overlay_min_mib=16 ;;
+		mediatek/filogic) overlay_min_mib=16 ;;
+		ramips/mt7621) overlay_min_mib=8 ;;
 		x86/64) overlay_min_mib=32 ;;
 	esac
 	preflight_resources

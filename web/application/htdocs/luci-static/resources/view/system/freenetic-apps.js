@@ -209,7 +209,7 @@ const GROUPS = [
 				desc: _('Programmable DPI-bypass engine with Lua strategies.') },
 			{ id: 'mihomo', name: _('Mihomo proxy'), tier: 'advanced',
 				packages: [ 'freenetic-mihomo' ], externallyAvailable: true,
-				installHelper: MIHOMO_PACKAGE_HELPER, configurePath: [ 'admin', 'network', 'mihomo' ],
+				installHelper: MIHOMO_PACKAGE_HELPER, configurePath: [ 'admin', 'services', 'mihomo' ],
 				customStatus: 'mihomo',
 				desc: _('Local proxy core with router-side URI and subscription conversion.') },
 			{ id: 'magitrickle', name: _('MagiTrickle'), tier: 'advanced',
@@ -563,6 +563,7 @@ return view.extend({
 		const focused = item.id === this.focusedAppId;
 		const installed = this.itemInstalled(item);
 		const existing = this.itemExisting(item);
+		const configOnly = !!(item.customStatus && this.externalStatus && this.externalStatus[item.customStatus] && this.externalStatus[item.customStatus].config_only);
 		const availableSet = !installed && this.packageAvailabilityKnown
 			? packageSets(item).find(set => this.itemPackageSetAvailable(item, set)) : null;
 		const unavailablePackages = !installed && !availableSet && !item.externallyAvailable && this.packageAvailabilityKnown
@@ -572,8 +573,8 @@ return view.extend({
 			}) : [];
 		const unavailable = unavailablePackages.length > 0;
 
-		const statusPill = E('span', { class: 'fn-status-pill ' + (installed ? 'fn-status-ok' : existing ? 'fn-status-warn' : unavailable ? 'fn-status-unavailable' : 'fn-status-off') },
-			installed ? _('Installed') : existing ? _('Installed outside Freenetic') : unavailable ? _('Unavailable') : _('Not installed'));
+		const statusPill = E('span', { class: 'fn-status-pill ' + (installed ? 'fn-status-ok' : existing || configOnly ? 'fn-status-warn' : unavailable ? 'fn-status-unavailable' : 'fn-status-off') },
+			installed ? _('Installed') : existing ? _('Installed outside Freenetic') : configOnly ? _('Configuration found') : unavailable ? _('Unavailable') : _('Not installed'));
 
 		const buttonAttrs = {
 			type: 'button',
@@ -589,6 +590,8 @@ return view.extend({
 			installed ? _('Remove') : existing ? _('Managed elsewhere') : unavailable ? _('Unavailable') : _('Install'));
 		const description = unavailable
 			? _('%s Required package(s) are unavailable for this firmware: %s.').format(item.desc, unavailablePackages.join(', '))
+			: configOnly
+				? _('%s An existing Mihomo configuration will be preserved when the core is installed.').format(item.desc)
 			: item.desc;
 
 		const nameParts = [ E('span', {}, item.name) ];
