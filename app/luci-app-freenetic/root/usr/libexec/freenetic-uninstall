@@ -171,6 +171,9 @@ removal_committed=1
 # release, not the user's router configuration.
 rm -f /usr/bin/fnc
 rm -rf /usr/lib/freenetic
+rm -f /etc/uci-defaults/95-freenetic-theme-fallback \
+	/etc/init.d/freenetic-ui-fallback /etc/rc.d/S15freenetic-ui-fallback \
+	/lib/upgrade/keep.d/freenetic-ui-fallback
 rm -f /etc/config/freenetic /etc/config/freenetic.apk-new /etc/config/freenetic.apk-old \
 	/etc/config/freenetic.opkg /etc/config/freenetic.opkg-dist /etc/config/freenetic.opkg-old
 
@@ -195,6 +198,7 @@ if [ -f /etc/sysupgrade.conf ]; then
 	# Remove only paths owned by this project. Never use a broad
 	# "contains freenetic" filter against a user-maintained keep list.
 	sed -i \
+		-e '/^# BEGIN FREENETIC UI (managed)$/,/^# END FREENETIC UI (managed)$/d' \
 		-e '\|^/www/luci-static/freenetic\(/.*\)\?$|d' \
 		-e '\|^/www/luci-static/resources/\(freenetic-.*\|menu-freenetic\.js\|settings-freenetic\.js\)$|d' \
 		-e '\|^/www/luci-static/resources/view/[^/]*/freenetic-.*\.js$|d' \

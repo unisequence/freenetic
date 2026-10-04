@@ -23,6 +23,7 @@ const TAILSCALE_RECOVERY_HELPER = '/usr/libexec/freenetic-tailscale-recover';
 const ZAPRET2_PACKAGE_HELPER = '/usr/libexec/freenetic-zapret2-package';
 const MIHOMO_PACKAGE_HELPER = '/usr/libexec/freenetic-mihomo-package';
 const MAGITRICKLE_PACKAGE_HELPER = '/usr/libexec/freenetic-magitrickle-package';
+const MIXOMO_HELPER = '/usr/libexec/freenetic-mixomo';
 const MAGITRICKLE_SUGGESTION_IDS = [
 	'mihomo', 'wireguard', 'amneziawg', 'openvpn', 'pptp', 'l2tp', 'l2tp_ipsec', 'ikev2_ipsec'
 ];
@@ -194,9 +195,7 @@ const GROUPS = [
 				{ id: 'pbr', name: _('Policy-based routing'), packages: [ 'pbr' ],
 					desc: _('Route an entire network segment or device through a selected WAN or VPN tunnel.') },
 			{ id: 'nfqws2', name: _('Zapret2 (NFQWS2)'), tier: 'advanced',
-				/* Prefer the complete LuCI package already used by OpenWrt builds.
-				 * The signed Freenetic runtime remains a fallback for older feeds
-				 * which do not publish zapret2/luci-app-zapret2 separately. */
+				/* The Freenetic view is the common UI for either runtime package. */
 				packages: [ 'zapret2', 'luci-app-zapret2' ],
 				packageSets: [
 					[ 'zapret2', 'luci-app-zapret2' ],
@@ -205,16 +204,17 @@ const GROUPS = [
 				externallyAvailable: true, installHelper: ZAPRET2_PACKAGE_HELPER,
 				installHelperSet: 1,
 				configurePath: [ 'admin', 'network', 'zapret2' ],
-				nativeConfigurePath: [ 'admin', 'services', 'zapret2' ],
 				desc: _('Programmable DPI-bypass engine with Lua strategies.') },
 			{ id: 'mihomo', name: _('Mihomo proxy'), tier: 'advanced',
 				packages: [ 'freenetic-mihomo' ], externallyAvailable: true,
 				installHelper: MIHOMO_PACKAGE_HELPER, configurePath: [ 'admin', 'services', 'mihomo' ],
+				nativeConfigurePath: [ 'admin', 'services', 'mihomo', 'native' ],
 				customStatus: 'mihomo',
 				desc: _('Local proxy core with router-side URI and subscription conversion.') },
 			{ id: 'magitrickle', name: _('MagiTrickle'), tier: 'advanced',
 				packages: [ 'magitrickle' ], externallyAvailable: true,
-				installHelper: MAGITRICKLE_PACKAGE_HELPER, configureUrlPort: 8080,
+				installHelper: MAGITRICKLE_PACKAGE_HELPER,
+				configurePath: [ 'admin', 'services', 'magitrickle' ],
 				desc: _('Route selected domains through Mihomo or any VPN tunnel interface.') }
 		]
 	}
@@ -683,36 +683,74 @@ return view.extend({
 	offerMagiTrickleList() {
 		if (this.magiTrickleListOfferShown)
 			return;
+		const mihomo = catalogItem('mihomo');
+		if (!mihomo || !this.itemInstalled(mihomo.item))
+			return;
 		this.magiTrickleListOfferShown = true;
-		ui.showModal(_('Install Internet Helper list?'), [
-			E('p', {}, _('Internet Helper provides a ready-made MagiTrickle domain list.')),
-			E('p', {}, _('The list will be downloaded to the router and applied to MagiTrickle.')),
-			E('div', { class: 'button-row' }, [
-				E('button', { class: 'btn', click: ui.hideModal }, _('Later')),
-				E('button', {
-					class: 'btn cbi-button-positive',
-					click: () => {
-						ui.showModal(_('Installing Internet Helper list…'), [
-							E('p', { class: 'spinning' }, _('The list is being downloaded and applied to MagiTrickle.'))
+		const showListOffer = () => {
+			const variant = E('select', { class: 'cbi-input-select' }, [
+				E('option', { value: '1' }, _('Internet Helper #1')),
+				E('option', { value: '2' }, _('Internet Helper #2'))
+			]);
+			ui.showModal(_('Install Internet Helper list?'), [
+				E('p', {}, _('Internet Helper provides a ready-made MagiTrickle domain list.')),
+				E('p', {}, _('The list will be downloaded to the router and applied to MagiTrickle through the Mihomo tunnel.')),
+				E('label', { class: 'fn-magitrickle-list-choice' }, [ _('Choose a list'), variant ]),
+				E('div', { class: 'button-row' }, [
+					E('button', { class: 'btn', click: ui.hideModal }, _('Later')),
+					E('button', {
+						class: 'btn cbi-button-positive',
+						click: () => {
+							ui.showModal(_('Installing Internet Helper list…'), [
+								E('p', { class: 'spinning' }, _('The list is being downloaded and applied to MagiTrickle.'))
+							]);
+							fs.exec_direct(MAGITRICKLE_PACKAGE_HELPER, [ variant.value === '2' ? 'install-ih-list-2' : 'install-ih-list-1' ], 'json')
+								.then(result => {
+									ui.hideModal();
+									if (!result || result.code !== 0) {
+										const detail = (result && (result.stderr || result.stdout)) || _('unknown error');
+										notify(_('Failed to install the Internet Helper list: %s').format(detail), 'danger');
+										return;
+									}
+									notify(_('Internet Helper list installed.'), 'info');
+								})
+								.catch(error => {
+									ui.hideModal();
+									notify(_('Failed to install the Internet Helper list: %s').format(error.message || error), 'danger');
+								});
+						}
+					}, _('Install list'))
+				])
+			]);
+		};
+		fs.exec_direct(MIXOMO_HELPER, [ 'status' ], 'json').then(status => {
+			if (status && (status.bridge_running || status.external_running)) {
+				showListOffer();
+				return;
+			}
+			ui.showModal(_('Connect MagiTrickle to Mihomo?'), [
+				E('p', {}, _('Freenetic will install hev-socks5-tunnel and add its own network and firewall sections. The network may briefly reload.')),
+				E('div', { class: 'button-row' }, [
+					E('button', { class: 'btn', click: ui.hideModal }, _('Later')),
+					E('button', { class: 'btn cbi-button-positive', click: () => {
+						ui.showModal(_('Updating Mihomo tunnel…'), [
+							E('p', { class: 'spinning' }, _('Applying the tunnel and firewall settings.'))
 						]);
-						fs.exec_direct(MAGITRICKLE_PACKAGE_HELPER, [ 'install-ih-list' ], 'json')
-							.then(result => {
-								ui.hideModal();
-								if (!result || result.code !== 0) {
-									const detail = (result && (result.stderr || result.stdout)) || _('unknown error');
-									notify(_('Failed to install the Internet Helper list: %s').format(detail), 'danger');
-									return;
-								}
-								notify(_('Internet Helper list installed.'), 'info');
-							})
-							.catch(error => {
-								ui.hideModal();
-								notify(_('Failed to install the Internet Helper list: %s').format(error.message || error), 'danger');
-							});
-					}
-				}, _('Install list'))
-			])
-		]);
+						fs.exec_direct(MIXOMO_HELPER, [ 'connect' ], 'json').then(result => {
+							ui.hideModal();
+							if (!result || result.code !== 0)
+								throw new Error(result && (result.stderr || result.stdout) || _('unknown error'));
+							showListOffer();
+						}).catch(error => {
+							ui.hideModal();
+							notify(_('Could not update the Mihomo tunnel: %s').format(error.message || error), 'danger');
+						});
+					} }, _('Connect'))
+				])
+			]);
+		}).catch(error => {
+			notify(_('Could not read the Mihomo tunnel status: %s').format(error.message || error), 'danger');
+		});
 	},
 
 	confirmMwanInstall(item, btn, statusPill, row) {
@@ -736,9 +774,11 @@ return view.extend({
 
 	toggleItem(item, wasInstalled, btn, statusPill, row) {
 		const action = wasInstalled ? 'remove' : 'install';
-		const offerMagiTrickle = this.shouldOfferMagiTrickle(item, wasInstalled);
-		const installSet = wasInstalled ? null : this.itemInstallPackageSet(item);
-		const useInstallHelper = !!item.installHelper && (wasInstalled || this.itemUsesInstallHelper(item, installSet));
+	const offerMagiTrickle = this.shouldOfferMagiTrickle(item, wasInstalled);
+	const installSet = wasInstalled ? null : this.itemInstallPackageSet(item);
+	const activeSet = wasInstalled ? this.itemInstalledPackageSet(item) : installSet;
+	const useInstallHelper = !!item.installHelper &&
+		(item.customStatus || this.itemUsesInstallHelper(item, activeSet));
 		const operationPackages = item.customStatus ? [] : (wasInstalled ? this.removablePackages(item) : installSet.slice());
 		this.packageOperationInProgress++;
 		btn.disabled = true;
@@ -818,6 +858,9 @@ return view.extend({
 					window.setTimeout(() => this.offerMagiTrickle(), 0);
 				if (!wasInstalled && item.id === 'magitrickle' && typeof window !== 'undefined')
 					window.setTimeout(() => this.offerMagiTrickleList(), 0);
+				if (!wasInstalled && item.id === 'nfqws2' && typeof window !== 'undefined')
+					fs.exec_direct('/usr/libexec/freenetic-clear-luci-cache', [])
+						.finally(() => window.setTimeout(() => window.location.reload(), 300));
 			});
 		}).catch(err => {
 			/* Installing mwan3 intentionally restarts rpcd. Its in-flight RPC call

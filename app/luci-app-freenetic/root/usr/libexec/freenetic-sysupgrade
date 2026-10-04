@@ -1,0 +1,184 @@
+#!/bin/sh
+# Control which Freenetic UI files OpenWrt includes in its sysupgrade archive.
+# Router configuration is always handled by sysupgrade itself, independently
+# of this preference. Never change the currently selected theme here.
+set -eu
+
+conf=/etc/sysupgrade.conf
+fallback=/etc/init.d/freenetic-ui-fallback
+fallback_link=/etc/rc.d/S15freenetic-ui-fallback
+fallback_source=/usr/share/freenetic/sysupgrade/theme-fallback
+begin='# BEGIN FREENETIC UI (managed)'
+end='# END FREENETIC UI (managed)'
+paths=
+sorted=
+out=
+
+cleanup() {
+	[ -z "$paths" ] || rm -f "$paths"
+	[ -z "$sorted" ] || rm -f "$sorted"
+	[ -z "$out" ] || rm -f "$out"
+}
+trap cleanup EXIT HUP INT TERM
+
+preference() {
+	value=$(uci -q get freenetic.updates.preserve_ui_on_upgrade 2>/dev/null || true)
+	[ "$value" = 0 ] && echo 0 || echo 1
+}
+
+status() {
+	if [ "$(preference)" = 1 ]; then enabled=true; else enabled=false; fi
+	if [ -f "$conf" ] && grep -qxF "$begin" "$conf"; then prepared=true; else prepared=false; fi
+	printf '{"enabled":%s,"prepared":%s}\n' "$enabled" "$prepared"
+}
+
+add_path() {
+	case "$1" in
+		/|/etc|/usr|/usr/share|/usr/lib|/usr/libexec|/www|/www/luci-static|/www/luci-static/resources|/lib|/tmp|/overlay)
+			echo "Refusing broad sysupgrade backup path: $1" >&2
+			return 1 ;;
+	esac
+	[ -e "$1" ] || [ -L "$1" ] || return 0
+	printf '%s\n' "$1" >> "$paths"
+}
+
+collect_package_paths() {
+	for package in luci-theme-freenetic luci-app-freenetic \
+		luci-i18n-theme-freenetic-ru luci-i18n-freenetic-ru; do
+		if command -v apk >/dev/null 2>&1 && apk info -e "$package" >/dev/null 2>&1; then
+			apk info -L -q "$package" 2>/dev/null || true
+		elif command -v opkg >/dev/null 2>&1 && opkg status "$package" 2>/dev/null |
+			grep -q '^Status:.*installed$'; then
+			opkg files "$package" 2>/dev/null | sed -n '/^\//p' || true
+		fi
+		done | while IFS= read -r path; do
+		[ -n "$path" ] || continue
+		case "$path" in
+			/) continue ;;
+			/*) ;;
+			*) path="/$path" ;;
+		esac
+		case "$path" in
+			/etc/config/*|/etc/uci-defaults/*|/lib/apk/*|/usr/lib/opkg/*) continue ;;
+		esac
+		# Package inventories may include parent directories. Backing one up
+		# could silently pull unrelated files into a later firmware upgrade.
+		[ ! -d "$path" ] || [ -L "$path" ] || continue
+		add_path "$path"
+	done
+}
+
+collect_development_paths() {
+	# deploy.sh can copy a newer view than the installed APK's file list.
+	for path in \
+		/www/luci-static/freenetic \
+		/usr/share/ucode/luci/template/themes/freenetic \
+		/www/luci-static/resources/zapret2 \
+		/www/luci-static/resources/view/zapret2 \
+		/usr/share/freenetic \
+		/usr/bin/fnc \
+		/usr/lib/freenetic \
+		/usr/share/luci/menu.d/zz-luci-freenetic.json \
+		/usr/share/luci/menu.d/freenetic-magitrickle.json \
+		/usr/share/rpcd/acl.d/luci-theme-freenetic.json \
+		/usr/share/rpcd/acl.d/luci-app-freenetic.json \
+		/usr/share/rpcd/ucode/mihomo.uc \
+		/usr/lib/lua/luci/i18n/freenetic.ru.lmo \
+		/usr/lib/lua/luci/i18n/freenetic-theme.ru.lmo; do
+		add_path "$path"
+	done
+	for path in /www/luci-static/resources/freenetic-*.js \
+		/www/luci-static/resources/menu-freenetic.js \
+		/www/luci-static/resources/settings-freenetic.js \
+		/www/luci-static/resources/view/*/freenetic-*.js \
+		/www/luci-static/resources/view/magitrickle/magitrickle.js \
+		/usr/libexec/freenetic-*; do
+		add_path "$path"
+	done
+}
+
+is_old_ui_path() {
+	case "$1" in
+		/www/luci-static/freenetic|/www/luci-static/freenetic/*|\
+		/usr/share/ucode/luci/template/themes/freenetic|/usr/share/ucode/luci/template/themes/freenetic/*|\
+		/www/luci-static/resources/freenetic-*.js|\
+		/www/luci-static/resources/menu-freenetic.js|/www/luci-static/resources/settings-freenetic.js|\
+		/www/luci-static/resources/view/*/freenetic-*.js|\
+		/www/luci-static/resources/view/magitrickle/magitrickle.js|\
+		/www/luci-static/resources/zapret2|/www/luci-static/resources/zapret2/*|\
+		/www/luci-static/resources/view/zapret2|/www/luci-static/resources/view/zapret2/*|\
+		/usr/share/freenetic|/usr/share/freenetic/*|\
+		/usr/bin/fnc|/usr/lib/freenetic|/usr/lib/freenetic/*|\
+		/usr/share/luci/menu.d/zz-luci-freenetic.json|/usr/share/luci/menu.d/freenetic-magitrickle.json|\
+		/usr/share/rpcd/acl.d/luci-app-freenetic.json|/usr/share/rpcd/acl.d/luci-theme-freenetic.json|\
+		/usr/share/rpcd/ucode/mihomo.uc|/usr/libexec/freenetic-*|\
+		/usr/lib/lua/luci/i18n/freenetic.ru.lmo|/usr/lib/lua/luci/i18n/freenetic-theme.ru.lmo)
+			return 0 ;;
+	esac
+	return 1
+}
+
+sync() {
+	want="$1"
+	[ -f "$fallback_source" ] || { echo 'Freenetic fallback script is missing' >&2; return 1; }
+	mkdir -p /etc/init.d /etc/rc.d
+	cp "$fallback_source" "$fallback"
+	chmod 755 "$fallback"
+	rm -f "$fallback_link" /etc/uci-defaults/95-freenetic-theme-fallback
+	ln -s ../init.d/freenetic-ui-fallback "$fallback_link"
+	paths=$(mktemp /tmp/freenetic-sysupgrade-paths.XXXXXX)
+	sorted=$(mktemp /tmp/freenetic-sysupgrade-sorted.XXXXXX)
+	out=$(mktemp /etc/sysupgrade.conf.freenetic.XXXXXX)
+	collect_package_paths
+	collect_development_paths
+	sort -u "$paths" > "$sorted"
+	mv "$sorted" "$paths"
+	sorted=
+	if [ "$want" = 1 ]; then
+		for required in /www/luci-static/freenetic/cascade.css \
+			/usr/share/ucode/luci/template/themes/freenetic/header.ut \
+			/www/luci-static/resources/menu-freenetic.js; do
+			[ -f "$required" ] || { echo "Missing required Freenetic file: $required" >&2; return 1; }
+		done
+	fi
+	touch "$conf"
+	cp -p "$conf" "$out"
+	: > "$out"
+	inside=0
+	while IFS= read -r line || [ -n "$line" ]; do
+		if [ "$line" = "$begin" ]; then inside=1; continue; fi
+		if [ "$line" = "$end" ]; then inside=0; continue; fi
+		[ "$inside" = 1 ] && continue
+		if is_old_ui_path "$line" || grep -qxF "$line" "$paths"; then
+			continue
+		fi
+		printf '%s\n' "$line" >> "$out"
+	done < "$conf"
+	[ "$inside" = 0 ] || { echo 'Unterminated Freenetic block in sysupgrade.conf' >&2; return 1; }
+	if [ "$want" = 1 ]; then
+		printf '%s\n' "$begin" >> "$out"
+		cat "$paths" >> "$out"
+		printf '%s\n' "$end" >> "$out"
+	fi
+	if ! cmp -s "$conf" "$out"; then mv "$out" "$conf"; out=; fi
+}
+
+case "${1:-}" in
+	status)
+		[ "$#" -eq 1 ] || exit 2
+		status ;;
+	enable|disable)
+		[ "$#" -eq 1 ] || exit 2
+		if [ "$1" = enable ]; then want=1; else want=0; fi
+		sync "$want"
+		uci set "freenetic.updates.preserve_ui_on_upgrade=$want"
+		uci commit freenetic
+		status ;;
+	sync)
+		[ "$#" -eq 1 ] || exit 2
+		sync "$(preference)"
+		status ;;
+	*)
+		echo 'Usage: freenetic-sysupgrade status|enable|disable|sync' >&2
+		exit 2 ;;
+esac

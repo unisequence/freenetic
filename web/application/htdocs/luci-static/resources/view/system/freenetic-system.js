@@ -31,6 +31,7 @@ const ICON_SWAP = 'M17 3 21 7l-4 4M3 7h18M7 21 3 17l4-4M21 17H3';
 const ICON_FILE = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6';
 const ICON_TRASH = 'M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 10v7m4-7v7';
 const ICON_LOCK = 'M5 10h14v11H5zM8 10V7a4 4 0 1 1 8 0v3';
+const SYSUPGRADE_HELPER = '/usr/libexec/freenetic-sysupgrade';
 
 /* /proc/mtd's numbering isn't guaranteed stable across devices/reflashes —
    look partitions up by name rather than hardcoding "mtd4" etc. Returns
@@ -117,17 +118,20 @@ return view.extend({
 	load() {
 		return Promise.all([
 			ubusCall('system', 'board').catch(() => ({})),
-			getMtdMap()
+			getMtdMap(),
+			fs.exec_direct(SYSUPGRADE_HELPER, [ 'status' ], 'json').catch(() => null)
 		]);
 	},
 
 	render(data) {
 		const board = data[0];
 		this.mtdMap = data[1];
+		this.preserveUI = data[2] && data[2].enabled === true;
 		const release = board.release || {};
 
 		return E('div', { class: 'fn-dash' }, [
 			this.renderPasswordCard(),
+			this.renderUpgradePreferenceCard(data[2]),
 			E('div', { class: 'fn-card', style: 'grid-column: 1 / -1' }, [
 				E('div', { class: 'fn-card-head' }, [ E('h3', {}, _('System files')) ]),
 				E('div', { class: 'fn-card-body' }, [
@@ -145,6 +149,59 @@ return view.extend({
 				])
 			]),
 			this.renderUninstallCard()
+		]);
+	},
+
+	renderUpgradePreferenceCard(state) {
+		const toggle = E('input', {
+			type: 'checkbox', class: 'fn-switch-input',
+			'aria-label': _('Keep Freenetic after an OpenWrt upgrade')
+		});
+		toggle.checked = !!(state && state.enabled);
+		toggle.disabled = !state;
+		const needsPreparation = state && state.enabled && !state.prepared;
+		const status = E('p', {
+			class: 'fn-upgrade-preference-status' + (needsPreparation ? ' fn-password-error' : ''),
+			role: 'status'
+		}, !state ? _('The upgrade preference is unavailable.')
+			: needsPreparation ? _('Freenetic is not yet included in the upgrade backup.') : '');
+		toggle.addEventListener('change', () => {
+			const wanted = toggle.checked;
+			toggle.disabled = true;
+			status.textContent = '';
+			status.classList.remove('fn-password-error');
+			fs.exec_direct(SYSUPGRADE_HELPER, [ wanted ? 'enable' : 'disable' ], 'json')
+				.then(result => {
+					if (!result || result.enabled !== wanted || (wanted && !result.prepared))
+						throw new Error(_('The upgrade preference was not saved.'));
+					this.preserveUI = result.enabled;
+					status.textContent = wanted
+						? _('Freenetic will be included in the upgrade backup.')
+						: _('Freenetic will not be included in the upgrade backup.');
+				})
+				.catch(error => {
+					toggle.checked = this.preserveUI;
+					status.textContent = _('Could not update the upgrade preference: %s').format(error.message || error);
+					status.classList.add('fn-password-error');
+				})
+				.finally(() => { toggle.disabled = false; });
+		});
+		return E('section', { class: 'fn-card fn-upgrade-preference-card', style: 'grid-column: 1 / -1' }, [
+			E('div', { class: 'fn-card-head' }, [
+				svgIcon(ICON_FILE, 19), E('h3', {}, _('OpenWrt upgrades'))
+			]),
+			E('div', { class: 'fn-card-body' }, [
+				E('div', { class: 'fn-upgrade-preference-row' }, [
+					E('div', { class: 'fn-apps-info' }, [
+						E('div', { class: 'fn-apps-name' }, _('Keep Freenetic after an OpenWrt upgrade')),
+						E('div', { class: 'fn-apps-desc' }, _('Include the Freenetic interface, theme and supporting files in the upgrade backup. Router, network and Wi-Fi settings are preserved separately.'))
+					]),
+					E('label', { class: 'fn-switch' }, [ toggle, E('span', { class: 'fn-switch-slider' }) ])
+				]),
+				status,
+				E('p', { class: 'fn-info-empty fn-upgrade-preference-note' },
+					_('A major OpenWrt upgrade can change LuCI dependencies. The saved interface may then need to be reinstalled.'))
+			])
 		]);
 	},
 
@@ -526,7 +583,9 @@ return view.extend({
 				}
 
 				ui.showModal(_('Flash new firmware image?'), [
-					E('p', {}, _('The uploaded image passed verification. Flashing starts immediately and cannot be undone — the device will reboot when done. The theme is preserved across the upgrade.')),
+					E('p', {}, this.preserveUI
+						? _('The image passed verification. Freenetic will be included in the configuration backup. Flashing starts immediately and the router will reboot.')
+						: _('The image passed verification. Freenetic will not be included in the configuration backup; other router settings are still preserved. Flashing starts immediately and the router will reboot.')),
 					E('div', { class: 'button-row' }, [
 						E('button', { class: 'btn', click: ui.hideModal }, _('Cancel')),
 						E('button', {

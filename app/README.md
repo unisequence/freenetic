@@ -12,11 +12,18 @@ This component owns three independently installable OpenWrt packages:
 - `tests/` checks contracts between privileged ACLs and browser-side calls.
 
 Zapret2's native OpenWrt control plane is packaged here for targets where the
-runtime is not already available.  The Freenetic entry point prefers the real
-`luci-app-zapret2` page when that package is present (the same arrangement used
-by current OpenWrt builds); the versioned client under
-`web/application/htdocs/luci-static/resources/zapret2/v4r30/` remains only as a
-compatibility fallback for older Freenetic runtime packages.
+runtime is not already available. The versioned client under
+`web/application/htdocs/luci-static/resources/zapret2/v4r30/` is the versioned
+client for the API-v1/schema-v2 runtime. The Freenetic entry page shows service
+status and links to its editors. If a different Zapret2 integration is present,
+the page keeps its configuration untouched and offers its installed LuCI view.
+
+MagiTrickle can optionally use the Internet Helper list with a locally managed
+Mihomo tunnel. The `freenetic-mixomo` helper installs `hev-socks5-tunnel` from
+the router's package feed and adds only marked UCI sections. It neither runs
+the third-party Mixomo installer nor removes existing tunnel/firewall sections.
+Disconnecting the integration leaves Mihomo, MagiTrickle, and their user
+configurations installed.
 
 Each package's `htdocs` and `ucode` entries are intentional links into `web/`.
 They are the boundary through which the stock LuCI build system assembles the

@@ -1,0 +1,4 @@
+/etc/mihomo/config.yaml
+/etc/mihomo/providers/freenetic.txt
+/etc/hev-socks5-tunnel/freenetic-mihomo.yml
+/etc/hev-socks5-tunnel/.freenetic-mihomo

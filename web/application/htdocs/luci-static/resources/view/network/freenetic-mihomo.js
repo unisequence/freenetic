@@ -6,6 +6,7 @@
 'require freenetic-ui as uiHelper';
 
 const PACKAGE_HELPER = '/usr/libexec/freenetic-mihomo-package';
+const EXTERNAL_CONFIG = '/etc/mihomo/config.yaml';
 const notify = uiHelper.notify;
 
 function applicationsUrl(focus) {
@@ -365,6 +366,306 @@ function effectiveYaml(configText, sourceMode, source) {
 	};
 }
 
+function parserYaml(sourceMode, source, reservedNames) {
+	const entries = String(source || '').split(/\r?\n/).map(line => line.trim())
+		.filter(line => line && line[0] !== '#');
+	if (!entries.length)
+		return { text: '', names: [], note: _('Enter at least one proxy link or subscription URL.') };
+	const lines = [];
+	const names = [];
+	const used = new Set(reservedNames || []);
+	let skipped = 0;
+	if (sourceMode === 'subscriptions') {
+		const urls = entries.filter(entry => {
+			try { return /^https?:$/.test(new URL(entry).protocol); }
+			catch (error) { return false; }
+		});
+		skipped = entries.length - urls.length;
+		if (urls.length) {
+			lines.push('proxy-providers:');
+			urls.forEach((url, index) => {
+				let suffix = index + 1;
+				while (used.has('freenetic-' + suffix)) suffix++;
+				const name = 'freenetic-' + suffix;
+				used.add(name);
+				names.push(name);
+				lines.push('  ' + name + ':', '    type: http', '    url: ' + yamlScalar(url),
+					'    path: ./proxy-providers/' + name + '.yaml', '    interval: 3600', '    format: uri');
+			});
+		}
+	}
+	else {
+		const proxies = [];
+		entries.forEach((entry, index) => {
+			const proxy = parseProxyUri(entry, index);
+			if (!proxy) { skipped++; return; }
+			const base = proxy.name;
+			let name = base;
+			let suffix = 2;
+			while (used.has(name))
+				name = base + ' (' + suffix++ + ')';
+			proxy.name = name;
+			used.add(name);
+			names.push(name);
+			proxies.push(proxy);
+		});
+		if (proxies.length) {
+			lines.push('proxies:');
+			proxies.forEach(proxy => emitYamlProxy(lines, proxy));
+		}
+	}
+	return {
+		text: lines.length ? lines.join('\n') + '\n' : '',
+		names: names,
+		skipped: skipped,
+		note: skipped
+			? _('Converted %s entries; skipped %s unsupported entries.').format(entries.length - skipped, skipped)
+			: _('Converted %s entries.').format(entries.length)
+	};
+}
+
+function yamlValue(raw) {
+	const value = String(raw || '').trim().replace(/\s+#.*$/, '');
+	if (value[0] === '"') {
+		try { return JSON.parse(value); }
+		catch (error) { throw new Error(_('Unsupported quoted YAML value.')); }
+	}
+	if (value[0] === "'") {
+		if (value[value.length - 1] !== "'") throw new Error(_('Unsupported quoted YAML value.'));
+		return value.slice(1, -1).replace(/''/g, "'");
+	}
+	return value;
+}
+
+function yamlDocument(text) {
+	const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n');
+	const sections = [];
+	for (let index = 0; index < lines.length; index++) {
+		const line = lines[index];
+		if (!line || /^\s*(?:#|$)/.test(line) || /^(?:---|\.\.\.)\s*$/.test(line) || /^\s/.test(line))
+			continue;
+		const match = /^([A-Za-z][A-Za-z0-9_-]*):(?:[ \t]*(.*))?$/.exec(line);
+		if (!match) throw new Error(_('The existing YAML layout is not supported for automatic merging.'));
+		sections.push({ key: match[1], start: index, value: (match[2] || '').trim(), end: lines.length });
+	}
+	for (let index = 0; index < sections.length; index++)
+		sections[index].end = index + 1 < sections.length ? sections[index + 1].start : lines.length;
+	return { lines: lines, sections: sections };
+}
+
+function yamlSection(doc, key) {
+	const matches = doc.sections.filter(section => section.key === key);
+	if (matches.length > 1) throw new Error(_('The existing YAML contains duplicate sections.'));
+	return matches[0] || null;
+}
+
+function yamlBlock(section, kind) {
+	if (!section) return;
+	if (section.value && section.value !== '[]' && section.value !== '{}' && section.value !== 'null')
+		throw new Error(_('The existing %s section uses an unsupported inline format.').format(kind));
+}
+
+function yamlList(doc, section) {
+	if (!section) return { indent: 2, items: [] };
+	yamlBlock(section, section.key);
+	const body = [];
+	for (let index = section.start + 1; index < section.end; index++) {
+		if (doc.lines[index].trim() && !/^\s*#/.test(doc.lines[index])) body.push(index);
+	}
+	if (!body.length) return { indent: 2, items: [] };
+	const first = /^(\s*)-\s+/.exec(doc.lines[body[0]]);
+	if (!first) throw new Error(_('The existing %s section is not a block list.').format(section.key));
+	const indent = first[1].length;
+	const items = [];
+	for (const index of body) {
+		const match = /^(\s*)-\s+/.exec(doc.lines[index]);
+		if (match && match[1].length === indent) items.push({ start: index, end: section.end, indent: indent });
+	}
+	for (let index = 0; index < items.length; index++)
+		items[index].end = index + 1 < items.length ? items[index + 1].start : section.end;
+	return { indent: indent, items: items };
+}
+
+function yamlProxyNames(doc) {
+	const names = [];
+	const list = yamlList(doc, yamlSection(doc, 'proxies'));
+	for (const item of list.items) {
+		const match = /^\s*-\s+name:\s*(.+)$/.exec(doc.lines[item.start]);
+		if (!match) throw new Error(_('Existing proxy entries must use block YAML.'));
+		names.push(yamlValue(match[1]));
+	}
+	return names;
+}
+
+function yamlGroups(doc) {
+	const groups = [];
+	const list = yamlList(doc, yamlSection(doc, 'proxy-groups'));
+	for (const item of list.items) {
+		const match = /^\s*-\s+name:\s*(.+)$/.exec(doc.lines[item.start]);
+		if (!match) throw new Error(_('Existing proxy groups must use block YAML.'));
+		let type = '';
+		for (let index = item.start + 1; index < item.end; index++) {
+			const field = /^(\s*)type:\s*(.+)$/.exec(doc.lines[index]);
+			if (field && field[1].length === item.indent + 2) type = yamlValue(field[2]);
+		}
+		groups.push(Object.assign({}, item, { name: yamlValue(match[1]), type: type }));
+	}
+	return groups;
+}
+
+function yamlProviderNames(doc) {
+	const section = yamlSection(doc, 'proxy-providers');
+	if (!section) return [];
+	yamlBlock(section, section.key);
+	const lines = doc.lines.slice(section.start + 1, section.end)
+		.filter(line => line.trim() && !/^\s*#/.test(line));
+	if (!lines.length) return [];
+	const first = /^(\s*)([A-Za-z0-9_-]+):/.exec(lines[0]);
+	if (!first) throw new Error(_('Existing proxy providers must use block YAML.'));
+	const indent = first[1].length;
+	return lines.map(line => /^(\s*)([A-Za-z0-9_-]+):/.exec(line))
+		.filter(match => match && match[1].length === indent).map(match => match[2]);
+}
+
+function yamlMatchRule(doc) {
+	const section = yamlSection(doc, 'rules');
+	if (!section) return null;
+	const list = yamlList(doc, section);
+	let matched = null;
+	for (const item of list.items) {
+		const match = /^\s*-\s+(.+)$/.exec(doc.lines[item.start]);
+		if (!match) continue;
+		const rule = yamlValue(match[1]);
+		if (rule.indexOf('MATCH,') === 0)
+			matched = { index: item.start, indent: item.indent, target: rule.slice(6).trim() };
+	}
+	return matched;
+}
+
+function mergeParserYaml(configText, sourceMode, source, requestedGroup) {
+	const doc = yamlDocument(configText);
+	const proxies = yamlProxyNames(doc);
+	const groups = yamlGroups(doc);
+	const providers = yamlProviderNames(doc);
+	const existingNames = proxies.concat(groups.map(group => group.name), providers);
+	const fragment = parserYaml(sourceMode, source, existingNames);
+	if (!fragment.text) return fragment;
+	const sectionKey = sourceMode === 'subscriptions' ? 'proxy-providers' : 'proxies';
+	const section = yamlSection(doc, sectionKey);
+	const groupSection = yamlSection(doc, 'proxy-groups');
+	const rulesSection = yamlSection(doc, 'rules');
+	const insertions = new Map();
+	const replacements = [];
+	const insert = (at, lines) => insertions.set(at, (insertions.get(at) || []).concat(lines));
+	const replace = (at, line) => replacements.push({ at: at, line: line });
+	const insertionPoint = section => {
+		let at = section.end;
+		while (at > section.start + 1 && !doc.lines[at - 1].trim()) at--;
+		return at;
+	};
+	const body = fragment.text.trimEnd().split('\n').slice(1);
+	if (section) {
+		yamlBlock(section, sectionKey);
+		if (section.value) replace(section.start, sectionKey + ':');
+		let indent = 2;
+		if (sectionKey === 'proxies') indent = yamlList(doc, section).indent;
+		else {
+			const first = doc.lines.slice(section.start + 1, section.end)
+				.find(line => line.trim() && !/^\s*#/.test(line));
+			if (first) indent = /^\s*/.exec(first)[0].length;
+		}
+		if (indent < 2) throw new Error(_('The existing YAML indentation is not supported.'));
+		insert(insertionPoint(section), body.map(line => ' '.repeat(indent - 2) + line));
+	}
+	else {
+		const at = groupSection ? groupSection.start : rulesSection ? rulesSection.start : doc.lines.length;
+		insert(at, [ sectionKey + ':' ].concat(body, [ '' ]));
+	}
+	let groupName = requestedGroup;
+	if (groupName === '__direct__') {
+		if (sourceMode !== 'links' || fragment.names.length !== 1 || groups.length)
+			throw new Error(_('Direct routing requires exactly one proxy link and no proxy groups.'));
+		const match = yamlMatchRule(doc);
+		if (!match) throw new Error(_('A MATCH rule is needed to route through the imported proxy.'));
+		groupName = fragment.names[0];
+		replace(match.index, ' '.repeat(match.indent) + '- ' + yamlScalar('MATCH,' + groupName));
+	}
+	else if (groupName === '__create__') {
+		const match = yamlMatchRule(doc);
+		if (!match || !match.target)
+			throw new Error(_('A MATCH rule is needed to create a proxy group safely.'));
+		if (existingNames.indexOf(match.target) < 0 && [ 'DIRECT', 'REJECT' ].indexOf(match.target) < 0)
+			throw new Error(_('The current MATCH target was not found in the configuration.'));
+		let suffix = 2;
+		groupName = 'FREENETIC';
+		while (existingNames.indexOf(groupName) >= 0) groupName = 'FREENETIC-' + suffix++;
+		const indent = groupSection ? yamlList(doc, groupSection).indent : 2;
+		const groupLines = [
+			' '.repeat(indent) + '- name: ' + yamlScalar(groupName),
+			' '.repeat(indent + 2) + 'type: select',
+			' '.repeat(indent + 2) + 'proxies:',
+			' '.repeat(indent + 4) + '- ' + yamlScalar(match.target)
+		];
+		if (sourceMode === 'links')
+			fragment.names.forEach(name => groupLines.push(' '.repeat(indent + 4) + '- ' + yamlScalar(name)));
+		else {
+			groupLines.push(' '.repeat(indent + 2) + 'use:');
+			fragment.names.forEach(name => groupLines.push(' '.repeat(indent + 4) + '- ' + yamlScalar(name)));
+		}
+		if (groupSection) {
+			yamlBlock(groupSection, 'proxy-groups');
+			if (groupSection.value) replace(groupSection.start, 'proxy-groups:');
+			insert(insertionPoint(groupSection), groupLines);
+		}
+		else {
+			const at = rulesSection ? rulesSection.start : doc.lines.length;
+			insert(at, [ 'proxy-groups:' ].concat(groupLines, [ '' ]));
+		}
+		replace(match.index, ' '.repeat(match.indent) + '- ' + yamlScalar('MATCH,' + groupName));
+	}
+	else {
+		const group = groups.find(item => item.name === groupName && item.type === 'select');
+		if (!group) throw new Error(_('Choose an existing select group.'));
+		const fieldName = sourceMode === 'subscriptions' ? 'use' : 'proxies';
+		const fieldIndent = group.indent + 2;
+		let field = null;
+		for (let index = group.start + 1; index < group.end; index++) {
+			const match = /^(\s*)(proxies|use):\s*(.*)$/.exec(doc.lines[index]);
+			if (match && match[1].length === fieldIndent && match[2] === fieldName)
+				field = { index: index, value: match[3].trim() };
+		}
+		if (field) {
+			if (field.value && field.value !== '[]')
+				throw new Error(_('The selected group uses an unsupported inline list.'));
+			if (field.value) replace(field.index, ' '.repeat(fieldIndent) + fieldName + ':');
+			let at = field.index + 1;
+			while (at < group.end) {
+				const line = doc.lines[at];
+				if (line.trim() && !/^\s*#/.test(line) && /^\s*/.exec(line)[0].length <= fieldIndent) break;
+				at++;
+			}
+			while (at > field.index + 1 && !doc.lines[at - 1].trim()) at--;
+			insert(at, fragment.names.map(name => ' '.repeat(fieldIndent + 2) + '- ' + yamlScalar(name)));
+		}
+		else {
+			let at = group.end;
+			while (at > group.start + 1 && !doc.lines[at - 1].trim()) at--;
+			insert(at, [ ' '.repeat(fieldIndent) + fieldName + ':' ].concat(
+				fragment.names.map(name => ' '.repeat(fieldIndent + 2) + '- ' + yamlScalar(name))));
+		}
+	}
+	const lines = doc.lines.slice();
+	const operations = replacements.map(item => ({ at: item.at, lines: [ item.line ], count: 1 }))
+		.concat(Array.from(insertions, ([ at, value ]) => ({ at: at, lines: value, count: 0 })));
+	operations.sort((left, right) => right.at - left.at);
+	operations.forEach(item => lines.splice(item.at, item.count, ...item.lines));
+	return { text: lines.join('\n').replace(/\n*$/, '\n'), names: fragment.names, skipped: fragment.skipped, group: groupName,
+		note: fragment.note + ' ' + (requestedGroup === '__direct__'
+			? _('MATCH now routes through %s.').format(groupName)
+			: _('Added to group %s.').format(groupName) +
+				(requestedGroup === '__create__' ? ' ' + _('The previous route stays selected until you choose an imported proxy.') : '')) };
+}
+
 function downloadText(filename, text) {
 	const url = URL.createObjectURL(new Blob([ text || '' ], { type: 'text/yaml;charset=utf-8' }));
 	const link = E('a', { href: url, download: filename });
@@ -376,11 +677,18 @@ function downloadText(filename, text) {
 
 return view.extend({
 	load() {
-		return Promise.all([
-			apiCall('status').catch(() => null),
-			fs.exec_direct(PACKAGE_HELPER, [ 'status' ], 'json').catch(() => null),
-			apiCall('config').catch(() => null)
-		]);
+		return fs.exec_direct(PACKAGE_HELPER, [ 'status' ], 'json').catch(() => null).then(packageStatus => {
+			if (!packageStatus || !packageStatus.installed) {
+				if (packageStatus && packageStatus.existing)
+					return fs.read(EXTERNAL_CONFIG).catch(() => null).then(config => [ null, packageStatus, config ]);
+				return [ null, packageStatus, null ];
+			}
+			return Promise.all([
+				apiCall('status').catch(() => null),
+				Promise.resolve(packageStatus),
+				apiCall('config').catch(() => null)
+			]);
+		});
 	},
 
 	render(data) {
@@ -388,9 +696,152 @@ return view.extend({
 		const status = packageStatus && packageStatus.installed ? data[0] : null;
 		this.status = status || {};
 		this.configText = data && data[2] && data[2].text || '';
+		this.externalConfigText = packageStatus && packageStatus.existing && !packageStatus.installed
+			? data && data[2] || '' : '';
 		if (!packageStatus || !packageStatus.installed)
-			return this.renderMissing();
+			return packageStatus && packageStatus.existing ? this.renderExternal() : this.renderMissing();
 		return this.renderInstalled();
+	},
+
+	renderExternal() {
+		const nativeUrl = L.url('admin/services/mihomo/native');
+		const frame = E('iframe', {
+			class: 'fn-mihomo-native-frame', src: nativeUrl, title: _('Native Mihomo interface'),
+			loading: 'eager'
+		});
+		frame.addEventListener('load', () => {
+			try { frame.contentDocument.documentElement.classList.add('fn-mihomo-native-embed'); }
+			catch (error) { /* The full native page remains available via the link. */ }
+		});
+		this.externalFrame = frame;
+		return E('div', { class: 'fn-mihomo-page' }, [
+			E('section', { class: 'fn-card fn-mihomo-card fn-mihomo-native-card' }, [
+				E('div', { class: 'fn-card-head' }, [
+					E('h3', {}, _('Configuration')),
+					E('a', { class: 'fn-card-link', href: nativeUrl, target: '_blank', rel: 'noopener noreferrer' }, [
+						_('Open separately'), E('span', { class: 'fn-card-link-arrow', 'aria-hidden': 'true' }, '↗')
+					])
+				]),
+				E('div', { class: 'fn-card-body fn-mihomo-native-body' }, [ frame ])
+			]),
+			this.renderExternalParser()
+		]);
+	},
+
+	renderExternalParser() {
+		const mode = E('select', { class: 'fn-settings-input', 'aria-label': _('Source type') }, [
+			E('option', { value: 'links' }, _('Proxy links')),
+			E('option', { value: 'subscriptions' }, _('Subscriptions'))
+		]);
+		const group = E('select', { class: 'fn-settings-input', 'aria-label': _('Proxy group') });
+		let groupError = '';
+		let hasGroups = false;
+		const updateNoGroupOptions = () => {
+			group.replaceChildren();
+			if (mode.value === 'links')
+				group.appendChild(E('option', { value: '__direct__' }, _('Use imported proxy directly')));
+			group.appendChild(E('option', { value: '__create__' }, _('Create a proxy group')));
+		};
+		try {
+			if (!this.externalConfigText) throw new Error(_('Could not read the current Mihomo YAML.'));
+			const groups = yamlGroups(yamlDocument(this.externalConfigText)).filter(item => item.type === 'select');
+			hasGroups = groups.length > 0;
+			if (hasGroups)
+				groups.forEach(item => group.appendChild(E('option', { value: item.name }, _('Group: %s').format(item.name))));
+			else
+				updateNoGroupOptions();
+		}
+		catch (error) {
+			groupError = error.message || String(error);
+			group.appendChild(E('option', { value: '' }, _('No available proxy group')));
+			group.disabled = true;
+		}
+		const source = E('textarea', {
+			id: 'fn-mihomo-parser-source', class: 'fn-settings-input fn-mihomo-input', rows: 7, wrap: 'soft',
+			placeholder: _('vless://, vmess://, ss:// or trojan:// — one per line')
+		});
+		const output = E('textarea', {
+			id: 'fn-mihomo-parser-output', class: 'fn-settings-input fn-mihomo-input fn-mihomo-parser-output',
+			rows: 7, wrap: 'off', spellcheck: 'false', readonly: 'readonly'
+		});
+		output.readOnly = true;
+		const initialNote = groupError || _('Unsaved changes in the Mihomo editor are not included.');
+		const note = E('p', { class: 'fn-mihomo-parser-note', 'aria-live': 'polite' }, initialNote);
+		const build = () => fs.read(EXTERNAL_CONFIG).then(config => ({
+			config: config, result: mergeParserYaml(config, mode.value, source.value, group.value)
+		}));
+		let busy = false;
+		const available = () => !busy && !groupError && !!source.value.trim();
+		const invalidate = () => {
+			output.value = '';
+			note.textContent = initialNote;
+			preview.disabled = apply.disabled = !available();
+		};
+		const preview = E('button', { type: 'button', class: 'fn-settings-btn', disabled: true, click: () => {
+			invalidate();
+			busy = true;
+			preview.disabled = apply.disabled = true;
+			return build().then(({ result }) => {
+				output.value = result.text;
+				note.textContent = result.text ? result.note + ' ' + _('Preview only — nothing is saved.') : result.note;
+			}).catch(error => {
+				note.textContent = _('Could not build the Mihomo YAML: %s').format(error.message || error);
+			}).finally(() => { busy = false; preview.disabled = apply.disabled = !available(); });
+		} }, _('Preview'));
+		const apply = E('button', { type: 'button', class: 'fn-settings-btn fn-settings-btn-primary', disabled: true, click: () => {
+			invalidate();
+			busy = true;
+			preview.disabled = apply.disabled = true;
+			note.textContent = _('Checking and applying the Mihomo configuration…');
+			return build().then(({ config, result }) => {
+				if (!result.text) throw new Error(result.note);
+				if (result.skipped) throw new Error(_('Some entries could not be converted. Check the preview before applying.'));
+				return apiCall('apply_external', { config: result.text, expected_config: config }).then(reply => ({ result, reply }));
+			}).then(({ result, reply }) => {
+				output.value = result.text;
+				this.externalConfigText = result.text;
+				if (group.value === '__create__') {
+					group.replaceChildren(E('option', { value: result.group }, _('Group: %s').format(result.group)));
+					hasGroups = true;
+				}
+				source.value = '';
+				note.textContent = reply.unchanged ? _('Mihomo configuration is already up to date.')
+					: result.note + ' ' + _('Mihomo configuration applied.');
+				if (this.externalFrame) this.externalFrame.src = this.externalFrame.src;
+			}).catch(error => {
+				note.textContent = _('Could not apply the Mihomo configuration: %s').format(error.message || error);
+			}).finally(() => { busy = false; preview.disabled = apply.disabled = !available(); });
+		} }, _('Apply'));
+		mode.addEventListener('change', () => {
+			source.placeholder = mode.value === 'links'
+				? _('vless://, vmess://, ss:// or trojan:// — one per line')
+				: _('https://example.com/subscription — one URL per line');
+			if (!hasGroups && !groupError) updateNoGroupOptions();
+			invalidate();
+		});
+		source.addEventListener('input', invalidate);
+		group.addEventListener('change', invalidate);
+		return E('section', { class: 'fn-card fn-mihomo-card fn-mihomo-converter' }, [
+			E('div', { class: 'fn-card-head fn-mihomo-converter-head' }, [
+				E('h3', {}, _('Link converter')),
+				E('div', { class: 'fn-mihomo-converter-targets' }, [ mode, group ])
+			]),
+			E('div', { class: 'fn-card-body fn-mihomo-parser-body' }, [
+				E('div', { class: 'fn-mihomo-converter-grid' }, [
+					E('div', { class: 'fn-mihomo-converter-pane' }, [
+						E('label', { class: 'fn-sr-only', 'for': 'fn-mihomo-parser-source' }, _('Sources')),
+						source
+					]),
+					E('div', { class: 'fn-mihomo-converter-pane' }, [
+						E('label', { class: 'fn-sr-only', 'for': 'fn-mihomo-parser-output' }, _('Complete YAML')),
+						output
+					])
+				]),
+				E('div', { class: 'fn-mihomo-converter-footer' }, [
+					note, E('div', { class: 'fn-mihomo-actions' }, [ preview, apply ])
+				])
+			])
+		]);
 	},
 
 	renderMissing() {

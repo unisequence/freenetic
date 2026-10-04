@@ -9,6 +9,8 @@ const read = filename => fs.readFileSync(path.join(root, filename), 'utf8');
 const helperPath = 'app/luci-app-freenetic/root/usr/libexec/freenetic-magitrickle-package';
 const magitrickleView = read('web/application/htdocs/luci-static/resources/view/magitrickle/magitrickle.js');
 const helper = read(helperPath);
+assert.match(helper, /apk list --installed "\$PACKAGE"/,
+	'MagiTrickle version must be read from apk list, not the description format of apk info');
 const apps = read('web/application/htdocs/luci-static/resources/view/system/freenetic-apps.js');
 const wireguard = read('web/application/htdocs/luci-static/resources/freenetic-connections-wireguard.js');
 const deploy = read('app/deploy.sh');
@@ -42,12 +44,16 @@ assert.match(helper, /opkg update[\s\S]*opkg install "\$PACKAGE"/,
 	'IPK installation must refresh and install MagiTrickle from its feed');
 assert.match(helper, /\/etc\/init\.d\/magitrickle start/,
 	'MagiTrickle must be started through its native init script');
-assert.match(helper, /MAGITRICKLE_IH_CONFIG_URL=https:\/\/raw\.githubusercontent\.com\/StressOzz\/Zapret-Manager\/refs\/heads\/main\/files\/MagiTrickle\/configAD\.yaml/,
-	'MagiTrickle list installation must use the Internet Helper source');
+assert.match(helper, /MAGITRICKLE_IH1_CONFIG_URL=https:\/\/raw\.githubusercontent\.com\/StressOzz\/Zapret-Manager\/refs\/heads\/main\/files\/MagiTrickle\/config\.yaml/,
+	'Internet Helper #1 must use the upstream config.yaml source');
+assert.match(helper, /MAGITRICKLE_IH2_CONFIG_URL=https:\/\/raw\.githubusercontent\.com\/StressOzz\/Zapret-Manager\/refs\/heads\/main\/files\/MagiTrickle\/configOLD\.yaml/,
+	'Internet Helper #2 must use the upstream configOLD.yaml source');
+assert.doesNotMatch(helper, /MAGITRICKLE_IH\d?_CONFIG_URL=.*configAD\.yaml/,
+	'ITDog configAD.yaml must not be labeled as an Internet Helper list');
 assert.match(helper, /install_ih_list[\s\S]*configVersion:[\s\S]*magitrickle restart/,
 	'Internet Helper list installation must validate and apply the downloaded config');
-assert.match(helper, /install-ih-list/,
-	'MagiTrickle helper must expose an explicit Internet Helper list action');
+assert.match(helper, /install-ih-list-1[\s\S]*install-ih-list-2/,
+	'MagiTrickle helper must expose both Internet Helper list variants');
 assert.match(helper, /LUCI_MENU_FILE=.*freenetic-magitrickle\.json/,
 	'MagiTrickle installation must register its LuCI menu entry');
 assert.match(helper, /admin\/services\/magitrickle[\s\S]*magitrickle\/magitrickle/,
@@ -56,13 +62,22 @@ assert.match(helper, /remove_luci_menu/,
 	'MagiTrickle removal must unregister its LuCI menu entry');
 assert.match(helper, /apk del "\$PACKAGE"[\s\S]*opkg remove "\$PACKAGE"/,
 	'MagiTrickle removal must support both OpenWrt package managers');
+const removeFunction = helper.slice(helper.indexOf('remove_package() {'), helper.indexOf('\nstatus() {'));
+assert.ok(removeFunction.indexOf('cp -a "$MAGITRICKLE_CONFIG_FILE" "$backup_dir/state"') <
+	removeFunction.indexOf('apk del "$PACKAGE"'),
+	'MagiTrickle rules must be backed up before package removal');
+assert.ok(removeFunction.indexOf('cp -a "$backup_dir/state" "$MAGITRICKLE_CONFIG_FILE"') >
+	removeFunction.indexOf('apk del "$PACKAGE"'),
+	'MagiTrickle rules must be restored after package removal');
+assert.match(removeFunction, /cp -a \/etc\/config\/magitrickle "\$backup_dir\/uci"[\s\S]*cp -a "\$backup_dir\/uci" \/etc\/config\/magitrickle/,
+	'MagiTrickle UCI settings must survive uninstall');
 assert.match(magitrickleView, /http:\/\/.*:8080/,
 	'MagiTrickle view must target the native HTTP interface');
 assert.match(magitrickleView, /window\.location\.protocol === 'https:'/,
 	'MagiTrickle view must provide an HTTPS mixed-content fallback');
 
-assert.match(apps, /id: 'magitrickle'[\s\S]*?externallyAvailable: true[\s\S]*?installHelper: MAGITRICKLE_PACKAGE_HELPER[\s\S]*?configureUrlPort: 8080/,
-	'Applications must expose MagiTrickle through its signed external feed');
+assert.match(apps, /id: 'magitrickle'[\s\S]*?externallyAvailable: true[\s\S]*?installHelper: MAGITRICKLE_PACKAGE_HELPER[\s\S]*?configurePath: \[ 'admin', 'services', 'magitrickle' \]/,
+	'Applications must expose MagiTrickle through its signed external feed and local service view');
 for (const id of [ 'mihomo', 'wireguard', 'openvpn', 'pptp', 'l2tp', 'l2tp_ipsec', 'ikev2_ipsec' ])
 	assert.match(apps, new RegExp("'" + id + "'"), `MagiTrickle suggestion must cover ${id}`);
 assert.match(apps, /shouldOfferMagiTrickle[\s\S]*?offerMagiTrickle/,
@@ -85,10 +100,19 @@ assert.ok(acl.read.file['/usr/libexec/freenetic-magitrickle-package status'],
 assert.ok(acl.write.file['/usr/libexec/freenetic-magitrickle-package install'],
 	'LuCI must be allowed to install MagiTrickle');
 assert.ok(acl.write.file['/usr/libexec/freenetic-magitrickle-package install-ih-list'],
-	'LuCI must be allowed to install the Internet Helper list');
+	'LuCI must retain the compatible Internet Helper #1 action');
+for (const variant of [ 1, 2 ])
+	assert.ok(acl.write.file[`/usr/libexec/freenetic-magitrickle-package install-ih-list-${variant}`],
+		`LuCI must be allowed to install Internet Helper #${variant}`);
+for (const view of [ apps, magitrickleView ]) {
+	assert.match(view, /Internet Helper #1[\s\S]*Internet Helper #2/,
+		'list selection must offer only Internet Helper variants');
+	assert.match(view, /install-ih-list-2[\s\S]*install-ih-list-1/,
+		'list selection must pass the selected variant to the helper');
+}
 assert.ok(acl.write.file['/usr/libexec/freenetic-magitrickle-package remove'],
 	'LuCI must be allowed to remove MagiTrickle');
-assert.match(deploy, /\/usr\/libexec\/freenetic-magitrickle-package/,
-	'deployments must persist the MagiTrickle helper across sysupgrades');
+assert.match(deploy, /\/usr\/libexec\/freenetic-sysupgrade sync/,
+	'deployments must refresh the MagiTrickle helper backup according to the selected preference');
 
 console.log('MagiTrickle package contract: ok');

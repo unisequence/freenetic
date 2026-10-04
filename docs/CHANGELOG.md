@@ -6,6 +6,48 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-10-04
+
+This release fixes problems found after fresh installs of 0.4.0.
+
+- Zapret2 now opens on a Freenetic status and service-control page, with links
+  to the versioned profile, list and log editors. Its entry remains visible
+  before installation; installing a runtime refreshes LuCI's cached menu.
+- The Wi-Fi Monitor's recommended-channel button now applies the selected
+  channel after confirmation and reports any configuration error.
+- Long dependency trees in the OpenWrt package details dialog scroll inside
+  the dialog, keeping package actions reachable on narrow screens.
+- The Mihomo page can merge parsed proxy links or subscriptions into a chosen
+  select group in an existing YAML config, with a preview before applying.
+  Existing third-party configs stay separately owned.
+- MagiTrickle can connect to Mihomo through a dedicated hev-socks5-tunnel
+  instance. The connection is optional; Freenetic changes only its marked
+  network and firewall sections, checks for pending edits, and restores the
+  previous configuration if setup fails. The Internet Helper list is offered
+  after the tunnel is connected. Users with another VPN can still select its
+  interface in MagiTrickle. Removing MagiTrickle disconnects the managed
+  tunnel without deleting the Mihomo configuration.
+- The MagiTrickle list chooser now offers Internet Helper #1 and #2, and
+  restores the previous rules if the new list fails to start.
+- System settings now let users choose whether to preserve the Freenetic UI
+  across an OpenWrt sysupgrade. If its files are absent afterward, a small
+  fallback returns LuCI to Bootstrap instead of leaving an unusable theme.
+- Mihomo removal now respects external ownership, and runtime installation
+  checks available overlay space before replacing the binary.
+
+Freenetic does not run the upstream Mixomo installer automatically. Its tunnel
+layout was tested on a reset BT-RB300; Freenetic detects that installation as
+externally managed and leaves its configuration alone. On the tested OpenWrt
+snapshot, matching kernel modules and access to the packages feed were needed
+before the upstream installer could finish.
+
+Known limitations: if Mihomo's mixed port is changed in raw YAML after the
+MagiTrickle tunnel is connected, reconnect the tunnel to update its SOCKS port.
+The protected-DNS proxy setting does not yet follow raw YAML port changes.
+Removing `https-dns-proxy` outside Freenetic may leave stale dnsmasq entries;
+check DNS settings after uninstalling it. A failed Zapret2 package removal can
+leave its service stopped until it is started again.
+
 ## [0.4.0] — 2026-09-26
 
 ### Introducing Oxidice

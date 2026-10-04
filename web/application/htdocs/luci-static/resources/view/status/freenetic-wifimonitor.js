@@ -1,6 +1,8 @@
 'use strict';
 'require view';
 'require poll';
+'require ui';
+'require uci';
 'require freenetic-rpc as rpc';
 'require freenetic-ui as uiHelper';
 
@@ -13,6 +15,8 @@
 const ubusCall = rpc.call;
 
 const dom_empty = uiHelper.empty;
+const notify = uiHelper.notify;
+const applyChanges = uiHelper.applyChanges;
 
 function svgIcon(d, size) {
 	size = size || 18;
@@ -160,6 +164,7 @@ return view.extend({
 		this.wireless = wireless;
 		this.wstatus = wstatus;
 		this.radios = radios;
+		this.channelChangeInProgress = false;
 
 		if (!radios.length) {
 			return E('div', { class: 'fn-dash' }, [
@@ -445,17 +450,21 @@ return view.extend({
 		]);
 
 		dom_empty(this.airspaceSummary);
+		const applyButton = E('button', {
+			type: 'button',
+			class: 'fn-settings-btn fn-settings-btn-primary fn-airspace-apply',
+			disabled: !recommendation,
+			title: recommendation ? null : _('No available channel recommendation.')
+		}, _('Apply'));
+		applyButton.addEventListener('click', () =>
+			this.confirmRecommendedChannel(radio, recommendation, applyButton));
+
 		this.airspaceSummary.appendChild(metric(
 			_('Recommended channel'),
 			recommendation ? String(recommendation.channel) : '–',
 			recommendationNote,
 			'fn-airspace-metric-primary',
-			E('button', {
-				type: 'button',
-				class: 'fn-settings-btn fn-settings-btn-primary fn-airspace-apply',
-				disabled: true,
-				title: _('Channel changes are disabled in this preview.')
-			}, _('Apply'))
+			applyButton
 		));
 		this.airspaceSummary.appendChild(metric(
 			_('Current channel'),
@@ -470,6 +479,73 @@ return view.extend({
 			String(data.networks.length),
 			_('Visible during the latest scan')
 		));
+	},
+
+	confirmRecommendedChannel(radio, recommendation, button) {
+		if (!radio || !recommendation || this.channelChangeInProgress)
+			return;
+
+		ui.showModal(_('Apply recommended channel?'), [
+			E('p', {}, _('Switch this radio to channel %d? Wi-Fi clients may briefly disconnect while the radio restarts.').format(recommendation.channel)),
+			E('div', { class: 'button-row' }, [
+				E('button', { class: 'btn', click: ui.hideModal }, _('Cancel')),
+				E('button', {
+					class: 'btn cbi-button-positive',
+					click: () => {
+						ui.hideModal();
+						this.applyRecommendedChannel(radio, recommendation, button);
+					}
+				}, _('Apply'))
+			])
+		]);
+	},
+
+	applyRecommendedChannel(radio, recommendation, button) {
+		if (!radio || !recommendation || this.channelChangeInProgress)
+			return Promise.resolve();
+
+		const channel = String(recommendation.channel);
+		this.channelChangeInProgress = true;
+		button.disabled = true;
+		ui.showModal(_('Applying Wi-Fi channel…'), [
+			E('p', { class: 'spinning' }, _('Saving the selected channel and restarting the radio.'))
+		]);
+
+		return uci.load('wireless').then(() => {
+			const section = uci.sections('wireless', 'wifi-device')
+				.find(item => item['.name'] === radio.name);
+			if (!section)
+				throw new Error(_('The selected Wi-Fi radio is no longer available.'));
+			if (section.channel === channel)
+				return false;
+
+			uci.set('wireless', radio.name, 'channel', channel);
+			return uci.save().then(() => applyChanges(60)).then(() => true);
+		}).then(changed => {
+			ui.hideModal();
+			if (!changed) {
+				notify(_('This radio is already configured for channel %d.').format(channel), 'info');
+				return;
+			}
+
+			radio.channel = channel;
+			const cached = this.airspaceCache && this.airspaceCache[radio.name];
+			if (cached) {
+				cached.info = Object.assign({}, cached.info, {
+					channel: Number(channel),
+					frequency: recommendation.mhz
+				});
+				this.renderAirspace(radio, cached);
+			}
+			notify(_('Channel %d applied. Wi-Fi clients may need a moment to reconnect.').format(channel), 'info');
+		}).catch(error => {
+			ui.hideModal();
+			uci.unload('wireless');
+			notify(_('Could not apply the recommended channel: %s').format(error.message || error), 'danger');
+		}).finally(() => {
+			this.channelChangeInProgress = false;
+			button.disabled = !recommendation;
+		});
 	},
 
 	renderAirspaceChart(radio, data, recommendation) {

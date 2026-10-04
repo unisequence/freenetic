@@ -1,2 +1,3 @@
 config freenetic 'updates'
 	option channel 'stable'
+	option preserve_ui_on_upgrade '1'

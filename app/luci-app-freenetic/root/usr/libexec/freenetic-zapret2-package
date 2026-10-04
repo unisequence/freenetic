@@ -60,8 +60,66 @@ download_checked() {
 	[ "$actual_hash" = "$expected_hash" ] || fail "SHA-256 mismatch for $asset_name"
 }
 
-[ "$#" -eq 1 ] && [ "$1" = install ] || {
-	reply 1 "" "Usage: $0 install"
+remove_fail() {
+	reply 1 "" "$*"
+	exit 0
+}
+
+remove_package() {
+	case "$package_manager" in
+		apk) apk info -e freenetic-zapret2 >/dev/null 2>&1 || { reply 0 "" ""; return; } ;;
+		opkg) opkg status freenetic-zapret2 2>/dev/null | grep -q '^Status: .* installed$' || { reply 0 "" ""; return; } ;;
+	esac
+
+	# apk may purge even modified package conffiles. Keep a persistent copy
+	# until every file has been restored after the package transaction.
+	mkdir -p /etc/freenetic || remove_fail "Cannot prepare the Zapret2 configuration backup"
+	backup_dir="$(mktemp -d /etc/freenetic/zapret2-remove.XXXXXX 2>/dev/null || true)"
+	case "$backup_dir" in
+		/etc/freenetic/zapret2-remove.??????) ;;
+		*) remove_fail "Cannot create a private Zapret2 configuration backup" ;;
+	esac
+	chmod 0700 "$backup_dir" || remove_fail "Cannot protect the Zapret2 backup: $backup_dir"
+	for relative_path in \
+		etc/config/zapret2 \
+		opt/zapret2/config \
+		opt/zapret2/ipset/zapret-hosts-user.txt \
+		opt/zapret2/ipset/zapret-hosts-user-exclude.txt \
+		opt/zapret2/ipset/zapret-hosts-user-ipban.txt; do
+		[ -e "/$relative_path" ] || continue
+		mkdir -p "$backup_dir/$(dirname "$relative_path")" || remove_fail "Cannot prepare backup path: $backup_dir"
+		cp -a "/$relative_path" "$backup_dir/$relative_path" || remove_fail "Cannot back up $relative_path; backup directory: $backup_dir"
+	done
+	if command -v flock >/dev/null 2>&1; then
+		exec 200>/tmp/ipkg.lock
+		flock -x 200 || remove_fail "Cannot acquire the package manager lock; backup directory: $backup_dir"
+	fi
+	if [ -x /etc/init.d/zapret2 ]; then
+		/etc/init.d/zapret2 stop >/dev/null 2>&1 || remove_fail "Cannot stop Zapret2; backup directory: $backup_dir"
+	fi
+	case "$package_manager" in
+		apk) package_output="$(apk del freenetic-zapret2 2>&1)" || remove_fail "Cannot remove Zapret2: $package_output; backup directory: $backup_dir" ;;
+		opkg) package_output="$(opkg remove freenetic-zapret2 2>&1)" || remove_fail "Cannot remove Zapret2: $package_output; backup directory: $backup_dir" ;;
+	esac
+	for relative_path in \
+		etc/config/zapret2 \
+		opt/zapret2/config \
+		opt/zapret2/ipset/zapret-hosts-user.txt \
+		opt/zapret2/ipset/zapret-hosts-user-exclude.txt \
+		opt/zapret2/ipset/zapret-hosts-user-ipban.txt; do
+		[ -e "$backup_dir/$relative_path" ] || continue
+		mkdir -p "/$(dirname "$relative_path")" || remove_fail "Zapret2 was removed, but $relative_path could not be restored; backup directory: $backup_dir"
+		cp -a "$backup_dir/$relative_path" "/$relative_path" || remove_fail "Zapret2 was removed, but $relative_path could not be restored; backup directory: $backup_dir"
+	done
+	rm -rf "$backup_dir"
+	# rpcd keeps the removed ucode object in memory until it reloads.
+	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
+	/usr/libexec/freenetic-clear-luci-cache >/dev/null 2>&1 || true
+	reply 0 "$package_output" ""
+}
+
+[ "$#" -eq 1 ] && { [ "$1" = install ] || [ "$1" = remove ]; } || {
+	reply 1 "" "Usage: $0 install|remove"
 	exit 0
 }
 
@@ -75,6 +133,11 @@ elif command -v opkg >/dev/null 2>&1; then
 	package_extension=ipk
 else
 	reply 1 "" "Neither apk nor opkg is installed"
+	exit 0
+fi
+
+if [ "$1" = remove ]; then
+	remove_package
 	exit 0
 fi
 
@@ -150,5 +213,6 @@ case "$package_manager" in
 esac
 
 package_output="$(tail -n 20 "$output_file" 2>/dev/null || true)"
+/usr/libexec/freenetic-clear-luci-cache >/dev/null 2>&1 || true
 reply 0 "$package_output" ""
 rm -rf "$stage_dir"

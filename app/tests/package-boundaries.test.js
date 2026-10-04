@@ -100,8 +100,9 @@ assert.match(applicationMakefile, /app\/freenetic-preflight\.mk/,
 const menuPath = path.join(applicationPackage, 'root', 'usr', 'share', 'luci',
 	'menu.d', 'zz-luci-freenetic.json');
 const menu = JSON.parse(fs.readFileSync(menuPath, 'utf8'));
-for (const entry of Object.values(menu))
-	assert.deepEqual(entry.depends.acl, [ 'luci-app-freenetic' ]);
+for (const [ route, entry ] of Object.entries(menu))
+	assert.deepEqual(entry.depends.acl,
+		route === 'admin/services/mihomo/native' ? [ 'luci-app-mihomo' ] : [ 'luci-app-freenetic' ]);
 
 const navigationSource = fs.readFileSync(path.join(root, 'web', 'theme', 'htdocs',
 	'luci-static', 'resources', 'menu-freenetic.js'), 'utf8');

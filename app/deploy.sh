@@ -107,6 +107,8 @@ $SSH_CMD "$ROUTER" '
     cp /tmp/freenetic-pkg/root/usr/share/rpcd/ucode/*.uc /usr/share/rpcd/ucode/
     cp /tmp/freenetic-pkg/root/usr/libexec/freenetic-* /usr/libexec/
     cp -r /tmp/freenetic-pkg/root/usr/share/freenetic/. /usr/share/freenetic/
+    mkdir -p /lib/upgrade/keep.d
+    cp /tmp/freenetic-pkg/root/lib/upgrade/keep.d/* /lib/upgrade/keep.d/
     # Remove the automatic recovery hook left by earlier development builds.
     # It could bounce a healthy but offline provider interface; recovery is
     # now an explicit diagnostic action only.
@@ -134,80 +136,17 @@ $SSH_CMD "$ROUTER" '
     fi
     rm -f /tmp/luci-indexcache*
     rm -rf /tmp/luci-modulecache
-    # Theme files live outside /etc, so a plain sysupgrade (which only keeps
-    # /etc plus whatever this lists) would wipe them — keep this list synced
-    # with everything deploy.sh installs above.
+    # Keep router-owned settings independently from the optional UI backup.
+    # The helper generates the namespaced UI file list from installed packages
+    # and development assets, according to the selected System preference.
     touch /etc/sysupgrade.conf
     sed -i "\|^/www/cgi-bin/freenetic-events$|d" /etc/sysupgrade.conf
     sed -i "\|^/etc/hotplug.d/iface/95-freenetic-mwan-recover$|d" /etc/sysupgrade.conf
-    for p in /www/luci-static/freenetic /usr/share/ucode/luci/template/themes/freenetic \
-             /www/luci-static/resources/freenetic-diagnostics.js \
-             /www/luci-static/resources/freenetic-network.js \
-             /www/luci-static/resources/freenetic-qrcode.js \
-             /www/luci-static/resources/freenetic-dashboard-data.js \
-             /www/luci-static/resources/freenetic-connections-core.js \
-             /www/luci-static/resources/freenetic-connections-ipsec.js \
-             /www/luci-static/resources/freenetic-connections-openvpn.js \
-             /www/luci-static/resources/freenetic-connections-wireguard.js \
-             /www/luci-static/resources/freenetic-rpc.js \
-             /www/luci-static/resources/freenetic-ui.js \
-             /www/luci-static/resources/freenetic-view-guard.js \
-             /www/luci-static/resources/freenetic-multiwan-data.js \
-             /www/luci-static/resources/menu-freenetic.js \
-             /www/luci-static/resources/freenetic-navigation.js \
-             /www/luci-static/resources/freenetic-zapret2-tabs.js \
-             /www/luci-static/resources/settings-freenetic.js \
-             /www/luci-static/resources/view/network/freenetic-firewall.js \
-             /www/luci-static/resources/view/network/freenetic-mynetworks.js \
-             /www/luci-static/resources/view/network/freenetic-wifi-acl.js \
-             /www/luci-static/resources/view/network/freenetic-other-connections.js \
-             /www/luci-static/resources/view/network/freenetic-ddns.js \
-			 /www/luci-static/resources/view/network/freenetic-multiwan.js \
-			 /www/luci-static/resources/view/network/freenetic-zapret2.js \
-			 /www/luci-static/resources/zapret2 \
-             /www/luci-static/resources/view/zapret2 \
-             /www/luci-static/resources/view/network/freenetic-portforward.js \
-             /www/luci-static/resources/view/network/freenetic-routing.js \
-             /www/luci-static/resources/view/network/freenetic-wan.js \
-             /www/luci-static/resources/view/status/freenetic-clients.js \
-             /www/luci-static/resources/view/status/freenetic-dashboard.js \
-             /www/luci-static/resources/view/status/freenetic-traffic.js \
-             /www/luci-static/resources/view/status/freenetic-wifimonitor.js \
-             /www/luci-static/resources/view/system/freenetic-apps.js \
-             /www/luci-static/resources/view/system/freenetic-reboot.js \
-             /www/luci-static/resources/view/network/freenetic-mihomo.js \
-             /www/luci-static/resources/view/magitrickle/magitrickle.js \
-             /www/luci-static/resources/view/system/freenetic-diagnostics.js \
-             /www/luci-static/resources/view/system/freenetic-system.js \
-             /usr/lib/lua/luci/i18n/freenetic.ru.lmo \
-             /usr/lib/lua/luci/i18n/freenetic-theme.ru.lmo \
-             /usr/share/luci/menu.d/zz-luci-freenetic.json \
-             /usr/share/rpcd/acl.d/luci-theme-freenetic.json \
-             /usr/share/rpcd/acl.d/luci-app-freenetic.json \
-             /usr/share/rpcd/ucode/mihomo.uc \
-             /usr/share/freenetic/mihomo \
-             /usr/share/freenetic/keys \
-             /usr/share/luci/menu.d/freenetic-magitrickle.json \
-             /usr/libexec/freenetic-backup-call /usr/libexec/freenetic-clear-luci-cache \
-             /usr/libexec/freenetic-diagnostics-bundle \
-             /usr/libexec/freenetic-diagnostics-call /usr/libexec/freenetic-awg-feed \
-             /etc/openvpn/freenetic /usr/libexec/freenetic-openvpn-profile \
-             /usr/libexec/freenetic-package-status \
-             /usr/libexec/freenetic-network-restart \
-		     /usr/libexec/freenetic-tailscale-recover \
-             /usr/libexec/freenetic-zapret2-package \
-             /usr/libexec/freenetic-mihomo-package \
-             /usr/libexec/freenetic-magitrickle-package \
-		     /usr/libexec/freenetic-zapret2 \
-             /usr/libexec/freenetic-ipsec-restart \
-             /usr/libexec/freenetic-ipsec-status \
-             /usr/libexec/freenetic-pbr-restart \
-             /usr/libexec/freenetic-multiwan \
-             /usr/libexec/freenetic-wifi-uplink \
-             /usr/libexec/freenetic-mwan-recover \
-             /usr/libexec/freenetic-uninstall; do
+    for p in /etc/openvpn/freenetic /etc/freenetic \
+             /lib/upgrade/keep.d/freenetic-mihomo; do
         grep -qxF "$p" /etc/sysupgrade.conf || echo "$p" >> /etc/sysupgrade.conf
     done
+    /usr/libexec/freenetic-sysupgrade sync >/dev/null
 '
 if [ -n "$APPLICATION_RU_LMO_FILE" ] || [ -n "$THEME_RU_LMO_FILE" ]; then
     $SSH_CMD "$ROUTER" 'mkdir -p /usr/lib/lua/luci/i18n'

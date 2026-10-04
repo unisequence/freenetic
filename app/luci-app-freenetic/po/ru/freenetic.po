@@ -174,8 +174,32 @@ msgstr "Найдено сетей"
 msgid "Visible during the latest scan"
 msgstr "Видимы при последнем сканировании"
 
-msgid "Channel changes are disabled in this preview."
-msgstr "В тестовом наброске смена канала отключена."
+msgid "No available channel recommendation."
+msgstr "Нет доступной рекомендации по каналу."
+
+msgid "Apply recommended channel?"
+msgstr "Применить рекомендуемый канал?"
+
+msgid "Switch this radio to channel %d? Wi-Fi clients may briefly disconnect while the radio restarts."
+msgstr "Переключить этот радиомодуль на канал %d? Wi-Fi-клиенты могут ненадолго отключиться, пока радиомодуль перезапускается."
+
+msgid "Applying Wi-Fi channel…"
+msgstr "Применяем канал Wi-Fi…"
+
+msgid "Saving the selected channel and restarting the radio."
+msgstr "Сохраняем выбранный канал и перезапускаем радиомодуль."
+
+msgid "The selected Wi-Fi radio is no longer available."
+msgstr "Выбранный радиомодуль Wi-Fi больше недоступен."
+
+msgid "This radio is already configured for channel %d."
+msgstr "Для этого радиомодуля уже настроен канал %d."
+
+msgid "Channel %d applied. Wi-Fi clients may need a moment to reconnect."
+msgstr "Канал %d применён. Wi-Fi-клиентам может понадобиться время для повторного подключения."
+
+msgid "Could not apply the recommended channel: %s"
+msgstr "Не удалось применить рекомендуемый канал: %s"
 
 msgid "Apply"
 msgstr "Применить"
@@ -1022,6 +1046,15 @@ msgstr "Установить MagiTrickle"
 msgid "Install Internet Helper list?"
 msgstr "Установить список от Internet Helper?"
 
+msgid "Choose a list"
+msgstr "Выберите список"
+
+msgid "Internet Helper #1"
+msgstr "Internet Helper #1"
+
+msgid "Internet Helper #2"
+msgstr "Internet Helper #2"
+
 msgid "Internet Helper provides a ready-made MagiTrickle domain list."
 msgstr "Internet Helper предоставляет готовый список доменов для MagiTrickle."
 
@@ -1042,6 +1075,133 @@ msgstr "Список Internet Helper установлен."
 
 msgid "Failed to install the Internet Helper list: %s"
 msgstr "Не удалось установить список Internet Helper: %s"
+
+msgid "MagiTrickle and Mihomo"
+msgstr "MagiTrickle и Mihomo"
+
+msgid "Traffic interception and bypass profiles on this router."
+msgstr "Перехват трафика и профили обхода на этом роутере."
+
+msgid "Enabled profiles"
+msgstr "Активные профили"
+
+msgid "Bypass profiles"
+msgstr "Профили обхода"
+
+msgid "System log"
+msgstr "Системный журнал"
+
+msgid "Traffic interception and service parameters."
+msgstr "Перехват трафика и параметры службы."
+
+msgid "Ports, protocols and traffic rules."
+msgstr "Порты, протоколы и правила обработки трафика."
+
+msgid "Domain and IP lists used by the profiles."
+msgstr "Списки доменов и IP-адресов для профилей."
+
+msgid "Recent Zapret2 service messages."
+msgstr "Последние сообщения службы Zapret2."
+
+msgid "Zapret2 service updated."
+msgstr "Состояние службы Zapret2 обновлено."
+
+#, javascript-format
+msgid "Could not update Zapret2: %s"
+msgstr "Не удалось изменить состояние Zapret2: %s"
+
+#, javascript-format
+msgid "Could not read Zapret2 status: %s"
+msgstr "Не удалось получить состояние Zapret2: %s"
+
+msgid "Zapret2 status is unavailable"
+msgstr "Состояние Zapret2 недоступно"
+
+msgid "The installed runtime does not expose the Zapret2 API used by this page. Its existing settings were not changed."
+msgstr "Установленная версия Zapret2 не поддерживает API этой страницы. Её настройки не изменены."
+
+msgid "Open installed Zapret2 interface"
+msgstr "Открыть установленный интерфейс Zapret2"
+
+msgid "Tunnel status is unavailable."
+msgstr "Не удалось получить состояние туннеля."
+
+msgid "Mihomo tunnel is connected."
+msgstr "Туннель Mihomo подключён."
+
+msgid "Mixomo tunnel is connected."
+msgstr "Туннель Mixomo подключён."
+
+msgid "Mihomo tunnel is configured but stopped."
+msgstr "Туннель Mihomo настроен, но остановлен."
+
+msgid "Mixomo tunnel is configured but stopped."
+msgstr "Туннель Mixomo настроен, но остановлен."
+
+msgid "This tunnel is managed by the Mixomo installer. Freenetic will not replace its network or firewall settings."
+msgstr "Этим туннелем управляет установщик Mixomo. Freenetic не заменит его настройки сети и межсетевого экрана."
+
+msgid "Mihomo tunnel is not connected."
+msgstr "Туннель Mihomo не подключён."
+
+msgid "Install and start Mihomo to use the Internet Helper list. Other VPN interfaces can be selected in MagiTrickle."
+msgstr "Для списка Internet Helper установите и запустите Mihomo. Другой VPN-интерфейс можно выбрать в MagiTrickle."
+
+msgid "Reconnect tunnel"
+msgstr "Переподключить туннель"
+
+msgid "Connect to Mihomo"
+msgstr "Подключить к Mihomo"
+
+msgid "Disconnect tunnel"
+msgstr "Отключить туннель"
+
+msgid "Install Internet Helper list"
+msgstr "Установить список Internet Helper"
+
+msgid "Connect MagiTrickle to Mihomo?"
+msgstr "Подключить MagiTrickle к Mihomo?"
+
+msgid "Disconnect Mihomo tunnel?"
+msgstr "Отключить туннель Mihomo?"
+
+msgid "Freenetic will install hev-socks5-tunnel and add its own network and firewall sections. The network may briefly reload."
+msgstr "Freenetic установит hev-socks5-tunnel и добавит собственные сетевые правила. Сеть ненадолго перезапустится."
+
+msgid "Freenetic will remove only the tunnel sections it created. MagiTrickle and Mihomo remain installed."
+msgstr "Freenetic удалит только созданные им секции туннеля. MagiTrickle и Mihomo останутся установленными."
+
+msgid "Connect"
+msgstr "Подключить"
+
+msgid "Disconnect"
+msgstr "Отключить"
+
+msgid "Updating Mihomo tunnel…"
+msgstr "Обновляем туннель Mihomo…"
+
+msgid "Applying the tunnel and firewall settings."
+msgstr "Применяем настройки туннеля и межсетевого экрана."
+
+msgid "Mihomo tunnel connected."
+msgstr "Туннель Mihomo подключён."
+
+msgid "Mihomo tunnel disconnected."
+msgstr "Туннель Mihomo отключён."
+
+#, javascript-format
+msgid "Could not update the Mihomo tunnel: %s"
+msgstr "Не удалось обновить туннель Mihomo: %s"
+
+msgid "The list routes selected domains through the Mihomo tunnel. An existing MagiTrickle configuration will be backed up."
+msgstr "Список направляет выбранные домены через туннель Mihomo. Текущая конфигурация MagiTrickle будет сохранена в резервной копии."
+
+msgid "The list will be downloaded to the router and applied to MagiTrickle through the Mihomo tunnel."
+msgstr "Список загрузится на роутер и применится в MagiTrickle с туннелем Mihomo."
+
+#, javascript-format
+msgid "Could not read the Mihomo tunnel status: %s"
+msgstr "Не удалось получить состояние туннеля Mihomo: %s"
 
 msgid "Install additional features on demand. Recommended features are suitable for most routers; Advanced networking tools can change traffic processing and are intended for experienced users. Packages come from the router's configured repositories."
 msgstr "Устанавливайте дополнительные функции по необходимости. Рекомендуемые функции подходят большинству роутеров, а расширенные сетевые инструменты могут менять обработку трафика и предназначены для опытных пользователей. Пакеты загружаются из настроенных репозиториев роутера."
@@ -3382,8 +3542,11 @@ msgstr "Проверка образа не пройдена"
 msgid "Flash new firmware image?"
 msgstr "Прошить новый образ?"
 
-msgid "The uploaded image passed verification. Flashing starts immediately and cannot be undone — the device will reboot when done. The theme is preserved across the upgrade."
-msgstr "Загруженный образ прошёл проверку. Прошивка начнётся сразу и необратима — после завершения устройство перезагрузится. Тема сохранится после обновления."
+msgid "The image passed verification. Freenetic will be included in the configuration backup. Flashing starts immediately and the router will reboot."
+msgstr "Образ прошёл проверку. Freenetic войдёт в резервную копию настроек. Прошивка начнётся сразу, затем роутер перезагрузится."
+
+msgid "The image passed verification. Freenetic will not be included in the configuration backup; other router settings are still preserved. Flashing starts immediately and the router will reboot."
+msgstr "Образ прошёл проверку. Freenetic не войдёт в резервную копию, остальные настройки роутера сохранятся. Прошивка начнётся сразу, затем роутер перезагрузится."
 
 msgid "Flashing…"
 msgstr "Прошивка…"
@@ -4399,11 +4562,8 @@ msgstr "Открывается полный конфигуратор Zapret2."
 msgid "Opening the Zapret2 settings…"
 msgstr "Открываем настройки Zapret2…"
 
-msgid "The installed LuCI interface is opening."
-msgstr "Открывается установленный интерфейс LuCI."
-
-msgid "The compatibility interface is opening."
-msgstr "Открывается интерфейс совместимости."
+msgid "The Freenetic interface is opening."
+msgstr "Открывается интерфейс Freenetic."
 
 msgid "Profiles"
 msgstr "Профили"
@@ -4473,12 +4633,6 @@ msgstr "Несовместимая конфигурация"
 
 msgid "Zapret2 is not installed"
 msgstr "Zapret2 не установлен"
-
-msgid "Zapret2 interface is not installed"
-msgstr "Интерфейс Zapret2 не установлен"
-
-msgid "The runtime is present, but its LuCI interface is missing. Install luci-app-zapret2 from Applications."
-msgstr "Среда Zapret2 установлена, но интерфейс LuCI отсутствует. Установите luci-app-zapret2 в разделе «Приложения»."
 
 msgid "Install Zapret2 from Applications. Installation does not enable traffic processing."
 msgstr "Установите Zapret2 в разделе «Приложения». Сама установка не включает обработку трафика."
@@ -4584,6 +4738,174 @@ msgstr "Mihomo"
 
 msgid "Mihomo is not installed"
 msgstr "Mihomo не установлен"
+
+msgid "Mihomo is installed by another installer"
+msgstr "Mihomo установлен сторонним установщиком"
+
+msgid "Its configuration is preserved. Freenetic will not replace the upstream service or tunnel settings."
+msgstr "Его конфигурация сохранена. Freenetic не заменит настройки службы или туннеля, созданные установщиком."
+
+msgid "Open installed Mihomo interface"
+msgstr "Открыть установленный интерфейс Mihomo"
+
+msgid "Native Mihomo interface"
+msgstr "Родной интерфейс Mihomo"
+
+msgid "Open full interface"
+msgstr "Открыть целиком"
+
+msgid "Open separately"
+msgstr "Открыть отдельно"
+
+msgid "Link converter"
+msgstr "Конвертер ссылок"
+
+msgid "Proxy group"
+msgstr "Группа прокси"
+
+#, javascript-format
+msgid "Group: %s"
+msgstr "Группа: %s"
+
+msgid "Create a proxy group"
+msgstr "Создать группу прокси"
+
+msgid "Use imported proxy directly"
+msgstr "Использовать прокси напрямую"
+
+msgid "Direct routing requires exactly one proxy link and no proxy groups."
+msgstr "Для прямой маршрутизации нужна ровно одна прокси-ссылка и отсутствие групп прокси."
+
+msgid "A MATCH rule is needed to route through the imported proxy."
+msgstr "Для маршрутизации через добавленный прокси нужно правило MATCH."
+
+#, javascript-format
+msgid "MATCH now routes through %s."
+msgstr "Правило MATCH теперь направляет трафик через %s."
+
+msgid "No available proxy group"
+msgstr "Нет доступной группы прокси"
+
+msgid "Complete YAML"
+msgstr "Полный YAML"
+
+msgid "Copy the complete YAML into the editor, check it, then save."
+msgstr "Скопируйте полный YAML в редактор, проверьте и сохраните."
+
+msgid "Could not read the current Mihomo YAML."
+msgstr "Не удалось прочитать текущий YAML Mihomo."
+
+#, javascript-format
+msgid "Could not build the Mihomo YAML: %s"
+msgstr "Не удалось собрать YAML Mihomo: %s"
+
+#, javascript-format
+msgid "Added to group %s."
+msgstr "Добавлено в группу %s."
+
+msgid "The previous route stays selected until you choose an imported proxy."
+msgstr "Прежний маршрут останется выбранным, пока вы не переключитесь на добавленный прокси."
+
+msgid "Unsupported quoted YAML value."
+msgstr "Не поддерживается такой формат строки в YAML."
+
+msgid "The existing YAML layout is not supported for automatic merging."
+msgstr "Структура текущего YAML не поддерживается для автоматического объединения."
+
+msgid "The existing YAML contains duplicate sections."
+msgstr "В текущем YAML найдены повторяющиеся разделы."
+
+#, javascript-format
+msgid "The existing %s section uses an unsupported inline format."
+msgstr "Раздел %s использует неподдерживаемый однострочный формат."
+
+#, javascript-format
+msgid "The existing %s section is not a block list."
+msgstr "Раздел %s не является обычным списком YAML."
+
+msgid "Existing proxy entries must use block YAML."
+msgstr "Существующие прокси должны быть записаны в блочном формате YAML."
+
+msgid "Existing proxy groups must use block YAML."
+msgstr "Существующие группы прокси должны быть записаны в блочном формате YAML."
+
+msgid "Existing proxy providers must use block YAML."
+msgstr "Существующие поставщики прокси должны быть записаны в блочном формате YAML."
+
+msgid "The existing YAML indentation is not supported."
+msgstr "Отступы в текущем YAML не поддерживаются."
+
+msgid "A MATCH rule is needed to create a proxy group safely."
+msgstr "Для безопасного создания группы нужно правило MATCH."
+
+msgid "The current MATCH target was not found in the configuration."
+msgstr "Текущая цель правила MATCH не найдена в конфигурации."
+
+msgid "Choose an existing select group."
+msgstr "Выберите существующую группу типа select."
+
+msgid "The selected group uses an unsupported inline list."
+msgstr "Выбранная группа использует неподдерживаемый однострочный список."
+
+msgid "Preview only — nothing is saved."
+msgstr "Только предпросмотр — ничего не сохраняется."
+
+msgid "Preview"
+msgstr "Предпросмотр"
+
+msgid "Unsaved changes in the Mihomo editor are not included."
+msgstr "Несохранённые изменения в редакторе Mihomo не учитываются."
+
+msgid "Checking and applying the Mihomo configuration…"
+msgstr "Проверка и применение конфигурации Mihomo…"
+
+msgid "Some entries could not be converted. Check the preview before applying."
+msgstr "Не все записи удалось преобразовать. Проверьте предпросмотр перед применением."
+
+msgid "Mihomo configuration is already up to date."
+msgstr "Конфигурация Mihomo уже актуальна."
+
+#, javascript-format
+msgid "Could not apply the Mihomo configuration: %s"
+msgstr "Не удалось применить конфигурацию Mihomo: %s"
+
+msgid "Convert"
+msgstr "Преобразовать"
+
+msgid "Freenetic link parser"
+msgstr "Парсер ссылок Freenetic"
+
+msgid "Convert proxy links or URI subscriptions into a YAML fragment for the native Mihomo editor."
+msgstr "Преобразуйте прокси-ссылки или URI-подписки во фрагмент YAML для родного редактора Mihomo."
+
+msgid "This parser only prepares YAML. Review and paste it into the native editor; the router configuration is not changed."
+msgstr "Парсер только готовит YAML. Проверьте и вставьте его в родной редактор; конфигурация роутера при этом не меняется."
+
+msgid "YAML fragment"
+msgstr "Фрагмент YAML"
+
+msgid "Converted YAML will appear here"
+msgstr "Здесь появится преобразованный YAML"
+
+msgid "Convert to YAML"
+msgstr "Преобразовать в YAML"
+
+msgid "Convert the sources first."
+msgstr "Сначала преобразуйте источники."
+
+msgid "YAML copied."
+msgstr "YAML скопирован."
+
+#, javascript-format
+msgid "Converted %s entries."
+msgstr "Преобразовано записей: %s."
+
+#, javascript-format
+msgid "Converted %s entries; skipped %s unsupported entries."
+msgstr "Преобразовано записей: %s; пропущено неподдерживаемых: %s."
+
+msgid "Enter at least one proxy link or subscription URL."
+msgstr "Добавьте хотя бы одну прокси-ссылку или URL подписки."
 
 msgid "Install Mihomo from Applications to convert proxy links and subscriptions on the router."
 msgstr "Установите Mihomo в разделе «Приложения», чтобы конвертировать прокси-ссылки и подписки прямо на роутере."
@@ -4850,3 +5172,34 @@ msgstr "Роутер перезагружается. Подождите немн
 #, javascript-format
 msgid "Could not restart the router: %s"
 msgstr "Не удалось перезагрузить роутер: %s"
+
+msgid "OpenWrt upgrades"
+msgstr "Обновления OpenWrt"
+
+msgid "Keep Freenetic after an OpenWrt upgrade"
+msgstr "Сохранять Freenetic после обновления OpenWrt"
+
+msgid "Include the Freenetic interface, theme and supporting files in the upgrade backup. Router, network and Wi-Fi settings are preserved separately."
+msgstr "Добавлять интерфейс, тему и служебные файлы Freenetic в резервную копию обновления. Настройки роутера, сети и Wi-Fi сохраняются отдельно."
+
+msgid "A major OpenWrt upgrade can change LuCI dependencies. The saved interface may then need to be reinstalled."
+msgstr "При крупном обновлении OpenWrt зависимости LuCI могут измениться. Тогда интерфейс может потребовать переустановки."
+
+msgid "The upgrade preference is unavailable."
+msgstr "Настройка сохранения недоступна."
+
+msgid "Freenetic is not yet included in the upgrade backup."
+msgstr "Freenetic пока не входит в резервную копию обновления."
+
+msgid "The upgrade preference was not saved."
+msgstr "Настройка сохранения не записана."
+
+msgid "Freenetic will be included in the upgrade backup."
+msgstr "Freenetic войдёт в резервную копию обновления."
+
+msgid "Freenetic will not be included in the upgrade backup."
+msgstr "Freenetic не войдёт в резервную копию обновления."
+
+#, javascript-format
+msgid "Could not update the upgrade preference: %s"
+msgstr "Не удалось изменить настройку сохранения: %s"

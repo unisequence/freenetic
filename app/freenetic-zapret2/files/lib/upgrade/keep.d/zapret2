@@ -1,3 +1,7 @@
 /etc/zapret2/lists/
 /etc/zapret2/autohostlists/
 /etc/zapret2/legacy/
+/opt/zapret2/config
+/opt/zapret2/ipset/zapret-hosts-user.txt
+/opt/zapret2/ipset/zapret-hosts-user-exclude.txt
+/opt/zapret2/ipset/zapret-hosts-user-ipban.txt

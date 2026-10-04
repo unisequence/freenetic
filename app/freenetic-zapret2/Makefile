@@ -11,7 +11,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freenetic-zapret2
 PKG_VERSION:=1.0.5.2
-PKG_RELEASE:=2
+PKG_RELEASE:=4
 
 PKG_SOURCE:=zapret2-v$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/bol-van/zapret2/releases/download/v$(PKG_VERSION)
@@ -74,6 +74,18 @@ chmod 0750 "$${IPKG_INSTROOT}/etc/zapret2/lists" "$${IPKG_INSTROOT}/etc/zapret2/
 chmod 0700 "$${IPKG_INSTROOT}/etc/zapret2/legacy"
 [ -n "$${IPKG_INSTROOT}" ] || {
 	[ "$$(uci -q get zapret2.main.schema_version)" = 2 ] || /usr/libexec/zapret2-init
+	# v0.4.0 stored a Freenetic marker in the strict Zapret2 schema and
+	# selected marked interception without any include mark. Either setting
+	# prevents the freshly installed service from starting. Migrate only
+	# configurations carrying that old marker; preserve custom marked rules.
+	if [ "$$(uci -q get zapret2.main.freenetic_managed)" = 1 ]; then
+		uci -q delete zapret2.main.freenetic_managed || exit 1
+		if [ "$$(uci -q get zapret2.main.intercept_mode)" = marked ] && \
+		   [ -z "$$(uci -q get zapret2.main.include_mark)" ]; then
+			uci -q set zapret2.main.intercept_mode=all || exit 1
+		fi
+		uci -q commit zapret2 || exit 1
+	fi
 	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
 }
 endef

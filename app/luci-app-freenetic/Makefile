@@ -39,6 +39,14 @@ define Package/luci-app-freenetic/preinst
 $(FREENETIC_PACKAGE_PREINST)
 endef
 
+define Package/luci-app-freenetic/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || {
+	[ ! -x /usr/libexec/freenetic-sysupgrade ] ||
+		/usr/libexec/freenetic-sysupgrade sync >/dev/null 2>&1 || true
+}
+endef
+
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # htdocs is an intentional link to web/application.

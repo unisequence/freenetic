@@ -2276,6 +2276,30 @@ body[data-page="admin-system-package-manager"] #maincontent #view > .controls > 
 	text-align: center;
 }
 
+/* Package details may contain a deeply nested dependency tree. Keep its
+   actions reachable on small screens and wrap long package names. */
+body[data-page="admin-system-package-manager"] #modal_overlay .modal {
+	box-sizing: border-box;
+	width: min(680px, calc(100vw - 24px));
+	max-width: 680px;
+	max-height: calc(100vh - 24px);
+	max-height: calc(100dvh - 24px);
+	margin: 12px auto;
+	overflow-y: auto;
+}
+body[data-page="admin-system-package-manager"] #modal_overlay .modal > ul {
+	max-height: 42vh;
+	max-height: 42dvh;
+	overflow: auto;
+	padding-left: 20px;
+}
+body[data-page="admin-system-package-manager"] #modal_overlay .modal ul ul {
+	padding-left: 16px;
+}
+body[data-page="admin-system-package-manager"] #modal_overlay .modal li {
+	overflow-wrap: anywhere;
+}
+
 /* The upstream package toolbar uses 250px minimum labels. Reflow it before
    the sidebar makes the controls collide. */
 @media (max-width: 1100px) {
@@ -4880,10 +4904,51 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-zapret-title-row .fn-status-pill { margin-top: 8px; flex: 0 0 auto; }
 .fn-zapret-layout { display: grid; gap: 16px; margin-top: 20px; }
 .fn-mihomo-page { display: grid; gap: 16px; }
-.fn-magitrickle-page { width: 100%; min-height: calc(100vh - 150px); overflow: hidden; }
+.fn-mihomo-page .fn-mihomo-card:hover { transform: none; }
+.fn-mihomo-native-body { padding: 0; }
+.fn-mihomo-native-frame { display: block; width: 100%; min-height: 560px; height: min(76vh, 820px); border: 0; background: var(--fn-surface); }
+html.fn-mihomo-native-embed #fn-topbar,
+html.fn-mihomo-native-embed #fn-sidebar,
+html.fn-mihomo-native-embed #fn-sidebar-backdrop,
+html.fn-mihomo-native-embed #fn-footer { display: none !important; }
+html.fn-mihomo-native-embed #maincontent.container { padding: 16px; }
+html.fn-mihomo-native-embed .cbi-map { border: 0; box-shadow: none; background: transparent; }
+html.fn-mihomo-native-embed .tab-bar { overflow-x: auto; background: transparent !important; border-bottom: 1px solid var(--fn-border); }
+html.fn-mihomo-native-embed .tab-item { background: transparent !important; border: 0 !important; border-bottom: 2px solid transparent !important; color: var(--fn-text-secondary) !important; }
+html.fn-mihomo-native-embed .tab-item.active { color: var(--fn-accent) !important; border-bottom-color: var(--fn-accent) !important; }
+html.fn-mihomo-native-embed .toolbar { background: var(--fn-surface-alt) !important; border-color: var(--fn-border) !important; border-radius: var(--fn-radius-sm); }
+html.fn-mihomo-native-embed #ace_editor_container { border: 1px solid var(--fn-border) !important; border-radius: 0 0 var(--fn-radius-sm) var(--fn-radius-sm); }
+.fn-mihomo-converter-head { justify-content: space-between; }
+.fn-mihomo-converter-targets { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; min-width: 0; }
+.fn-mihomo-converter-head select { width: auto; min-width: 165px; max-width: 280px; min-height: 34px; padding: 5px 32px 5px 10px; border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius-sm); background-color: var(--fn-surface); color: var(--fn-text); font: inherit; font-size: .9rem; }
+.fn-mihomo-parser-body { display: grid; gap: 14px; }
+.fn-mihomo-converter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.fn-mihomo-converter-pane { min-width: 0; }
+.fn-mihomo-converter-pane .fn-mihomo-input { display: block; box-sizing: border-box; width: 100%; min-height: 220px; max-height: 65vh; margin: 0; padding: 14px; resize: vertical; border: 1px solid var(--fn-border-strong); border-radius: var(--fn-radius-sm); background: var(--fn-surface-alt); color: var(--fn-text); font-size: .9rem; }
+.fn-mihomo-converter-pane #fn-mihomo-parser-source { overflow-wrap: anywhere; }
+.fn-mihomo-converter-pane .fn-mihomo-input:focus { outline: 2px solid var(--fn-accent); outline-offset: 1px; }
+.fn-mihomo-converter-pane .fn-mihomo-parser-output { background: var(--fn-surface); }
+.fn-mihomo-converter-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.fn-mihomo-parser-note { margin: 0; color: var(--fn-text-secondary); font-size: .85rem; }
+.fn-mihomo-converter-footer .fn-mihomo-actions { margin-left: auto; }
+.fn-mihomo-converter-footer .fn-settings-btn { min-height: 34px; padding: 7px 12px; font-size: .88rem; white-space: nowrap; }
+.fn-magitrickle-page { display: grid; gap: 14px; width: 100%; min-height: calc(100vh - 150px); }
+.fn-magitrickle-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding: 16px 20px; }
+.fn-magitrickle-toolbar h2 { margin: 0 0 4px; font-size: 1rem; }
+.fn-magitrickle-bridge-state, .fn-magitrickle-hint { color: var(--fn-text-secondary); font-size: .875rem; }
+.fn-magitrickle-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.fn-magitrickle-actions .fn-settings-btn { width: auto; }
 .fn-magitrickle-frame { display: block; width: 100%; min-height: 720px; height: calc(100vh - 150px); border: 0; border-radius: var(--fn-radius); background: var(--fn-surface); }
+.fn-magitrickle-list-choice { display: grid; gap: 6px; margin: 12px 0; color: var(--fn-text-secondary); }
+.fn-magitrickle-list-choice select { width: 100%; max-width: 360px; }
 .fn-magitrickle-https { padding: 24px; }
 .fn-magitrickle-https p { max-width: 720px; color: var(--fn-text-muted); }
+@media (max-width: 640px) {
+	.fn-magitrickle-toolbar { align-items: stretch; padding: 16px; }
+	.fn-magitrickle-toolbar > div { width: 100%; }
+	.fn-magitrickle-actions .fn-settings-btn { flex: 1 1 150px; }
+	.fn-magitrickle-frame { min-height: 70vh; height: 70vh; }
+}
 .fn-mihomo-hero .fn-card-head,
 .fn-mihomo-card .fn-card-head { justify-content: space-between; }
 .fn-mihomo-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 16px; align-items: start; }
@@ -4914,6 +4979,17 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-mihomo-log { max-height: 260px; overflow: auto; margin: 14px 0 0; padding: 10px; border: 1px solid var(--fn-border); border-radius: var(--fn-radius); background: var(--fn-surface-alt); color: var(--fn-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; font-size: .78rem; line-height: 1.4; }
 @media (max-width: 800px) {
 	.fn-mihomo-layout { grid-template-columns: 1fr; }
+	.fn-mihomo-native-frame { min-height: 480px; height: 68vh; }
+	.fn-mihomo-converter-grid { grid-template-columns: 1fr; }
+	.fn-mihomo-converter-pane .fn-mihomo-input { min-height: 170px; }
+}
+@media (max-width: 520px) {
+	.fn-mihomo-converter-head { flex-direction: column; align-items: stretch; }
+	.fn-mihomo-converter-head h3 { width: 100%; }
+	.fn-mihomo-converter-targets { width: 100%; justify-content: stretch; }
+	.fn-mihomo-converter-head select { width: 100%; max-width: none; }
+	.fn-mihomo-converter-footer .fn-mihomo-actions { width: 100%; margin-left: 0; }
+	.fn-mihomo-converter-footer .fn-settings-btn { flex: 1 1 125px; }
 }
 .fn-zapret-card { overflow: hidden; }
 .fn-zapret-card .fn-card-head { min-height: 50px; }
@@ -4958,7 +5034,22 @@ input[type="checkbox"].fn-switch-input::after { content: none; }
 .fn-zapret-missing .fn-card-body { display: grid; gap: 10px; max-width: 720px; }
 .fn-zapret-missing p { margin: 0; color: var(--fn-text-secondary); }
 .fn-zapret-missing .fn-settings-btn { width: max-content; }
+.fn-zapret-home { display: grid; gap: 16px; }
+.fn-zapret-home .fn-zapret-title-row h2 { margin: 0 0 5px; }
+.fn-zapret-home .fn-zapret-title-row p { margin: 0; }
+.fn-zapret-home .fn-card-body { display: grid; gap: 16px; }
+.fn-zapret-home .fn-zapret-runtime-meta { margin: 0; padding: 0; border: 0; }
+.fn-zapret-home-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.fn-zapret-home-actions .fn-settings-btn { width: auto; }
+.fn-zapret-home-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fn-zapret-home-link { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; padding: 18px; color: var(--fn-text); text-decoration: none; }
+.fn-zapret-home-link strong { font-size: 1rem; }
+.fn-zapret-home-link span:nth-child(2) { grid-column: 1; color: var(--fn-text-secondary); font-size: .9rem; }
+.fn-zapret-home-link span:last-child { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--fn-accent); font-size: 1.3rem; }
+.fn-zapret-home-link:hover { border-color: var(--fn-accent); color: var(--fn-text); text-decoration: none; }
 @media (max-width: 700px) {
+	.fn-zapret-home-links { grid-template-columns: 1fr; }
+	.fn-zapret-home-actions .fn-settings-btn { flex: 1 1 125px; }
 	.fn-zapret-title-row { align-items: center; }
 	.fn-zapret-title-row .fn-pf-description { margin-bottom: 0; }
 	.fn-zapret-option { gap: 14px; padding: 13px 0; }
@@ -7334,6 +7425,21 @@ body[data-page="admin-services-zapret2"] #freenetic-zapret2-apply:hover {
 .fn-password-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
 .fn-password-actions .fn-settings-btn { width: auto; min-height: 38px; }
 
+.fn-upgrade-preference-card .fn-card-head .fn-icon { display: inline-flex; margin-right: 10px; }
+.fn-upgrade-preference-card .fn-card-body { padding: 18px 22px 20px; }
+.fn-upgrade-preference-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	min-width: 0;
+}
+.fn-upgrade-preference-row .fn-apps-info { min-width: 0; }
+.fn-upgrade-preference-row .fn-switch { flex: 0 0 auto; }
+.fn-upgrade-preference-status { min-height: 1.3em; margin: 8px 0 0; color: var(--fn-status-ok); font-size: .85rem; }
+.fn-upgrade-preference-status.fn-password-error { color: var(--fn-danger); }
+.fn-upgrade-preference-note { margin: 8px 0 0; }
+
 body[data-page="admin-status-logs-syslog"] #content_syslog,
 body[data-page="admin-status-logs-dmesg"] #content_syslog {
 	padding: 20px;
@@ -7407,6 +7513,8 @@ body[data-page="admin-status-logs-dmesg"] #content_syslog .btn {
 	.fn-password-status { grid-column: 1; }
 	.fn-password-actions { grid-column: 1; }
 	.fn-password-actions .fn-settings-btn { width: 100%; }
+	.fn-upgrade-preference-card .fn-card-body { padding: 16px; }
+	.fn-upgrade-preference-row { align-items: flex-start; }
 	body[data-page="admin-status-logs-syslog"] #content_syslog,
 	body[data-page="admin-status-logs-dmesg"] #content_syslog { padding: 14px; }
 	body[data-page="admin-status-logs-syslog"] #content_syslog textarea#syslog,

@@ -1,0 +1,5 @@
+/etc/config/freenetic
+/etc/freenetic
+/etc/openvpn/freenetic
+/etc/init.d/freenetic-ui-fallback
+/etc/rc.d/S15freenetic-ui-fallback

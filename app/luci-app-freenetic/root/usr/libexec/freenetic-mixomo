@@ -1,0 +1,296 @@
+#!/bin/sh
+# Connect MagiTrickle to the managed Mihomo SOCKS listener through a dedicated
+# hev-socks5-tunnel instance. Existing hev, network and firewall sections are
+# left alone; every section created here carries an ownership marker.
+
+set -u
+
+TUN_NAME=Mihomo
+TUN_CONFIG=/etc/hev-socks5-tunnel/freenetic-mihomo.yml
+TUN_MARKER=/etc/hev-socks5-tunnel/.freenetic-mihomo
+HEV_SECTION=freenetic_mihomo
+NETWORK_SECTION=freenetic_mihomo
+ZONE_SECTION=freenetic_mihomo
+FORWARD_SECTION=freenetic_lan_to_mihomo
+stage_dir=
+transaction=0
+
+json_escape() {
+	printf '%s' "$1" | tr '\r\n' '  ' | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+reply() {
+	code=$1
+	message=${2:-}
+	if [ "$code" -eq 0 ]; then
+		printf '{"code":0,"ok":true'
+	else
+		printf '{"code":1,"ok":false'
+	fi
+	[ -z "$message" ] || printf ',"stderr":"%s"' "$(json_escape "$message")"
+	printf ',"mihomo_installed":%s,"magitrickle_installed":%s,"bridge_configured":%s,"bridge_running":%s,"external_bridge":%s,"external_running":%s}\n' \
+		"$(mihomo_installed && printf true || printf false)" \
+		"$(magitrickle_installed && printf true || printf false)" \
+		"$(bridge_configured && printf true || printf false)" \
+		"$(bridge_running && printf true || printf false)" \
+		"$(external_bridge && printf true || printf false)" \
+		"$(external_running && printf true || printf false)"
+}
+
+cleanup() {
+	[ -z "$stage_dir" ] || rm -r "$stage_dir"
+	stage_dir=
+}
+
+rollback() {
+	[ "$transaction" -eq 1 ] || return 0
+	for config in network firewall hev-socks5-tunnel; do
+		uci -q revert "$config" >/dev/null 2>&1 || true
+		cp -p "$stage_dir/$config" "/etc/config/$config" 2>/dev/null || true
+	done
+	if [ -f "$stage_dir/tun.yml" ]; then
+		cp -p "$stage_dir/tun.yml" "$TUN_CONFIG" 2>/dev/null || true
+	else
+		rm -f "$TUN_CONFIG"
+	fi
+	if [ -f "$stage_dir/marker" ]; then
+		cp -p "$stage_dir/marker" "$TUN_MARKER" 2>/dev/null || true
+	else
+		rm -f "$TUN_MARKER"
+	fi
+	/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || true
+	/etc/init.d/network reload >/dev/null 2>&1 || true
+	/etc/init.d/firewall reload >/dev/null 2>&1 || true
+	transaction=0
+}
+
+fail() {
+	rollback
+	reply 1 "$1"
+	cleanup
+	exit 0
+}
+
+mihomo_installed() {
+	[ -x /usr/bin/mihomo ] && [ -x /etc/init.d/mihomo ]
+}
+
+magitrickle_installed() {
+	[ -x /etc/init.d/magitrickle ]
+}
+
+owned_section() {
+	[ "$(uci -q get "$1.freenetic_managed" 2>/dev/null || true)" = 1 ]
+}
+
+bridge_configured() {
+	[ -f "$TUN_MARKER" ] && [ -s "$TUN_CONFIG" ] && \
+		owned_section "hev-socks5-tunnel.$HEV_SECTION" && \
+		owned_section "network.$NETWORK_SECTION" && \
+		owned_section "firewall.$ZONE_SECTION" && \
+		owned_section "firewall.$FORWARD_SECTION"
+}
+
+bridge_running() {
+	bridge_configured && ip link show dev "$TUN_NAME" >/dev/null 2>&1
+}
+
+# The upstream Mixomo installer owns this layout. Recognize it for display,
+# but never adopt or remove its network and firewall configuration.
+external_bridge() {
+	[ -s /etc/hev-socks5-tunnel/main.yml ] && \
+		[ "$(uci -q get network.Mihomo.device 2>/dev/null || true)" = "$TUN_NAME" ] && \
+		[ "$(uci -q get 'hev-socks5-tunnel.@instance[0].conffile' 2>/dev/null || true)" = /etc/hev-socks5-tunnel/main.yml ]
+}
+
+external_running() {
+	external_bridge && ip link show dev "$TUN_NAME" >/dev/null 2>&1 && \
+		pidof hev-socks5-tunnel >/dev/null 2>&1
+}
+
+package_installed() {
+	if command -v apk >/dev/null 2>&1; then
+		apk info -e hev-socks5-tunnel >/dev/null 2>&1
+	else
+		opkg status hev-socks5-tunnel 2>/dev/null | grep -q '^Status: .* installed$'
+	fi
+}
+
+install_hev() {
+	package_installed && return 0
+	if command -v apk >/dev/null 2>&1; then
+		apk update >/dev/null 2>&1 || fail 'Cannot refresh the OpenWrt package index.'
+		apk add hev-socks5-tunnel >/dev/null 2>&1 || fail 'Cannot install hev-socks5-tunnel.'
+	elif command -v opkg >/dev/null 2>&1; then
+		opkg update >/dev/null 2>&1 || fail 'Cannot refresh the OpenWrt package index.'
+		opkg install hev-socks5-tunnel >/dev/null 2>&1 || fail 'Cannot install hev-socks5-tunnel.'
+	else
+		fail 'Neither apk nor opkg is available.'
+	fi
+	package_installed || fail 'hev-socks5-tunnel is still unavailable after installation.'
+}
+
+check_ownership() {
+	if [ -e "$TUN_CONFIG" ] && [ ! -f "$TUN_MARKER" ]; then
+		fail 'The Mihomo tunnel configuration is already owned by another service.'
+	fi
+	for section in \
+		"hev-socks5-tunnel.$HEV_SECTION" \
+		"network.$NETWORK_SECTION" \
+		"firewall.$ZONE_SECTION" \
+		"firewall.$FORWARD_SECTION"; do
+		if uci -q get "$section" >/dev/null 2>&1 && ! owned_section "$section"; then
+			fail "The existing $section section is not managed by Freenetic."
+		fi
+	done
+	if ! bridge_configured && ip link show dev "$TUN_NAME" >/dev/null 2>&1; then
+		fail 'A different service already owns the Mihomo tunnel device.'
+	fi
+	for config in network firewall hev-socks5-tunnel; do
+		[ -z "$(uci -q changes "$config" 2>/dev/null)" ] || \
+			fail "Save pending $config changes before connecting MagiTrickle."
+	done
+}
+
+any_owned_section() {
+	for section in \
+		"hev-socks5-tunnel.$HEV_SECTION" \
+		"network.$NETWORK_SECTION" \
+		"firewall.$ZONE_SECTION" \
+		"firewall.$FORWARD_SECTION"; do
+		owned_section "$section" && return 0
+	done
+	return 1
+}
+
+find_lan_zone() {
+	for section in $(uci -q show firewall | sed -n 's/^firewall\.\([^.=]*\)=zone$/\1/p'); do
+		name=$(uci -q get "firewall.$section.name" 2>/dev/null || true)
+		networks=$(uci -q get "firewall.$section.network" 2>/dev/null || true)
+		case " $networks " in
+			*' lan '*) printf '%s' "$name"; return 0 ;;
+		esac
+		[ "$name" != lan ] || { printf '%s' "$name"; return 0; }
+	done
+	return 1
+}
+
+begin_transaction() {
+	stage_dir=$(mktemp -d /tmp/freenetic-mixomo.XXXXXX 2>/dev/null || true)
+	[ -n "$stage_dir" ] || fail 'Cannot create a private configuration snapshot.'
+	chmod 0700 "$stage_dir" || fail 'Cannot protect the configuration snapshot.'
+	for config in network firewall hev-socks5-tunnel; do
+		cp -p "/etc/config/$config" "$stage_dir/$config" || fail "Cannot save $config before applying the tunnel."
+	done
+	[ ! -f "$TUN_CONFIG" ] || cp -p "$TUN_CONFIG" "$stage_dir/tun.yml" || fail 'Cannot save the tunnel configuration.'
+	[ ! -f "$TUN_MARKER" ] || cp -p "$TUN_MARKER" "$stage_dir/marker" || fail 'Cannot save the tunnel ownership marker.'
+	transaction=1
+}
+
+mixed_port() {
+	sed -n 's/^[[:space:]]*mixed-port:[[:space:]]*\([0-9][0-9]*\)[[:space:]]*\(#.*\)\{0,1\}$/\1/p' \
+		/etc/mihomo/config.yaml | head -n 1
+}
+
+connect_bridge() {
+	mihomo_installed || fail 'Install Mihomo before connecting MagiTrickle.'
+	magitrickle_installed || fail 'Install MagiTrickle before connecting it to Mihomo.'
+	! external_bridge || fail 'The Mihomo tunnel is managed by the upstream Mixomo installer.'
+	pidof mihomo >/dev/null 2>&1 || fail 'Start Mihomo with a working configuration first.'
+	port=$(mixed_port)
+	case "$port" in ''|*[!0-9]*) fail 'Mihomo must define a numeric mixed-port.' ;; esac
+	[ "$port" -ge 1 ] && [ "$port" -le 65535 ] || fail 'The Mihomo mixed-port is outside 1–65535.'
+	install_hev
+	check_ownership
+	lan_zone=$(find_lan_zone) || fail 'Cannot find the firewall zone for the home network.'
+	[ -n "$lan_zone" ] || fail 'The home network has no firewall zone.'
+	begin_transaction
+	mkdir -p /etc/hev-socks5-tunnel || fail 'Cannot prepare the tunnel directory.'
+	cat > "$stage_dir/tun.new" <<EOF
+tunnel:
+  name: $TUN_NAME
+  mtu: 8500
+  multi-queue: false
+  ipv4: 198.18.0.1
+socks5:
+  address: 127.0.0.1
+  port: $port
+  udp: 'udp'
+EOF
+	chmod 0600 "$stage_dir/tun.new" || fail 'Cannot protect the tunnel configuration.'
+	cp "$stage_dir/tun.new" "$TUN_CONFIG" || fail 'Cannot save the tunnel configuration.'
+	chmod 0600 "$TUN_CONFIG" || fail 'Cannot protect the tunnel configuration.'
+	: > "$TUN_MARKER" || fail 'Cannot record ownership of the Mihomo tunnel.'
+
+	uci -q set "hev-socks5-tunnel.$HEV_SECTION=instance" || fail 'Cannot configure the tunnel service.'
+	uci -q set "hev-socks5-tunnel.$HEV_SECTION.enabled=1" || fail 'Cannot enable the tunnel service.'
+	uci -q set "hev-socks5-tunnel.$HEV_SECTION.conffile=$TUN_CONFIG" || fail 'Cannot set the tunnel service file.'
+	uci -q set "hev-socks5-tunnel.$HEV_SECTION.freenetic_managed=1" || fail 'Cannot mark the tunnel service.'
+	uci -q set "network.$NETWORK_SECTION=interface" || fail 'Cannot create the tunnel interface.'
+	uci -q set "network.$NETWORK_SECTION.proto=none" || fail 'Cannot set the tunnel protocol.'
+	uci -q set "network.$NETWORK_SECTION.device=$TUN_NAME" || fail 'Cannot bind the tunnel device.'
+	uci -q set "network.$NETWORK_SECTION.freenetic_managed=1" || fail 'Cannot mark the tunnel interface.'
+	uci -q set "firewall.$ZONE_SECTION=zone" || fail 'Cannot create the tunnel firewall zone.'
+	uci -q set "firewall.$ZONE_SECTION.name=$ZONE_SECTION" || fail 'Cannot name the tunnel firewall zone.'
+	uci -q set "firewall.$ZONE_SECTION.network=$NETWORK_SECTION" || fail 'Cannot bind the tunnel firewall zone.'
+	uci -q set "firewall.$ZONE_SECTION.input=REJECT" || fail 'Cannot set tunnel input policy.'
+	uci -q set "firewall.$ZONE_SECTION.output=ACCEPT" || fail 'Cannot set tunnel output policy.'
+	uci -q set "firewall.$ZONE_SECTION.forward=REJECT" || fail 'Cannot set tunnel forwarding policy.'
+	uci -q set "firewall.$ZONE_SECTION.masq=1" || fail 'Cannot enable tunnel masquerading.'
+	uci -q set "firewall.$ZONE_SECTION.mtu_fix=1" || fail 'Cannot enable tunnel MTU adjustment.'
+	uci -q set "firewall.$ZONE_SECTION.freenetic_managed=1" || fail 'Cannot mark the tunnel firewall zone.'
+	uci -q set "firewall.$FORWARD_SECTION=forwarding" || fail 'Cannot create home-to-tunnel forwarding.'
+	uci -q set "firewall.$FORWARD_SECTION.src=$lan_zone" || fail 'Cannot set home-to-tunnel source.'
+	uci -q set "firewall.$FORWARD_SECTION.dest=$ZONE_SECTION" || fail 'Cannot set home-to-tunnel destination.'
+	uci -q set "firewall.$FORWARD_SECTION.freenetic_managed=1" || fail 'Cannot mark home-to-tunnel forwarding.'
+	for config in hev-socks5-tunnel network firewall; do
+		uci -q commit "$config" || fail "Cannot commit $config."
+	done
+	/etc/init.d/hev-socks5-tunnel enable >/dev/null 2>&1 || fail 'Cannot enable the tunnel service.'
+	/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || fail 'Cannot start the Mihomo tunnel.'
+	/etc/init.d/network reload >/dev/null 2>&1 || fail 'Cannot reload the tunnel interface.'
+	/etc/init.d/firewall reload >/dev/null 2>&1 || fail 'Cannot reload the tunnel firewall zone.'
+	sleep 1
+	bridge_running || fail 'The Mihomo tunnel device did not become ready.'
+	transaction=0
+	reply 0
+	cleanup
+}
+
+disconnect_bridge() {
+	! external_bridge || fail 'The Mihomo tunnel is managed by the upstream Mixomo installer.'
+	if ! bridge_configured; then
+		if any_owned_section || [ -f "$TUN_MARKER" ]; then
+			fail 'The managed Mihomo tunnel is incomplete; its state needs repair before removal.'
+		fi
+		reply 0
+		return 0
+	fi
+	check_ownership
+	begin_transaction
+	for section in \
+		"hev-socks5-tunnel.$HEV_SECTION" \
+		"network.$NETWORK_SECTION" \
+		"firewall.$ZONE_SECTION" \
+		"firewall.$FORWARD_SECTION"; do
+		uci -q delete "$section" || fail "Cannot remove $section."
+	done
+	for config in hev-socks5-tunnel network firewall; do
+		uci -q commit "$config" || fail "Cannot commit $config."
+	done
+	/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || fail 'Cannot stop the Mihomo tunnel.'
+	/etc/init.d/network reload >/dev/null 2>&1 || fail 'Cannot reload the network.'
+	/etc/init.d/firewall reload >/dev/null 2>&1 || fail 'Cannot reload the firewall.'
+	rm -f "$TUN_CONFIG" "$TUN_MARKER" || fail 'Cannot remove the tunnel configuration.'
+	transaction=0
+	reply 0
+	cleanup
+}
+
+[ "$#" -eq 1 ] || fail 'Usage: status|connect|disconnect'
+case "$1" in
+	status) reply 0 ;;
+	connect) connect_bridge ;;
+	disconnect) disconnect_bridge ;;
+	*) fail 'Usage: status|connect|disconnect' ;;
+esac

@@ -53,17 +53,17 @@ assert.match(apps, /requestedAppId\(\)[\s\S]*?searchParams\.get\('focus'\)/,
 assert.match(apps, /fn-apps-row-focused/,
 	'applications must visibly identify the requested package card');
 assert.match(apps, /id: 'nfqws2',[\s\S]*?packages: \[ 'zapret2', 'luci-app-zapret2' \]/,
-	'Applications must expose Zapret2 through the native LuCI package pair');
-assert.match(apps, /nativeConfigurePath: \[ 'admin', 'services', 'zapret2' \]/,
-	'Applications must configure native Zapret2 through its own LuCI route');
+	'Applications must retain the upstream Zapret2 runtime as an install option');
+assert.match(apps, /configurePath: \[ 'admin', 'network', 'zapret2' \]/,
+	'Applications must configure either Zapret2 runtime through the Freenetic entry page');
 assert.doesNotMatch(apps, /id: 'zapret',[\s\S]*?packages: \[ 'zapret' \]/,
 	'Applications must not present legacy Zapret as Zapret2');
 assert.match(multiwan, /applicationsUrl\('mwan3'\)/,
 	'the missing Multi-WAN package notice must target its catalog card');
 assert.match(zapret2, /applicationsUrl\(\)/,
 	'the missing Zapret2 package notice must target its catalog card');
-assert.match(zapret2, /admin\/services\/zapret2/,
-	'the Zapret2 entry point must open the installed native LuCI client');
+assert.match(zapret2, /zapret2\.v4r30\.rpc as api[\s\S]*fn-zapret-home-links/,
+	'the Zapret2 entry point must render the Freenetic status page before native editors');
 assert.match(zapret2Config, /api\.validate\(model\.candidate\(\)\)/,
 	'the Zapret2 settings page must validate the complete candidate before saving');
 assert.match(zapret2Config, /api\.service\('reload'\)/,
@@ -105,8 +105,10 @@ assert.match(ddns, /result\.code !== 0/,
 	'DDNS commands must reject non-zero exit codes');
 assert.match(wifiMonitor, /ubusCall\('iwinfo', 'scan'/,
 	'the Wi-Fi air map must use the router scan data');
-assert.match(wifiMonitor, /disabled: true[\s\S]*?_\('Apply'\)/,
-	'the preview must not allow channel changes');
+assert.match(wifiMonitor, /confirmRecommendedChannel\([\s\S]*?applyRecommendedChannel\(/,
+	'the Wi-Fi air map must apply its recommended channel after confirmation');
+assert.match(wifiMonitor, /uci\.set\('wireless', radio\.name, 'channel', channel\)[\s\S]*?applyChanges\(60\)/,
+	'recommended channel changes must be saved through rollback-protected UCI apply');
 assert.match(wifiMonitor, /class: 'fn-wifi-band-loading'/,
 	'band changes must hide stale Wi-Fi data behind a loading state');
 assert.match(wifiMonitor, /Promise\.all\(\[ update, animationFloor \]\)/,

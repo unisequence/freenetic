@@ -2,7 +2,6 @@
 # native ordered profile and in-profile step model and is intentionally
 # incompatible with every earlier wrapper schema.
 config zapret2 'main'
-	option freenetic_managed '1'
 	option schema_version '2'
 	option enabled '0'
 	option ipv4 '1'
@@ -11,7 +10,7 @@ config zapret2 'main'
 	list source_network 'lan'
 	option process_forwarded '1'
 	option process_local '0'
-	option intercept_mode 'marked'
+	option intercept_mode 'all'
 	# Retained only so upgrades from earlier releases preserve this conffile.
 	# The current control plane ignores this legacy option.
 	option all_traffic_ack '0'

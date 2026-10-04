@@ -87,14 +87,17 @@ target_asset() {
 		mediatek/filogic)
 			asset_name="mihomo-linux-arm64-v1.19.31.gz"
 			asset_hash="9e0f11afbf38426b8bd88fdc594678f8161c57eccb4e1b77acb12b493904f1d4"
+			min_remaining_kib=16384
 			;;
 		ramips/mt7621)
 			asset_name="mihomo-linux-mipsle-softfloat-v1.19.31.gz"
 			asset_hash="9061daa6a6b8cbb0491387e5de59663441b637eff0e3d295cec6949478752192"
+			min_remaining_kib=8192
 			;;
 		x86/64)
 			asset_name="mihomo-linux-amd64-compatible-v1.19.31.gz"
 			asset_hash="04cf9f09671704f839ddbee2e93069dc831a4123a75281e725d1d96ab9ac1afc"
+			min_remaining_kib=32768
 			;;
 		*)
 			printf '%s\n' "Unsupported OpenWrt target: ${target:-unknown}" >&2
@@ -172,12 +175,23 @@ install_runtime() {
 	gunzip -c "$archive" >"$stage_dir/mihomo" || fail "Cannot unpack Mihomo"
 	chmod 0755 "$stage_dir/mihomo" || fail "Cannot prepare Mihomo binary"
 	"$stage_dir/mihomo" -v >/dev/null 2>&1 || fail "Downloaded Mihomo binary is not runnable on this router"
+	binary_bytes=$(wc -c < "$stage_dir/mihomo" | tr -d '[:space:]')
+	free_kib=$(df -Pk /usr/bin 2>/dev/null | awk 'NR == 2 { print $4 }')
+	case "$binary_bytes:$free_kib" in
+		*[!0-9:]*|:*|*:) fail "Cannot determine free space for Mihomo" ;;
+	esac
+	required_kib=$(( (binary_bytes + 1023) / 1024 + min_remaining_kib ))
+	[ "$free_kib" -ge "$required_kib" ] ||
+		fail "Not enough storage for Mihomo: need ${required_kib} KiB free, have ${free_kib} KiB"
 
 	if [ -x "$MIHOMO_INIT" ]; then
 		"$MIHOMO_INIT" stop >/dev/null 2>&1 || true
 	fi
 	mkdir -p /usr/bin || fail "Cannot create /usr/bin"
-	mv "$stage_dir/mihomo" "$MIHOMO_BIN" || fail "Cannot install Mihomo binary"
+	if ! mv "$stage_dir/mihomo" "$MIHOMO_BIN"; then
+		rm -f "$MIHOMO_BIN"
+		fail "Cannot install Mihomo binary"
+	fi
 	if ! install_runtime_files; then
 		# Keep a pre-existing config-only setup intact when adding the runtime.
 		rm -f "$MIHOMO_BIN" "$MIHOMO_INIT"
@@ -193,9 +207,27 @@ install_runtime() {
 }
 
 remove_runtime() {
+	managed=$(uci -q get mihomo.main.freenetic_managed 2>/dev/null || true)
+	if [ "$managed" != 1 ]; then
+		if [ -e "$MIHOMO_BIN" ] || [ -e "$MIHOMO_INIT" ] || [ -e "$MIHOMO_CONFIG" ]; then
+			fail "Mihomo is not managed by Freenetic; its files were left unchanged."
+		fi
+		json_reply 1 "" "" 0
+		return
+	fi
+	if [ -x /usr/libexec/freenetic-mixomo ]; then
+		bridge_result=$(/usr/libexec/freenetic-mixomo disconnect 2>/dev/null || true)
+		case "$bridge_result" in
+			*'"ok":true'*) ;;
+			*) fail "Cannot remove the managed Mihomo tunnel before uninstalling Mihomo." ;;
+		esac
+	fi
 	[ -x "$MIHOMO_INIT" ] && "$MIHOMO_INIT" stop >/dev/null 2>&1 || true
-	rm -f "$MIHOMO_BIN" "$MIHOMO_INIT" "$MIHOMO_CONFIG"
-	# Keep /etc/mihomo so a reinstall does not silently destroy user state.
+	rm -f "$MIHOMO_BIN" "$MIHOMO_INIT" || fail "Cannot remove the Freenetic Mihomo runtime."
+	# This UCI file may have existed before Freenetic adopted the runtime.
+	# Preserve it, along with /etc/mihomo, and relinquish the ownership marker.
+	uci -q delete mihomo.main.freenetic_managed || fail "Cannot release the Mihomo configuration."
+	uci -q commit mihomo || fail "Cannot save the Mihomo configuration."
 	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
 	json_reply 1 "" "" 0
 }

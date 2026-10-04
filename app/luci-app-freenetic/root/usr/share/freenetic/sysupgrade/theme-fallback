@@ -1,0 +1,26 @@
+#!/bin/sh /etc/rc.common
+# Kept with the configuration archive even when the UI is not. It is a no-op
+# on normal boots, and selects Bootstrap if a new image lacks Freenetic assets.
+START=15
+
+start() {
+	if [ -f /www/luci-static/freenetic/cascade.css ] &&
+	   [ -f /usr/share/ucode/luci/template/themes/freenetic/header.ut ] &&
+	   [ -f /www/luci-static/resources/menu-freenetic.js ]; then
+		return 0
+	fi
+
+	changed=0
+	if [ "$(uci -q get luci.main.mediaurlbase 2>/dev/null)" = /luci-static/freenetic ]; then
+		uci set luci.main.mediaurlbase=/luci-static/bootstrap
+		changed=1
+	fi
+	if uci -q get luci.themes.Freenetic >/dev/null 2>&1; then
+		uci -q delete luci.themes.Freenetic
+		changed=1
+	fi
+	if [ "$changed" = 1 ]; then
+		uci commit luci
+		rm -f /tmp/luci-indexcache* 2>/dev/null || true
+	fi
+}

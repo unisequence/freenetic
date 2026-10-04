@@ -21,7 +21,8 @@ MAGITRICKLE_COMPAT_DIR=/etc/magitrickle
 MAGITRICKLE_NAT_COMPAT_MARKER="$MAGITRICKLE_COMPAT_DIR/.freenetic-kmod-ipt-nat-compat"
 MAGITRICKLE_STATE_DIR="$MAGITRICKLE_COMPAT_DIR/state"
 MAGITRICKLE_CONFIG_FILE="$MAGITRICKLE_STATE_DIR/config.yaml"
-MAGITRICKLE_IH_CONFIG_URL=https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml
+MAGITRICKLE_IH1_CONFIG_URL=https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/config.yaml
+MAGITRICKLE_IH2_CONFIG_URL=https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configOLD.yaml
 LUCI_MENU_FILE=/usr/share/luci/menu.d/freenetic-magitrickle.json
 OPKG_KEY_SHA256=6ef030b47cd07526f05bfc0599e8e9032ea6abf7cb233edb31f60ebc161f9ca4
 
@@ -139,8 +140,8 @@ service_running() {
 package_version() {
 	case "$package_manager" in
 		apk)
-			apk info -a "$PACKAGE" 2>/dev/null |
-				awk -F': ' '$1 == "version" { print $2; exit }'
+			apk list --installed "$PACKAGE" 2>/dev/null |
+				sed -n "s/^${PACKAGE}-\\([^[:space:]]*\\)[[:space:]].*/\\1/p" | head -n 1
 			;;
 		opkg)
 			opkg status "$PACKAGE" 2>/dev/null |
@@ -241,31 +242,54 @@ start_service() {
 }
 
 install_ih_list() {
+	case "$1" in
+		1) list_url="$MAGITRICKLE_IH1_CONFIG_URL" ;;
+		2) list_url="$MAGITRICKLE_IH2_CONFIG_URL" ;;
+		*) fail 'Unknown Internet Helper list variant.' ;;
+	esac
 	package_installed || fail 'MagiTrickle is not installed.'
 	stage_dir="$(mktemp -d /tmp/freenetic-magitrickle-list.XXXXXX 2>/dev/null || true)"
 	[ -n "$stage_dir" ] || fail 'Cannot create a private staging directory.'
 	chmod 0700 "$stage_dir" || fail 'Cannot protect the staging directory.'
 	list_tmp="$stage_dir/config.yaml"
-	if ! wget -qO "$list_tmp" "$MAGITRICKLE_IH_CONFIG_URL"; then
+	if ! wget -qO "$list_tmp" "$list_url"; then
 		use_direct_resolver || fail 'Cannot download the Internet Helper list.'
-		wget -qO "$list_tmp" "$MAGITRICKLE_IH_CONFIG_URL" || fail 'Cannot download the Internet Helper list.'
+		wget -qO "$list_tmp" "$list_url" || fail 'Cannot download the Internet Helper list.'
 	fi
 	[ -s "$list_tmp" ] || fail 'The Internet Helper list is empty.'
 	grep -q '^configVersion:' "$list_tmp" || fail 'The downloaded Internet Helper list is not a MagiTrickle configuration.'
 	grep -q '^app:' "$list_tmp" || fail 'The downloaded Internet Helper list is not a MagiTrickle configuration.'
 	mkdir -p "$MAGITRICKLE_STATE_DIR" || fail 'Cannot create the MagiTrickle state directory.'
-	if [ -s "$MAGITRICKLE_CONFIG_FILE" ] && [ ! -e "$MAGITRICKLE_CONFIG_FILE.freenetic-backup" ]; then
-		cp "$MAGITRICKLE_CONFIG_FILE" "$MAGITRICKLE_CONFIG_FILE.freenetic-backup" || fail 'Cannot back up the existing MagiTrickle configuration.'
+	previous_config="$stage_dir/previous.yaml"
+	had_previous=false
+	if [ -s "$MAGITRICKLE_CONFIG_FILE" ]; then
+		cp "$MAGITRICKLE_CONFIG_FILE" "$previous_config" || fail 'Cannot stage the existing MagiTrickle configuration.'
+		had_previous=true
+		if [ ! -e "$MAGITRICKLE_CONFIG_FILE.freenetic-backup" ]; then
+			cp "$previous_config" "$MAGITRICKLE_CONFIG_FILE.freenetic-backup" || fail 'Cannot back up the existing MagiTrickle configuration.'
+		fi
 	fi
 	cp "$list_tmp" "$MAGITRICKLE_CONFIG_FILE.new" || fail 'Cannot stage the Internet Helper list.'
 	chmod 0600 "$MAGITRICKLE_CONFIG_FILE.new" || fail 'Cannot protect the Internet Helper list.'
 	mv "$MAGITRICKLE_CONFIG_FILE.new" "$MAGITRICKLE_CONFIG_FILE" || fail 'Cannot install the Internet Helper list.'
 	if [ -x /etc/init.d/magitrickle ]; then
 		/etc/init.d/magitrickle enable >/dev/null 2>&1 || true
-		/etc/init.d/magitrickle reload >/dev/null 2>&1 || true
-		/etc/init.d/magitrickle restart >/dev/null 2>&1 || fail 'MagiTrickle could not be restarted with the Internet Helper list.'
+		list_running=false
+		if /etc/init.d/magitrickle restart >/dev/null 2>&1; then
+			sleep 2
+			service_running && list_running=true
+		fi
+		if [ "$list_running" = false ]; then
+			if [ "$had_previous" = true ]; then
+				cp "$previous_config" "$MAGITRICKLE_CONFIG_FILE" 2>/dev/null || true
+			else
+				rm -f "$MAGITRICKLE_CONFIG_FILE"
+			fi
+			/etc/init.d/magitrickle restart >/dev/null 2>&1 || true
+			fail 'MagiTrickle could not run with the Internet Helper list; the previous configuration was restored.'
+		fi
 	fi
-	json_reply 0 'Internet Helper list installed.' '' true "$(service_running && printf true || printf false)" '' "$MAGITRICKLE_IH_CONFIG_URL"
+	json_reply 0 "Internet Helper #$1 list installed." '' true "$(service_running && printf true || printf false)" '' "$list_url"
 }
 
 install_luci_menu() {
@@ -315,12 +339,45 @@ install_package() {
 }
 
 remove_package() {
+	if [ -x /usr/libexec/freenetic-mixomo ]; then
+		bridge_result=$(/usr/libexec/freenetic-mixomo disconnect 2>/dev/null || true)
+		case "$bridge_result" in
+			*'"ok":true'*) ;;
+			*) fail 'Cannot remove the managed Mihomo tunnel before uninstalling MagiTrickle.' ;;
+		esac
+	fi
 	if package_installed; then
 		[ ! -x /etc/init.d/magitrickle ] || /etc/init.d/magitrickle stop >/dev/null 2>&1 || true
+		# Both files are owned by the upstream package and apk removes them,
+		# even when the user has edited the domain and routing rules. Keep a
+		# persistent snapshot until the restore succeeds so an interrupted
+		# removal still leaves a recoverable copy on the overlay.
+		mkdir -p /etc/freenetic || fail 'Cannot prepare MagiTrickle configuration backup.'
+		backup_dir="$(mktemp -d /etc/freenetic/magitrickle-remove.XXXXXX 2>/dev/null || true)"
+		[ -n "$backup_dir" ] || fail 'Cannot create MagiTrickle configuration backup.'
+		had_uci=false
+		had_state=false
+		if [ -e /etc/config/magitrickle ]; then
+			cp -a /etc/config/magitrickle "$backup_dir/uci" || fail "Cannot back up /etc/config/magitrickle; backup directory: $backup_dir"
+			had_uci=true
+		fi
+		if [ -e "$MAGITRICKLE_CONFIG_FILE" ]; then
+			cp -a "$MAGITRICKLE_CONFIG_FILE" "$backup_dir/state" || fail "Cannot back up MagiTrickle rules; backup directory: $backup_dir"
+			had_state=true
+		fi
 		case "$package_manager" in
 			apk) apk del "$PACKAGE" >/dev/null 2>&1 || fail 'Cannot remove MagiTrickle.' ;;
 			opkg) opkg remove "$PACKAGE" >/dev/null 2>&1 || fail 'Cannot remove MagiTrickle.' ;;
 		esac
+		if [ "$had_uci" = true ]; then
+			cp -a "$backup_dir/uci" /etc/config/magitrickle || fail "MagiTrickle was removed but its UCI config could not be restored; backup directory: $backup_dir"
+		fi
+		if [ "$had_state" = true ]; then
+			mkdir -p "$MAGITRICKLE_STATE_DIR" || fail "MagiTrickle was removed but its rules directory could not be restored; backup directory: $backup_dir"
+			cp -a "$backup_dir/state" "$MAGITRICKLE_CONFIG_FILE" || fail "MagiTrickle was removed but its rules could not be restored; backup directory: $backup_dir"
+		fi
+		rm -f "$backup_dir/uci" "$backup_dir/state"
+		rmdir "$backup_dir" || fail "Cannot remove the temporary MagiTrickle backup: $backup_dir"
 	fi
 	# Keep /etc/magitrickle so a reinstall never destroys user routing rules.
 	case "$package_manager" in
@@ -345,10 +402,10 @@ status() {
 	json_reply 0 '' '' "$installed" "$running" "$(package_version)" "$repository_url"
 }
 
-[ "$#" -eq 1 ] || { detect_manager; detect_arch; fail 'Usage: status|install|remove|install-ih-list'; }
+[ "$#" -eq 1 ] || { detect_manager; detect_arch; fail 'Usage: status|install|remove|install-ih-list-1|install-ih-list-2'; }
 case "$1" in
-	status|install|remove|install-ih-list) ;;
-	*) detect_manager; detect_arch; fail 'Usage: status|install|remove|install-ih-list' ;;
+	status|install|remove|install-ih-list|install-ih-list-1|install-ih-list-2) ;;
+	*) detect_manager; detect_arch; fail 'Usage: status|install|remove|install-ih-list-1|install-ih-list-2' ;;
 esac
 
 detect_manager
@@ -358,6 +415,7 @@ case "$1" in
 	status) status ;;
 	install) install_package ;;
 	remove) remove_package ;;
-	install-ih-list) install_ih_list ;;
+	install-ih-list|install-ih-list-1) install_ih_list 1 ;;
+	install-ih-list-2) install_ih_list 2 ;;
 esac
 cleanup

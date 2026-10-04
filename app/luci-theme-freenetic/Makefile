@@ -41,6 +41,14 @@ define Package/luci-theme-freenetic/preinst
 $(FREENETIC_PACKAGE_PREINST)
 endef
 
+define Package/luci-theme-freenetic/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || {
+	[ ! -x /usr/libexec/freenetic-sysupgrade ] ||
+		/usr/libexec/freenetic-sysupgrade sync >/dev/null 2>&1 || true
+}
+endef
+
 define Package/luci-theme-freenetic/postrm
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {

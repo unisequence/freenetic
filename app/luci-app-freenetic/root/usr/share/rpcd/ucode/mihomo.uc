@@ -19,6 +19,8 @@ const HTTPS_DNS_INIT = '/etc/init.d/https-dns-proxy';
 const TUN_DEVICE = '/dev/net/tun';
 const HTTPS_DNS_PORT = 5053;
 const CONFIG_BACKUP = `${HOME}/.config.yaml.previous`;
+const EXTERNAL_CONFIG_BACKUP = `${HOME}/.config.yaml.freenetic-external.previous`;
+const EXTERNAL_CONFIG_TMP = `${HOME}/.config.yaml.freenetic-external.new`;
 const PROVIDER_BACKUP = `${PROVIDERS}/.freenetic.txt.previous`;
 const ubus = connect();
 
@@ -543,6 +545,61 @@ function apply_raw_config(request) {
 	return envelope({ applied: true, mode: 'manual', status: status_data() });
 }
 
+function apply_external_config(request) {
+	if (system(`[ -x ${BINARY} ] && [ -x ${INIT} ] && [ -s ${CONFIG} ]`) != 0)
+		return failure('not_installed', 'Mihomo не установлен.');
+	try {
+		if (cursor().get('mihomo', 'main', 'freenetic_managed') == '1')
+			return failure('wrong_owner', 'Эта конфигурация управляется Freenetic.');
+	}
+	catch (error) {}
+	const raw = request.args?.config;
+	const expected = request.args?.expected_config;
+	if (type(raw) != 'string' || !trim(raw) || length(raw) > MAX_INPUT ||
+		type(expected) != 'string' || !expected || length(expected) > MAX_INPUT)
+		return failure('invalid_config', 'Некорректная или слишком большая конфигурация Mihomo.');
+	const current = read_text(CONFIG, MAX_INPUT + 1);
+	if (!current || length(current) > MAX_INPUT)
+		return failure('read_failed', 'Не удалось прочитать текущую конфигурацию Mihomo.');
+	if (current != expected)
+		return failure('config_changed', 'Конфигурация Mihomo изменилась. Повторите предпросмотр.');
+	if (raw == current)
+		return envelope({ applied: false, unchanged: true, running: !!running() });
+	if (!write_file(EXTERNAL_CONFIG_TMP, raw, 0600))
+		return failure('write_failed', 'Не удалось подготовить конфигурацию Mihomo.');
+	const validation = run_capture(`${BINARY} -d ${HOME} -t -f ${EXTERNAL_CONFIG_TMP}`, 16384);
+	if (validation.rc != 0) {
+		unlink(EXTERNAL_CONFIG_TMP);
+		return failure('invalid_config', trim(validation.error || validation.output || 'Конфигурация Mihomo не прошла проверку.'));
+	}
+	if (system(`cp -a ${CONFIG} ${EXTERNAL_CONFIG_BACKUP}`) != 0) {
+		unlink(EXTERNAL_CONFIG_TMP);
+		return failure('write_failed', 'Не удалось сохранить предыдущую конфигурацию Mihomo.');
+	}
+	if (read_text(CONFIG, MAX_INPUT + 1) != expected) {
+		unlink(EXTERNAL_CONFIG_TMP);
+		unlink(EXTERNAL_CONFIG_BACKUP);
+		return failure('config_changed', 'Конфигурация Mihomo изменилась. Повторите предпросмотр.');
+	}
+	const was_running = !!running();
+	if (system(`mv ${EXTERNAL_CONFIG_TMP} ${CONFIG}`) != 0) {
+		unlink(EXTERNAL_CONFIG_TMP);
+		unlink(EXTERNAL_CONFIG_BACKUP);
+		return failure('write_failed', 'Не удалось заменить конфигурацию Mihomo.');
+	}
+	if (was_running) {
+		const action = run_capture(`${INIT} restart`, 8192);
+		if (action.rc != 0) {
+			if (system(`mv ${EXTERNAL_CONFIG_BACKUP} ${CONFIG}`) != 0)
+				return failure('rollback_failed', 'Mihomo не перезапустился, и не удалось восстановить предыдущую конфигурацию. Резервная копия сохранена.');
+			run_capture(`${INIT} restart`, 8192);
+			return failure('service_failed', trim(action.error || action.output || 'Не удалось перезапустить Mihomo.'));
+		}
+	}
+	unlink(EXTERNAL_CONFIG_BACKUP);
+	return envelope({ applied: true, running: !!running() });
+}
+
 function service_action(request) {
 	if (!installed()) return failure('not_installed', 'Mihomo не установлен.');
 	const action = request.args?.action;
@@ -567,6 +624,10 @@ const methods = {
 	} },
 	apply_raw: { args: { api_version: 0, config: '' }, call: function(request) {
 		try { const error = checked(request); return error || apply_raw_config(request); }
+		catch (error) { return failure('internal_error', error?.message || `${error}`); }
+	} },
+	apply_external: { args: { api_version: 0, config: '', expected_config: '' }, call: function(request) {
+		try { const error = checked(request); return error || apply_external_config(request); }
 		catch (error) { return failure('internal_error', error?.message || `${error}`); }
 	} },
 	service: { args: { api_version: 0, action: '' }, call: function(request) {

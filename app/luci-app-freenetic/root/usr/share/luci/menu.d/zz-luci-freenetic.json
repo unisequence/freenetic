@@ -139,8 +139,7 @@
 				"luci-app-freenetic"
 			],
 			"uci": {
-				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } },
-				"zapret2": { "main": { "freenetic_managed": "1" } }
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
 			}
 		}
 	},
@@ -154,9 +153,20 @@
 		"depends": {
 			"acl": [
 				"luci-app-freenetic"
+			]
+		}
+	},
+	"admin/services/mihomo/native": {
+		"action": {
+			"type": "view",
+			"path": "mihomo/config"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-mihomo"
 			],
-			"uci": {
-				"mihomo": { "main": { "freenetic_managed": "1" } }
+			"fs": {
+				"/www/luci-static/resources/view/mihomo/config.js": "file"
 			}
 		}
 	},
@@ -171,8 +181,11 @@
 			"acl": [
 				"luci-app-freenetic"
 			],
+			"fs": {
+				"/etc/init.d/zapret2": "executable"
+			},
 			"uci": {
-				"zapret2": { "main": { "freenetic_managed": "1" } }
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
 			}
 		}
 	},
@@ -187,8 +200,11 @@
 			"acl": [
 				"luci-app-freenetic"
 			],
+			"fs": {
+				"/etc/init.d/zapret2": "executable"
+			},
 			"uci": {
-				"zapret2": { "main": { "freenetic_managed": "1" } }
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
 			}
 		}
 	},
@@ -203,8 +219,11 @@
 			"acl": [
 				"luci-app-freenetic"
 			],
+			"fs": {
+				"/etc/init.d/zapret2": "executable"
+			},
 			"uci": {
-				"zapret2": { "main": { "freenetic_managed": "1" } }
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
 			}
 		}
 	},
@@ -219,8 +238,11 @@
 			"acl": [
 				"luci-app-freenetic"
 			],
+			"fs": {
+				"/etc/init.d/zapret2": "executable"
+			},
 			"uci": {
-				"zapret2": { "main": { "freenetic_managed": "1" } }
+				"luci": { "main": { "mediaurlbase": "/luci-static/freenetic" } }
 			}
 		}
 	},

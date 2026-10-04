@@ -1,0 +1,5 @@
+#!/bin/sh
+# Package postinst does not run against the live root during image creation.
+# Prepare the Freenetic sysupgrade preference on first boot as well.
+[ ! -x /usr/libexec/freenetic-sysupgrade ] ||
+	/usr/libexec/freenetic-sysupgrade sync >/dev/null 2>&1
