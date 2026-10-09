@@ -6,6 +6,11 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.4.2] — 2026-10-09
+
+This release fixes service cleanup and routing behavior in the 0.4.x
+integrations and expands `fnc` diagnostics and recovery.
+
 - Add read-only `fnc show wan`, `show multiwan`, `show dns` and
   `show applications [package]` commands backed by netifd, UCI and the
   existing Freenetic status helpers.
@@ -14,12 +19,6 @@ which they became user-visible.
   revert after 90 seconds, including when the CLI connection drops. Reject
   a second change or reboot while one is pending, and refuse Wi-Fi interface
   `up/down` because restoring the network option alone does not reattach STA.
-
-## [0.4.2] — 2026-10-09
-
-This maintenance release fixes service cleanup and routing behavior in the
-0.4.x integrations.
-
 - Make Applications distinguish exact package names, allow installs when
   repository lists are initially empty, refresh installed state after package
   changes, and reject overlapping package operations. Correct the USB printer
