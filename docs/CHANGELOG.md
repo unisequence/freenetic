@@ -11,6 +11,10 @@ which they became user-visible.
 This maintenance release fixes service cleanup and routing behavior in the
 0.4.x integrations.
 
+- Make Applications distinguish exact package names, allow installs when
+  repository lists are initially empty, refresh installed state after package
+  changes, and reject overlapping package operations. Correct the USB printer
+  server package name to `p910nd`.
 - Restore Zapret2's previous running state if package removal fails.
 - Preserve the shared HEV tunnel service state through Mixomo disconnects and
   rollbacks, and serialize Mixomo changes with other Freenetic network actions.

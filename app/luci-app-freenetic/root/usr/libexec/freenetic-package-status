@@ -74,8 +74,10 @@ for package in "$@"; do
 
 	available_flag=false
 	if [ "$manager" = 'apk' ]; then
-		# `apk search -e name` prints name-version for every matching variant.
-		printf '%s\n' "$available" | grep -Fq -- "$package-" && available_flag=true
+		# `apk search -e name` prints name-version. Match from the start:
+		# luci-app-nut must not make the separate nut package look available.
+		printf '%s\n' "$available" |
+			awk -v prefix="$package-" 'index($0, prefix) == 1 { found = 1 } END { exit !found }' && available_flag=true
 	else
 		printf '%s\n' "$available" | awk -v p="$package" '$1 == p { found = 1 } END { exit !found }' && available_flag=true
 	fi

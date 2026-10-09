@@ -1218,16 +1218,18 @@ msgstr "В текущем каталоге нет доступных прило�
 msgid "Not installed"
 msgstr "Не установлено"
 
-#, javascript-format
-msgid "Required package(s) are unavailable for this firmware: %s."
-msgstr "Необходимые пакеты недоступны для этой прошивки: %s."
+msgid "Not in package lists"
+msgstr "Нет в списках пакетов"
 
 msgid "Install"
 msgstr "Установить"
 
+msgid "Another application change is already running."
+msgstr "Уже выполняется изменение другого приложения."
+
 #, javascript-format
-msgid "%s Required package(s) are unavailable for this firmware: %s."
-msgstr "%s Необходимые пакеты недоступны для этой прошивки: %s."
+msgid "%s Missing from the current package lists: %s. Installation will refresh the lists first."
+msgstr "%s В текущих списках не найдены пакеты: %s. Перед установкой списки будут обновлены."
 
 msgid "Advanced"
 msgstr "Дополнительно"

@@ -151,7 +151,7 @@ const GROUPS = [
 		tier: 'recommended',
 		items: [
 			{ id: 'usb_printer', name: _('USB printer server'),
-				packages: [ 'kmod-usb-printer', 'p910d', 'luci-app-p910nd' ],
+				packages: [ 'kmod-usb-printer', 'p910nd', 'luci-app-p910nd' ],
 				desc: _('Share a USB printer with devices on the local network.') },
 			{ id: 'usb_ups', name: _('USB UPS monitoring'),
 				packages: [ 'nut', 'luci-app-nut' ],
@@ -256,7 +256,7 @@ function serviceUrl(port) {
 }
 
 function getPackageStatus() {
-	return fs.exec_direct('/usr/libexec/freenetic-package-status', APP_PACKAGE_NAMES, 'json')
+	return Promise.resolve().then(() => fs.exec_direct('/usr/libexec/freenetic-package-status', APP_PACKAGE_NAMES, 'json'))
 		.then(result => result && result.ok !== false && result.packages && typeof result.packages === 'object'
 			? result.packages : null)
 		.catch(() => null);
@@ -341,10 +341,7 @@ return view.extend({
 
 	refreshPackageStatus() {
 		return getPackageStatus().then(status => {
-			if (status) {
-				this.packageStatus = status;
-				this.packageAvailabilityKnown = true;
-			}
+			this.applyPackageStatus(status);
 			return getMihomoStatus().then(external => {
 				this.externalStatus = { mihomo: external };
 				if (this.packageOperationInProgress)
@@ -353,6 +350,19 @@ return view.extend({
 					this.renderCatalog();
 			});
 		}).catch(() => null);
+	},
+
+	applyPackageStatus(status) {
+		if (!status)
+			return false;
+		this.packageStatus = status;
+		this.packageAvailabilityKnown = true;
+		this.installedNames = {};
+		Object.entries(status).forEach(([ name, state ]) => {
+			if (state && state.installed)
+				this.installedNames[name] = true;
+		});
+		return true;
 	},
 
 	ensurePackageIndexes() {
@@ -574,22 +584,20 @@ return view.extend({
 		const unavailable = unavailablePackages.length > 0;
 
 		const statusPill = E('span', { class: 'fn-status-pill ' + (installed ? 'fn-status-ok' : existing || configOnly ? 'fn-status-warn' : unavailable ? 'fn-status-unavailable' : 'fn-status-off') },
-			installed ? _('Installed') : existing ? _('Installed outside Freenetic') : configOnly ? _('Configuration found') : unavailable ? _('Unavailable') : _('Not installed'));
+			installed ? _('Installed') : existing ? _('Installed outside Freenetic') : configOnly ? _('Configuration found') : unavailable ? _('Not in package lists') : _('Not installed'));
 
 		const buttonAttrs = {
 			type: 'button',
 			class: 'fn-settings-btn' + (installed ? ' fn-settings-btn-danger' : ' fn-settings-btn-primary')
 		};
-		if (unavailable || existing) {
+		if (existing) {
 			buttonAttrs.disabled = true;
-			buttonAttrs.title = existing
-				? _('Mihomo is already installed outside Freenetic. Use the existing LuCI interface or remove it first.')
-				: _('Required package(s) are unavailable for this firmware: %s.').format(unavailablePackages.join(', '));
+			buttonAttrs.title = _('Mihomo is already installed outside Freenetic. Use the existing LuCI interface or remove it first.');
 		}
 		const btn = E('button', buttonAttrs,
-			installed ? _('Remove') : existing ? _('Managed elsewhere') : unavailable ? _('Unavailable') : _('Install'));
+			installed ? _('Remove') : existing ? _('Managed elsewhere') : _('Install'));
 		const description = unavailable
-			? _('%s Required package(s) are unavailable for this firmware: %s.').format(item.desc, unavailablePackages.join(', '))
+			? _('%s Missing from the current package lists: %s. Installation will refresh the lists first.').format(item.desc, unavailablePackages.join(', '))
 			: configOnly
 				? _('%s An existing Mihomo configuration will be preserved when the core is installed.').format(item.desc)
 			: item.desc;
@@ -631,7 +639,7 @@ return view.extend({
 		if (focused)
 			this.focusedAppRow = row;
 
-		if (!unavailable && !existing) {
+		if (!existing) {
 			btn.addEventListener('click', () => {
 				if (!installed && item.id === 'mwan3')
 					this.confirmMwanInstall(item, btn, statusPill, row);
@@ -754,6 +762,10 @@ return view.extend({
 	},
 
 	confirmMwanInstall(item, btn, statusPill, row) {
+		if (this.packageOperationInProgress) {
+			notify(_('Another application change is already running.'), 'warning');
+			return;
+		}
 		ui.showModal(_('Install Multi-WAN?'), [
 			E('p', {}, _('Multi-WAN adds routing rules and restarts the LuCI session while it is being installed.')),
 			E('p', {}, _('After installation you will be signed out once. Sign in again to continue.')),
@@ -773,12 +785,16 @@ return view.extend({
 	},
 
 	toggleItem(item, wasInstalled, btn, statusPill, row) {
+		if (this.packageOperationInProgress) {
+			notify(_('Another application change is already running.'), 'warning');
+			return Promise.resolve();
+		}
 		const action = wasInstalled ? 'remove' : 'install';
-	const offerMagiTrickle = this.shouldOfferMagiTrickle(item, wasInstalled);
-	const installSet = wasInstalled ? null : this.itemInstallPackageSet(item);
-	const activeSet = wasInstalled ? this.itemInstalledPackageSet(item) : installSet;
-	const useInstallHelper = !!item.installHelper &&
-		(item.customStatus || this.itemUsesInstallHelper(item, activeSet));
+		const offerMagiTrickle = this.shouldOfferMagiTrickle(item, wasInstalled);
+		const installSet = wasInstalled ? null : this.itemInstallPackageSet(item);
+		const activeSet = wasInstalled ? this.itemInstalledPackageSet(item) : installSet;
+		const useInstallHelper = !!item.installHelper &&
+			(item.customStatus || this.itemUsesInstallHelper(item, activeSet));
 		const operationPackages = item.customStatus ? [] : (wasInstalled ? this.removablePackages(item) : installSet.slice());
 		this.packageOperationInProgress++;
 		btn.disabled = true;
@@ -814,12 +830,6 @@ return view.extend({
 				return;
 			}
 
-			operationPackages.forEach(p => {
-				if (wasInstalled)
-					delete this.installedNames[p];
-				else
-					this.installedNames[p] = true;
-			});
 			const refreshExternal = item.customStatus
 				? getMihomoStatus().then(status => {
 					this.externalStatus[item.customStatus] = status;
@@ -829,7 +839,15 @@ return view.extend({
 				? restartNetifd().then(() => ({ ok: true })).catch(error => ({ ok: false, error: error }))
 				: Promise.resolve({ ok: true });
 
-			return Promise.all([ refreshExternal, restart ]).then(results => {
+			return Promise.all([ refreshExternal, restart, getPackageStatus() ]).then(results => {
+				if (!this.applyPackageStatus(results[2])) {
+					operationPackages.forEach(p => {
+						if (wasInstalled)
+							delete this.installedNames[p];
+						else
+							this.installedNames[p] = true;
+					});
+				}
 				const networkResult = results[1];
 				const nowInstalled = this.itemInstalled(item);
 				if (wasInstalled && nowInstalled)
@@ -872,6 +890,8 @@ return view.extend({
 			btn.disabled = false;
 			dom_content(btn, wasInstalled ? _('Remove') : _('Install'));
 		}).then(() => {
+			if (!wasInstalled)
+				this.packageIndexRefresh = null;
 			this.packageOperationInProgress = Math.max(0, this.packageOperationInProgress - 1);
 			if (!this.packageOperationInProgress && this.packageStatusRefreshPending) {
 				this.packageStatusRefreshPending = false;
