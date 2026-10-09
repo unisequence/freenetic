@@ -236,6 +236,9 @@ int fnc_repl(struct ubus_context *ctx)
 		}
 
 		if (cur_if[0] && strcmp(argv[0], "show") != 0 &&
+		    strcmp(argv[0], "pending") != 0 &&
+		    strcmp(argv[0], "confirm") != 0 &&
+		    strcmp(argv[0], "rollback") != 0 &&
 		    strcmp(argv[0], "help") != 0 &&
 		    strcmp(argv[0], "ping") != 0 &&
 		    strcmp(argv[0], "traceroute") != 0 &&

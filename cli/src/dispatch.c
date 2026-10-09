@@ -11,6 +11,7 @@
 #include "cmd_show.h"
 #include "cmd_system.h"
 #include "dispatch.h"
+#include "safe_apply.h"
 
 static int dispatch_show(struct ubus_context *ctx, int argc, char **argv)
 {
@@ -146,6 +147,12 @@ int fnc_dispatch(struct ubus_context *ctx, int argc, char **argv)
 
 	if (strcmp(argv[0], "show") == 0)
 		return dispatch_show(ctx, argc, argv);
+	if (argc == 1 && strcmp(argv[0], "pending") == 0)
+		return fnc_safe_pending(ctx) ? 1 : 0;
+	if (argc == 1 && strcmp(argv[0], "confirm") == 0)
+		return fnc_safe_confirm(ctx) ? 1 : 0;
+	if (argc == 1 && strcmp(argv[0], "rollback") == 0)
+		return fnc_safe_rollback(ctx) ? 1 : 0;
 	if (strcmp(argv[0], "interface") == 0)
 		return dispatch_interface(ctx, argc, argv);
 	if (strcmp(argv[0], "system") == 0)

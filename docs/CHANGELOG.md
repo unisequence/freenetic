@@ -9,6 +9,11 @@ which they became user-visible.
 - Add read-only `fnc show wan`, `show multiwan`, `show dns` and
   `show applications [package]` commands backed by netifd, UCI and the
   existing Freenetic status helpers.
+- Apply `fnc` interface and route changes through OpenWrt's timed UCI
+  rollback. Add `fnc pending`, `confirm` and `rollback`; unconfirmed changes
+  revert after 90 seconds, including when the CLI connection drops. Reject
+  a second change or reboot while one is pending, and refuse Wi-Fi interface
+  `up/down` because restoring the network option alone does not reattach STA.
 
 ## [0.4.2] — 2026-10-09
 

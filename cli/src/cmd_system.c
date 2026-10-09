@@ -2,10 +2,15 @@
 #include <unistd.h>
 
 #include "cmd_system.h"
+#include "safe_apply.h"
 #include "ubus_util.h"
 
 int fnc_system_reboot(struct ubus_context *ctx)
 {
+	if (fnc_safe_has_pending(ctx)) {
+		fprintf(stderr, "fnc: подтвердите или отмените изменение сети перед перезагрузкой\n");
+		return -1;
+	}
 	printf("Перезагрузка...\n");
 	fflush(stdout);
 	return fnc_ubus_call(ctx, "system", "reboot", NULL, NULL, NULL);

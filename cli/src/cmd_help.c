@@ -14,6 +14,7 @@ struct help_entry {
 static const struct help_entry help_table[] = {
 	{ "general", "help [section]", "список команд (весь или по разделу)" },
 	{ "general", "--version", "версия сборки fnc" },
+	{ "general", "pending / confirm / rollback", "изменение сети: статус / сохранить / отменить" },
 	{ "general", "exit / quit", "выйти из контекста или из оболочки" },
 	{ "show", "show version", "модель, версия прошивки, ревизия" },
 	{ "show", "show system", "аптайм, load average, память" },
@@ -29,7 +30,7 @@ static const struct help_entry help_table[] = {
 	{ "interface", "interface <name>", "войти в контекст интерфейса" },
 	{ "interface", "  ip address A.B.C.D/N", "задать статический IP-адрес" },
 	{ "interface", "  ip dhcp client", "перевести интерфейс на DHCP" },
-	{ "interface", "  up / down", "включить / выключить интерфейс" },
+	{ "interface", "  up / down", "включить / выключить проводной интерфейс" },
 	{ "interface", "  exit", "выйти из контекста интерфейса" },
 	{ "system", "system reboot", "перезагрузить устройство" },
 	{ "system", "system configuration save", "форсировать sync (uci и так применяет сразу)" },

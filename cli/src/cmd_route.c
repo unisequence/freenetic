@@ -7,8 +7,7 @@
 
 #include "cmd_route.h"
 #include "exec_util.h"
-#include "ubus_util.h"
-#include "uci_util.h"
+#include "safe_apply.h"
 
 enum {
 	IF_NAME,
@@ -182,27 +181,13 @@ int fnc_ip_route_add(struct ubus_context *ctx, const char *target_cidr,
 		return -1;
 	}
 
-	if (fnc_uci_add_route(target_cidr, gateway, metric, ifname) != 0)
-		return -1;
-
-	printf("маршрут %s via %s сохранён, применяю (network reload)...\n",
-	       target_cidr, gateway);
-	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
+	return fnc_safe_apply(ctx, FNC_CHANGE_ROUTE_ADD, target_cidr,
+			      gateway, metric, ifname);
 }
 
 int fnc_ip_route_del(struct ubus_context *ctx, const char *target_cidr,
 		      const char *gateway)
 {
-	int ret = fnc_uci_del_route(target_cidr, gateway);
-
-	if (ret < 0)
-		return -1;
-	if (ret == 1) {
-		fprintf(stderr, "fnc: маршрут %s via %s не найден\n", target_cidr, gateway);
-		return -1;
-	}
-
-	printf("маршрут %s via %s удалён, применяю (network reload)...\n",
-	       target_cidr, gateway);
-	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
+	return fnc_safe_apply(ctx, FNC_CHANGE_ROUTE_DEL, target_cidr,
+			      gateway, NULL, NULL);
 }

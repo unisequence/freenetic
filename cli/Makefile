@@ -39,7 +39,7 @@ CFLAGS  = -Wall -Wextra -O2 -std=gnu11 --sysroot=$(SYSROOT) -DFNC_BUILD_ID=\"$(F
 LDFLAGS = --sysroot=$(SYSROOT) -L$(SYSROOT)/usr/lib
 LIBS    = -lubus -lubox -lblobmsg_json -ljson-c -luci
 
-SRCS = src/main.c src/ubus_util.c src/uci_util.c src/exec_util.c src/cmd_show.c src/cmd_freenetic.c src/cmd_config.c src/cmd_help.c src/cmd_diag.c src/cmd_system.c src/cmd_route.c src/dispatch.c src/repl.c
+SRCS = src/main.c src/ubus_util.c src/uci_util.c src/exec_util.c src/cmd_show.c src/cmd_freenetic.c src/safe_apply.c src/cmd_config.c src/cmd_help.c src/cmd_diag.c src/cmd_system.c src/cmd_route.c src/dispatch.c src/repl.c
 OBJS = $(SRCS:.c=.o)
 BIN  = fnc
 

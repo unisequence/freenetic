@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "cmd_config.h"
-#include "ubus_util.h"
+#include "safe_apply.h"
 #include "uci_util.h"
 
 int fnc_interface_exists(const char *name)
@@ -52,37 +52,20 @@ int fnc_set_ip_address(struct ubus_context *ctx, const char *ifname,
 		fprintf(stderr, "fnc: неверный формат адреса, ожидается A.B.C.D/N\n");
 		return -1;
 	}
-	if (fnc_uci_set_interface_address(ifname, cidr) != 0)
-		return -1;
-
-	printf("ipaddr %s сохранён, применяю (network reload)...\n", cidr);
-	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
+	return fnc_safe_apply(ctx, FNC_CHANGE_ADDRESS, ifname, cidr, NULL, NULL);
 }
 
 int fnc_set_dhcp_client(struct ubus_context *ctx, const char *ifname)
 {
-	if (fnc_uci_set_interface_dhcp(ifname) != 0)
-		return -1;
-
-	printf("proto dhcp сохранён, применяю (network reload)...\n");
-	return fnc_ubus_call(ctx, "network", "reload", NULL, NULL, NULL);
-}
-
-static int interface_updown(struct ubus_context *ctx, const char *ifname,
-			     const char *method)
-{
-	char path[96];
-
-	snprintf(path, sizeof(path), "network.interface.%s", ifname);
-	return fnc_ubus_call(ctx, path, method, NULL, NULL, NULL);
+	return fnc_safe_apply(ctx, FNC_CHANGE_DHCP, ifname, NULL, NULL, NULL);
 }
 
 int fnc_interface_up(struct ubus_context *ctx, const char *ifname)
 {
-	return interface_updown(ctx, ifname, "up");
+	return fnc_safe_apply(ctx, FNC_CHANGE_UP, ifname, NULL, NULL, NULL);
 }
 
 int fnc_interface_down(struct ubus_context *ctx, const char *ifname)
 {
-	return interface_updown(ctx, ifname, "down");
+	return fnc_safe_apply(ctx, FNC_CHANGE_DOWN, ifname, NULL, NULL, NULL);
 }
