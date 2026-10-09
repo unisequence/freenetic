@@ -31,6 +31,11 @@ try {
 		/freenetic-zapret2_1\.0\.5\.2-2_aarch64_cortex-a53\.ipk$/,
 		'target-specific IPKs must be found beside noarch package output'
 	);
+	fs.writeFileSync(path.join(primaryRoot, 'luci-app-freenetic-1.apk'), 'first');
+	fs.writeFileSync(path.join(primaryRoot, 'luci-app-freenetic-2.apk'), 'second');
+	assert.throws(() => checker.findArchive(primaryRoot, 'luci-app-freenetic', 'apk'),
+		/Expected exactly one APK for luci-app-freenetic, found 2: luci-app-freenetic-1\.apk, luci-app-freenetic-2\.apk/,
+		'multiple build artifacts must produce a useful error');
 }
 finally {
 	fs.rmSync(packageRoots, { recursive: true, force: true });

@@ -222,6 +222,11 @@ remove_runtime() {
 			*) fail "Cannot remove the managed Mihomo tunnel before uninstalling Mihomo." ;;
 		esac
 	fi
+	if [ "$(uci -q get mihomo.main.freenetic_dns_proxy_managed 2>/dev/null || true)" = 1 ]; then
+		dns_result=$(ubus call mihomo detach_dns '{"api_version":1}' 2>/dev/null || true)
+		[ "$(printf '%s\n' "$dns_result" | jsonfilter -e '@.ok' 2>/dev/null || true)" = true ] ||
+			fail "Cannot restore https-dns-proxy before removing Mihomo."
+	fi
 	[ -x "$MIHOMO_INIT" ] && "$MIHOMO_INIT" stop >/dev/null 2>&1 || true
 	rm -f "$MIHOMO_BIN" "$MIHOMO_INIT" || fail "Cannot remove the Freenetic Mihomo runtime."
 	# This UCI file may have existed before Freenetic adopted the runtime.

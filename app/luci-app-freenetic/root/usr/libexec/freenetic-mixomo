@@ -14,6 +14,26 @@ ZONE_SECTION=freenetic_mihomo
 FORWARD_SECTION=freenetic_lan_to_mihomo
 stage_dir=
 transaction=0
+lock_dir=
+lock_owned=0
+
+service_enabled() { /etc/init.d/hev-socks5-tunnel enabled >/dev/null 2>&1; }
+service_running() { /etc/init.d/hev-socks5-tunnel status >/dev/null 2>&1; }
+
+restore_service_state() {
+	target_enabled=$1
+	target_running=$2
+	if [ "$target_enabled" = 1 ]; then
+		/etc/init.d/hev-socks5-tunnel enable >/dev/null 2>&1 || return 1
+	else
+		/etc/init.d/hev-socks5-tunnel disable >/dev/null 2>&1 || return 1
+	fi
+	if [ "$target_running" = 1 ]; then
+		/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || return 1
+	else
+		/etc/init.d/hev-socks5-tunnel stop >/dev/null 2>&1 || return 1
+	fi
+}
 
 json_escape() {
 	printf '%s' "$1" | tr '\r\n' '  ' | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -40,6 +60,8 @@ reply() {
 cleanup() {
 	[ -z "$stage_dir" ] || rm -r "$stage_dir"
 	stage_dir=
+	[ "$lock_owned" -ne 1 ] || rmdir "$lock_dir" >/dev/null 2>&1 || true
+	lock_owned=0
 }
 
 rollback() {
@@ -58,11 +80,14 @@ rollback() {
 	else
 		rm -f "$TUN_MARKER"
 	fi
-	/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || true
+	restore_service_state "$snapshot_enabled" "$snapshot_running" || true
 	/etc/init.d/network reload >/dev/null 2>&1 || true
 	/etc/init.d/firewall reload >/dev/null 2>&1 || true
 	transaction=0
 }
+
+trap 'rollback; cleanup; exit 1' INT TERM
+trap cleanup EXIT
 
 fail() {
 	rollback
@@ -163,6 +188,15 @@ any_owned_section() {
 	return 1
 }
 
+other_enabled_instance() {
+	for instance in $(uci -q show hev-socks5-tunnel 2>/dev/null |
+		sed -n 's/^hev-socks5-tunnel\.\([A-Za-z0-9_]*\)=instance$/\1/p'); do
+		[ "$instance" != "$HEV_SECTION" ] || continue
+		[ "$(uci -q get "hev-socks5-tunnel.$instance.enabled" 2>/dev/null || printf 1)" = 0 ] || return 0
+	done
+	return 1
+}
+
 find_lan_zone() {
 	for section in $(uci -q show firewall | sed -n 's/^firewall\.\([^.=]*\)=zone$/\1/p'); do
 		name=$(uci -q get "firewall.$section.name" 2>/dev/null || true)
@@ -176,6 +210,11 @@ find_lan_zone() {
 }
 
 begin_transaction() {
+	ensure_network_lock
+	for config in network firewall hev-socks5-tunnel; do
+		[ -z "$(uci -q changes "$config" 2>/dev/null)" ] ||
+			fail "Save pending $config changes before connecting MagiTrickle."
+	done
 	stage_dir=$(mktemp -d /tmp/freenetic-mixomo.XXXXXX 2>/dev/null || true)
 	[ -n "$stage_dir" ] || fail 'Cannot create a private configuration snapshot.'
 	chmod 0700 "$stage_dir" || fail 'Cannot protect the configuration snapshot.'
@@ -184,7 +223,18 @@ begin_transaction() {
 	done
 	[ ! -f "$TUN_CONFIG" ] || cp -p "$TUN_CONFIG" "$stage_dir/tun.yml" || fail 'Cannot save the tunnel configuration.'
 	[ ! -f "$TUN_MARKER" ] || cp -p "$TUN_MARKER" "$stage_dir/marker" || fail 'Cannot save the tunnel ownership marker.'
+	snapshot_enabled=0
+	snapshot_running=0
+	service_enabled && snapshot_enabled=1
+	service_running && snapshot_running=1
 	transaction=1
+}
+
+ensure_network_lock() {
+	[ "$lock_owned" -ne 1 ] || return 0
+	lock_dir=/tmp/freenetic-mwan-mutation.lock
+	mkdir "$lock_dir" 2>/dev/null || fail 'Another network operation is already running.'
+	lock_owned=1
 }
 
 mixed_port() {
@@ -200,11 +250,21 @@ connect_bridge() {
 	port=$(mixed_port)
 	case "$port" in ''|*[!0-9]*) fail 'Mihomo must define a numeric mixed-port.' ;; esac
 	[ "$port" -ge 1 ] && [ "$port" -le 65535 ] || fail 'The Mihomo mixed-port is outside 1–65535.'
+	ensure_network_lock
 	install_hev
 	check_ownership
 	lan_zone=$(find_lan_zone) || fail 'Cannot find the firewall zone for the home network.'
 	[ -n "$lan_zone" ] || fail 'The home network has no firewall zone.'
 	begin_transaction
+	check_ownership
+	marker_enabled=$snapshot_enabled
+	marker_running=$snapshot_running
+	if [ -s "$stage_dir/marker" ]; then
+		original_enabled=$(sed -n 's/^enabled=\([01]\)$/\1/p' "$stage_dir/marker" | head -n 1)
+		original_running=$(sed -n 's/^running=\([01]\)$/\1/p' "$stage_dir/marker" | head -n 1)
+		[ -z "$original_enabled" ] || marker_enabled=$original_enabled
+		[ -z "$original_running" ] || marker_running=$original_running
+	fi
 	mkdir -p /etc/hev-socks5-tunnel || fail 'Cannot prepare the tunnel directory.'
 	cat > "$stage_dir/tun.new" <<EOF
 tunnel:
@@ -220,7 +280,8 @@ EOF
 	chmod 0600 "$stage_dir/tun.new" || fail 'Cannot protect the tunnel configuration.'
 	cp "$stage_dir/tun.new" "$TUN_CONFIG" || fail 'Cannot save the tunnel configuration.'
 	chmod 0600 "$TUN_CONFIG" || fail 'Cannot protect the tunnel configuration.'
-	: > "$TUN_MARKER" || fail 'Cannot record ownership of the Mihomo tunnel.'
+	printf 'enabled=%s\nrunning=%s\n' "$marker_enabled" "$marker_running" > "$TUN_MARKER" ||
+		fail 'Cannot record ownership of the Mihomo tunnel.'
 
 	uci -q set "hev-socks5-tunnel.$HEV_SECTION=instance" || fail 'Cannot configure the tunnel service.'
 	uci -q set "hev-socks5-tunnel.$HEV_SECTION.enabled=1" || fail 'Cannot enable the tunnel service.'
@@ -268,6 +329,21 @@ disconnect_bridge() {
 	fi
 	check_ownership
 	begin_transaction
+	check_ownership
+	# Empty markers from older releases have no saved service state.
+	prior_enabled=$snapshot_enabled
+	prior_running=$snapshot_running
+	if [ -s "$TUN_MARKER" ]; then
+		marker_enabled=$(sed -n 's/^enabled=\([01]\)$/\1/p' "$TUN_MARKER" | head -n 1)
+		marker_running=$(sed -n 's/^running=\([01]\)$/\1/p' "$TUN_MARKER" | head -n 1)
+		[ -z "$marker_enabled" ] || prior_enabled=$marker_enabled
+		[ -z "$marker_running" ] || prior_running=$marker_running
+	fi
+	# A foreign instance added after connect now owns the shared service too.
+	if other_enabled_instance; then
+		prior_enabled=$snapshot_enabled
+		prior_running=$snapshot_running
+	fi
 	for section in \
 		"hev-socks5-tunnel.$HEV_SECTION" \
 		"network.$NETWORK_SECTION" \
@@ -278,7 +354,7 @@ disconnect_bridge() {
 	for config in hev-socks5-tunnel network firewall; do
 		uci -q commit "$config" || fail "Cannot commit $config."
 	done
-	/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || fail 'Cannot stop the Mihomo tunnel.'
+	restore_service_state "$prior_enabled" "$prior_running" || fail 'Cannot restore the tunnel service state.'
 	/etc/init.d/network reload >/dev/null 2>&1 || fail 'Cannot reload the network.'
 	/etc/init.d/firewall reload >/dev/null 2>&1 || fail 'Cannot reload the firewall.'
 	rm -f "$TUN_CONFIG" "$TUN_MARKER" || fail 'Cannot remove the tunnel configuration.'

@@ -456,6 +456,8 @@ return baseclass.extend({ mixin: {
 			return _('MTU must be between 576 and 8940.');
 		if (fields.fwmark && !/^0x[0-9a-f]{1,8}$/i.test(fields.fwmark))
 			return _('Firewall mark must be hexadecimal, for example 0x1000.');
+		if (fields.fwmark && (parseInt(fields.fwmark, 16) & 0x60000000) !== 0)
+			return _('Firewall mark overlaps bits reserved by Freenetic traffic services.');
 		if (fields.dns.some(item => !validAddress(item.split('/')[0])))
 			return _('DNS servers must be valid IP addresses.');
 		if (fields.protocol === AWG_PROTO) {

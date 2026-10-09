@@ -1024,7 +1024,7 @@ return view.extend({
 		 * package/service was removed. Port assignment does not need to
 		 * restart a disabled policy-routing service in that state. Keep the
 		 * strict helper result for genuinely enabled PBR configurations. */
-		if (!this.pbrConfig || this.pbrConfig.enabled === '0')
+		if (!this.pbrConfig || uci.get('pbr', sectionName(this.pbrConfig), 'enabled') === '0')
 			return Promise.resolve(null);
 		return fs.exec_direct(PBR_RESTART_HELPER, [], 'json').then(result => {
 			if (!result || result.ok !== true || result.installed === false)

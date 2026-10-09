@@ -106,6 +106,10 @@ assert.match(ucode, /web_ui, false/);
 assert.match(ucode, /secure_dns: false/);
 assert.match(ucode, /dns_policy: ''/);
 assert.match(ucode, /https-dns-proxy/);
+assert.match(ucode, /direct-nameserver:[\s\S]*1\.1\.1\.1/,
+	'generated secure DNS must bootstrap direct connections outside its DoH listener');
+assert.match(ucode, /function https_dns_health\(\)/,
+	'Mihomo must verify the DoH listener before reporting secure DNS success');
 assert.match(ucode, /auto-redirect: true/);
 assert.match(ucode, /dns-hijack/);
 assert.match(ucode, /support-x25519mlkem768/,
@@ -229,7 +233,7 @@ assert.deepEqual(menuEntries['admin/services/mihomo/native'].depends.acl,
 	[ 'luci-app-mihomo' ]);
 assert.deepEqual(acl.read.ubus.mihomo, [ 'status', 'config', 'logs' ]);
 assert.deepEqual(acl.read.file['/etc/mihomo/config.yaml'], [ 'read' ]);
-assert.deepEqual(acl.write.ubus.mihomo, [ 'apply', 'apply_raw', 'apply_external', 'service' ]);
+assert.deepEqual(acl.write.ubus.mihomo, [ 'apply', 'apply_raw', 'apply_external', 'service', 'detach_dns' ]);
 assert.ok(acl.read.file['/usr/libexec/freenetic-mihomo-package status']);
 assert.ok(acl.write.file['/usr/libexec/freenetic-mihomo-package install']);
 assert.ok(acl.write.file['/usr/libexec/freenetic-mihomo-package remove']);

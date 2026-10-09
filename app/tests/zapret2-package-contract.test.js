@@ -29,7 +29,7 @@ const acl = JSON.parse(fs.readFileSync(path.join(root,
 
 assert.match(makefile, /PKG_VERSION:=1\.0\.5\.2/,
 	'Zapret2 package must pin an upstream version');
-assert.match(makefile, /PKG_RELEASE:=4/,
+assert.match(makefile, /PKG_RELEASE:=5/,
 	'Zapret2 package release must change when its default configuration changes');
 const defaultConfig = fs.readFileSync(path.join(root,
 	'app/freenetic-zapret2/files/etc/config/zapret2'), 'utf8');

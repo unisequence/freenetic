@@ -20,20 +20,53 @@ fi
 snapshot_dir=""
 mutation_started=0
 removal_committed=0
+runtime_changed=0
+lock_dir=/tmp/freenetic-mwan-mutation.lock
+lock_owned=0
+TUN_CONFIG=/etc/hev-socks5-tunnel/freenetic-mihomo.yml
+TUN_MARKER=/etc/hev-socks5-tunnel/.freenetic-mihomo
+
+reload_changed_services() {
+	/etc/init.d/network reload >/dev/null 2>&1 || return 1
+	/etc/init.d/firewall reload >/dev/null 2>&1 || return 1
+	for service in mwan3 pbr ipsec; do
+		[ -x "/etc/init.d/$service" ] || continue
+		"/etc/init.d/$service" status >/dev/null 2>&1 || continue
+		"/etc/init.d/$service" reload >/dev/null 2>&1 || return 1
+	done
+	return 0
+}
 
 cleanup() {
 	if [ "$mutation_started" = 1 ] && [ "$removal_committed" != 1 ] && [ -n "$snapshot_dir" ]; then
-		for config in luci network wireless dhcp firewall ddns pbr ipsec; do
+		for config in luci network wireless dhcp firewall ddns pbr ipsec mwan3 hev-socks5-tunnel; do
 			uci -q revert "$config" >/dev/null 2>&1 || true
 			rm -f "/etc/config/$config"
 			[ ! -e "$snapshot_dir/$config" ] || cp -a "$snapshot_dir/$config" "/etc/config/$config" 2>/dev/null || true
 			uci -q revert "$config" >/dev/null 2>&1 || true
 		done
+		if [ "$runtime_changed" = 1 ]; then
+			if [ -f "$snapshot_dir/tun.yml" ]; then
+				cp -a "$snapshot_dir/tun.yml" "$TUN_CONFIG" 2>/dev/null || true
+			fi
+			if [ -f "$snapshot_dir/marker" ]; then
+				cp -a "$snapshot_dir/marker" "$TUN_MARKER" 2>/dev/null || true
+			fi
+			reload_changed_services || true
+			if [ -x /etc/init.d/hev-socks5-tunnel ]; then
+				[ "$hev_was_enabled" != 1 ] || /etc/init.d/hev-socks5-tunnel enable >/dev/null 2>&1 || true
+				[ "$hev_was_enabled" = 1 ] || /etc/init.d/hev-socks5-tunnel disable >/dev/null 2>&1 || true
+				[ "$hev_was_running" != 1 ] || /etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || true
+				[ "$hev_was_running" = 1 ] || /etc/init.d/hev-socks5-tunnel stop >/dev/null 2>&1 || true
+			fi
+		fi
 	fi
 	[ -z "$snapshot_dir" ] || rm -rf "$snapshot_dir"
+	[ "$lock_owned" != 1 ] || rmdir "$lock_dir" >/dev/null 2>&1 || true
 }
 
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 1' INT TERM
 
 reply_error() {
 	json_init
@@ -52,14 +85,30 @@ esac
 
 [ "$(id -u)" = 0 ] || reply_error "Uninstalling Freenetic requires root privileges"
 command -v uci >/dev/null 2>&1 || reply_error "UCI is unavailable"
+mkdir "$lock_dir" 2>/dev/null || reply_error "Another network operation is already running"
+lock_owned=1
+for config in luci network wireless dhcp firewall ddns pbr ipsec mwan3 hev-socks5-tunnel; do
+	[ -z "$(uci -q changes "$config" 2>/dev/null || true)" ] ||
+		reply_error "Save pending $config changes before uninstalling Freenetic"
+done
 
 snapshot_dir="$(mktemp -d /tmp/freenetic-uninstall.XXXXXX 2>/dev/null)" ||
 	reply_error "Cannot create a secure uninstall snapshot"
 chmod 0700 "$snapshot_dir" || reply_error "Cannot protect the uninstall snapshot"
-for config in luci network wireless dhcp firewall ddns pbr ipsec; do
+for config in luci network wireless dhcp firewall ddns pbr ipsec mwan3 hev-socks5-tunnel; do
 	[ ! -e "/etc/config/$config" ] || cp -a "/etc/config/$config" "$snapshot_dir/$config" ||
 		reply_error "Cannot snapshot the router configuration"
 done
+[ ! -f "$TUN_CONFIG" ] || cp -a "$TUN_CONFIG" "$snapshot_dir/tun.yml" ||
+	reply_error "Cannot snapshot the managed tunnel configuration"
+[ ! -f "$TUN_MARKER" ] || cp -a "$TUN_MARKER" "$snapshot_dir/marker" ||
+	reply_error "Cannot snapshot the managed tunnel marker"
+hev_was_enabled=0
+hev_was_running=0
+if [ -x /etc/init.d/hev-socks5-tunnel ]; then
+	/etc/init.d/hev-socks5-tunnel enabled >/dev/null 2>&1 && hev_was_enabled=1
+	/etc/init.d/hev-socks5-tunnel status >/dev/null 2>&1 && hev_was_running=1
+fi
 
 # LuCI would otherwise retain a media URL owned by the package being removed.
 # Prefer Bootstrap, then any installed non-Freenetic theme. Refuse removal if
@@ -118,7 +167,9 @@ purge_config() {
 }
 
 if [ "$mode" = purge-managed ]; then
-	for config in network wireless dhcp firewall ddns pbr ipsec; do
+	purged_hev=0
+	uci -q show hev-socks5-tunnel 2>/dev/null | grep -q "\.freenetic_managed='1'" && purged_hev=1
+	for config in network wireless dhcp firewall ddns pbr ipsec mwan3 hev-socks5-tunnel; do
 		purge_config "$config" || reply_error "Cannot remove Freenetic-managed $config sections"
 	done
 
@@ -127,11 +178,41 @@ if [ "$mode" = purge-managed ]; then
 	# them, so never delete or disable the section during an uninstall.
 	clear_shared_markers ddns ddns
 	clear_shared_markers pbr pbr
-	for config in network wireless dhcp firewall ddns pbr ipsec; do
+	for config in network wireless dhcp firewall ddns pbr ipsec mwan3 hev-socks5-tunnel; do
 		[ ! -e "/etc/config/$config" ] ||
 			uci -q commit "$config" >/dev/null 2>&1 ||
 			reply_error "Cannot save cleaned $config configuration"
 	done
+	runtime_changed=1
+	reload_changed_services || reply_error "Cannot reload the cleaned network configuration"
+	if [ "$purged_hev" = 1 ] && [ -x /etc/init.d/hev-socks5-tunnel ]; then
+		remaining_instances=
+		for instance in $(uci -q show hev-socks5-tunnel 2>/dev/null |
+			sed -n 's/^hev-socks5-tunnel\.\([A-Za-z0-9_]*\)=instance$/\1/p'); do
+			[ "$(uci -q get "hev-socks5-tunnel.$instance.enabled" 2>/dev/null || printf 1)" = 0 ] ||
+				remaining_instances=1
+		done
+		# The marker records the service state before Freenetic connected its
+		# bridge. A remaining foreign instance keeps the current shared state.
+		hev_target_enabled=$hev_was_enabled
+		hev_target_running=$hev_was_running
+		if [ -z "$remaining_instances" ] && [ -f "$snapshot_dir/marker" ]; then
+			marker_enabled=$(sed -n 's/^enabled=\([01]\)$/\1/p' "$snapshot_dir/marker" | head -n 1)
+			marker_running=$(sed -n 's/^running=\([01]\)$/\1/p' "$snapshot_dir/marker" | head -n 1)
+			[ -z "$marker_enabled" ] || hev_target_enabled=$marker_enabled
+			[ -z "$marker_running" ] || hev_target_running=$marker_running
+		fi
+		if [ "$hev_target_enabled" = 1 ]; then
+			/etc/init.d/hev-socks5-tunnel enable >/dev/null 2>&1 || reply_error "Cannot enable the tunnel service"
+		else
+			/etc/init.d/hev-socks5-tunnel disable >/dev/null 2>&1 || reply_error "Cannot disable the tunnel service"
+		fi
+		if [ "$hev_target_running" = 1 ]; then
+			/etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1 || reply_error "Cannot reload the tunnel service"
+		else
+			/etc/init.d/hev-socks5-tunnel stop >/dev/null 2>&1 || reply_error "Cannot stop the tunnel service"
+		fi
+	fi
 fi
 
 packages=""
@@ -165,6 +246,9 @@ if [ -n "$packages" ]; then
 	fi
 fi
 removal_committed=1
+if [ "$mode" = purge-managed ] && [ -f "$snapshot_dir/marker" ]; then
+	rm -f "$TUN_CONFIG" "$TUN_MARKER"
+fi
 
 # fnc is release payload rather than an OpenWrt package file. The state file
 # is removed in both modes because it describes the installed Freenetic

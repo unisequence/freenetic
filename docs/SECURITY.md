@@ -3,16 +3,12 @@
 ## Supported versions
 
 Security fixes are developed on the active release branch and are published
-only after the complete verification matrix passes. The stable `0.2.x` line
-and the `0.3.x` alpha line use the same package boundaries, while their
-OpenWrt release targets use different package formats:
-
-- `v0.2.x-Stable.25.12.x` — OpenWrt 25.12.x / APK;
-- `v0.2.x-Legacy.24.10.x` — OpenWrt 24.10.x / IPK and `opkg`.
-
-The current stable patch release is the version shown in the repository
-release list. Older releases may be useful for reproducing a problem, but
-should be upgraded before deployment.
+only after the complete verification matrix passes. The current stable source
+release is `v0.4.1`; its release matrix covers OpenWrt 24.10.8 (IPK/`opkg`)
+and 25.12.5 (APK/`apk`) on Filogic, MT7621 and x86/64. Consult the release
+assets and `COMPATIBILITY.md` for the tested scope of each device. Older
+releases may be useful for reproducing a problem, but should be upgraded
+before deployment.
 
 Alpha releases are intended for test routers with a recovery path. They do
 not become production-supported merely because their build matrix is green.

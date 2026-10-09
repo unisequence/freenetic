@@ -147,42 +147,68 @@ function block_error(blocks) {
 }
 
 function https_dns_stage(enabled, port) {
-	if (!path_exists(HTTPS_DNS_CONFIG) || !executable(HTTPS_DNS_INIT))
-		return { changed: false };
+	const proxy_available = path_exists(HTTPS_DNS_CONFIG) && executable(HTTPS_DNS_INIT);
+	if (enabled && !proxy_available)
+		return failure('dependency_missing', 'Служба https-dns-proxy недоступна.');
+	let stage = null;
 	try {
 		const config = cursor();
-		const current_proxy = config.get('https-dns-proxy', 'config', 'proxy_server') || '';
-		const current_listen = config.get('https-dns-proxy', 'config', 'listen_addr') || '';
+		const current_proxy = proxy_available ? (config.get('https-dns-proxy', 'config', 'proxy_server') || '') : '';
+		const current_listen = proxy_available ? (config.get('https-dns-proxy', 'config', 'listen_addr') || '') : '';
 		const managed = config.get('mihomo', 'main', 'freenetic_dns_proxy_managed') == '1';
+		const stored_applied = config.get('mihomo', 'main', 'freenetic_dns_proxy_applied') || '';
+		const stored_previous_proxy = config.get('mihomo', 'main', 'freenetic_dns_proxy_previous') || '';
+		const stored_previous_listen = config.get('mihomo', 'main', 'freenetic_dns_listen_previous') || '';
 		const previous_proxy = managed ? (config.get('mihomo', 'main', 'freenetic_dns_proxy_previous') || '') : current_proxy;
 		const previous_listen = managed ? (config.get('mihomo', 'main', 'freenetic_dns_listen_previous') || '') : current_listen;
+		let expected_proxy = stored_applied;
+		if (managed && !expected_proxy) {
+			/* Releases before the applied-value marker can prove ownership from
+			 * the backed-up Mihomo config's previous mixed port. */
+			const old_config = enabled && path_exists(CONFIG_BACKUP) ?
+				read_text(CONFIG_BACKUP, 32768) : read_text(CONFIG, 32768);
+			const old_port = int(config_value(old_config, 'mixed-port', '0'));
+			if (old_port >= 1 && old_port <= 65535)
+				expected_proxy = `http://127.0.0.1:${old_port}`;
+		}
+		const owns_current = managed && !!expected_proxy &&
+			current_proxy == expected_proxy && current_listen == '127.0.0.1';
+		if (enabled && managed && !owns_current)
+			return failure('config_changed', 'Настройки https-dns-proxy изменились вне Freenetic. Проверьте их перед повторным применением.');
+		if (!enabled && !managed)
+			return { changed: false };
+		stage = {
+			changed: true, proxy: current_proxy, listen: current_listen,
+			managed: managed, stored_applied: stored_applied,
+			stored_proxy: stored_previous_proxy, stored_listen: stored_previous_listen,
+			proxy_changed: enabled || owns_current
+		};
 		if (enabled) {
-			config.set('https-dns-proxy', 'config', 'proxy_server', `http://127.0.0.1:${port}`);
+			const applied_proxy = `http://127.0.0.1:${port}`;
+			config.set('https-dns-proxy', 'config', 'proxy_server', applied_proxy);
 			config.set('https-dns-proxy', 'config', 'listen_addr', '127.0.0.1');
 			config.set('mihomo', 'main', 'freenetic_dns_proxy_managed', '1');
+			config.set('mihomo', 'main', 'freenetic_dns_proxy_applied', applied_proxy);
 			config.set('mihomo', 'main', 'freenetic_dns_proxy_previous', previous_proxy);
 			config.set('mihomo', 'main', 'freenetic_dns_listen_previous', previous_listen);
 		}
 		else if (managed) {
-			config.set('https-dns-proxy', 'config', 'proxy_server', previous_proxy);
-			config.set('https-dns-proxy', 'config', 'listen_addr', previous_listen);
+			/* Leave operator edits alone, even when an older release did not
+			 * record enough information to prove the proxy is still ours. */
+			if (owns_current) {
+				config.set('https-dns-proxy', 'config', 'proxy_server', previous_proxy);
+				config.set('https-dns-proxy', 'config', 'listen_addr', previous_listen);
+			}
 			config.set('mihomo', 'main', 'freenetic_dns_proxy_managed', '0');
+			config.set('mihomo', 'main', 'freenetic_dns_proxy_applied', '');
 		}
-		else {
-			return { changed: false };
-		}
-		config.commit('https-dns-proxy');
+		if (stage.proxy_changed)
+			config.commit('https-dns-proxy');
 		config.commit('mihomo');
-		return {
-			changed: true,
-			proxy: current_proxy,
-			listen: current_listen,
-			managed: managed,
-			stored_proxy: config.get('mihomo', 'main', 'freenetic_dns_proxy_previous') || '',
-			stored_listen: config.get('mihomo', 'main', 'freenetic_dns_listen_previous') || ''
-		};
+		return stage;
 	}
 	catch (error) {
+		https_dns_rollback(stage);
 		return failure('write_failed', error?.message || 'Не удалось настроить https-dns-proxy.');
 	}
 }
@@ -192,12 +218,16 @@ function https_dns_rollback(stage) {
 		return;
 	try {
 		const config = cursor();
-		config.set('https-dns-proxy', 'config', 'proxy_server', stage.proxy || '');
-		config.set('https-dns-proxy', 'config', 'listen_addr', stage.listen || '');
+		if (stage.proxy_changed) {
+			config.set('https-dns-proxy', 'config', 'proxy_server', stage.proxy || '');
+			config.set('https-dns-proxy', 'config', 'listen_addr', stage.listen || '');
+		}
 		config.set('mihomo', 'main', 'freenetic_dns_proxy_managed', stage.managed ? '1' : '0');
+		config.set('mihomo', 'main', 'freenetic_dns_proxy_applied', stage.stored_applied || '');
 		config.set('mihomo', 'main', 'freenetic_dns_proxy_previous', stage.stored_proxy || '');
 		config.set('mihomo', 'main', 'freenetic_dns_listen_previous', stage.stored_listen || '');
-		config.commit('https-dns-proxy');
+		if (stage.proxy_changed)
+			config.commit('https-dns-proxy');
 		config.commit('mihomo');
 	}
 	catch (error) {}
@@ -207,6 +237,12 @@ function https_dns_restart() {
 	if (!path_exists(HTTPS_DNS_CONFIG) || !executable(HTTPS_DNS_INIT))
 		return { rc: 0 };
 	return run_capture(`${HTTPS_DNS_INIT} restart`, 8192);
+}
+
+function https_dns_health() {
+	/* Query the DoH listener itself: dnsmasq may have another working upstream
+	 * while Mihomo and this proxy form a DNS resolution loop. */
+	return run_capture(`nslookup -type=a example.com 127.0.0.1:${HTTPS_DNS_PORT}`, 8192);
 }
 
 function subscription_values(text) {
@@ -306,6 +342,12 @@ function blocks_text(blocks) {
 		text += '    - "localhost"\n';
 		text += '  nameserver:\n';
 		text += blocks.secure_dns ? '    - 127.0.0.1:5053\n' : '    - 127.0.0.1:53\n';
+		if (blocks.secure_dns) {
+			/* DoH reaches its upstream through Mihomo. Resolve that direct
+			 * connection independently of the DoH listener to avoid a loop. */
+			text += '  direct-nameserver:\n';
+			text += '    - 1.1.1.1\n';
+		}
 		text += '  proxy-server-nameserver:\n';
 		text += '    - 1.1.1.1\n';
 		if (blocks.dns_policy == 'split') {
@@ -390,6 +432,16 @@ function cleanup_stage() {
 	unlink(PROVIDER_BACKUP);
 }
 
+function restore_mihomo_enabled(value) {
+	if (value == null) return;
+	try {
+		const config = cursor();
+		config.set('mihomo', 'main', 'enabled', value);
+		config.commit('mihomo');
+	}
+	catch (error) {}
+}
+
 function rollback_stage(previous) {
 	if (previous && previous.config)
 		system(`mv ${CONFIG_BACKUP} ${CONFIG}`);
@@ -399,6 +451,8 @@ function rollback_stage(previous) {
 		system(`mv ${PROVIDER_BACKUP} ${LOCAL_PROVIDER}`);
 	else
 		unlink(LOCAL_PROVIDER);
+	if (previous && previous.enabled_changed)
+		restore_mihomo_enabled(previous.enabled_before);
 	cleanup_stage();
 }
 
@@ -407,7 +461,8 @@ function stage_and_replace(values, mode, port, allow_lan, web_ui, blocks) {
 		return failure('storage_unavailable', 'Не удалось подготовить каталог Mihomo.');
 	const previous = {
 		config: system(`[ -f ${CONFIG} ]`) == 0,
-		provider: system(`[ -f ${LOCAL_PROVIDER} ]`) == 0
+		provider: system(`[ -f ${LOCAL_PROVIDER} ]`) == 0,
+		enabled_changed: false
 	};
 	cleanup_stage();
 	if (previous.config && system(`cp -a ${CONFIG} ${CONFIG_BACKUP}`) != 0)
@@ -442,7 +497,9 @@ function stage_and_replace(values, mode, port, allow_lan, web_ui, blocks) {
 	if (mode == 'subscriptions') unlink(LOCAL_PROVIDER);
 	try {
 		const config = cursor();
+		previous.enabled_before = config.get('mihomo', 'main', 'enabled') || '0';
 		config.set('mihomo', 'main', 'enabled', '1');
+		previous.enabled_changed = true;
 		config.commit('mihomo');
 	}
 	catch (error) {
@@ -454,7 +511,8 @@ function stage_and_replace(values, mode, port, allow_lan, web_ui, blocks) {
 		rollback_stage(previous);
 		return dns_stage;
 	}
-	return { config: previous.config, provider: previous.provider, dns: dns_stage };
+	return { config: previous.config, provider: previous.provider, dns: dns_stage,
+		enabled_before: previous.enabled_before, enabled_changed: previous.enabled_changed };
 }
 
 function apply_config(request) {
@@ -476,25 +534,30 @@ function apply_config(request) {
 	if (action.rc != 0) {
 		https_dns_rollback(stage && stage.dns);
 		rollback_stage(stage);
+		run_capture(`${INIT} restart`, 8192);
 		return failure('service_failed', trim(action.error || action.output || 'Не удалось перезапустить Mihomo.'));
 	}
-	const dns_action = https_dns_restart();
+	let dns_action = stage?.dns?.proxy_changed ? https_dns_restart() : { rc: 0 };
+	if (dns_action.rc == 0 && blocks.secure_dns)
+		dns_action = https_dns_health();
 	if (dns_action.rc != 0) {
 		https_dns_rollback(stage && stage.dns);
+		https_dns_restart();
 		rollback_stage(stage);
 		run_capture(`${INIT} restart`, 8192);
-		return failure('service_failed', trim(dns_action.error || dns_action.output || 'Не удалось перезапустить https-dns-proxy.'));
+		return failure('service_failed', trim(dns_action.error || dns_action.output || 'Не удалось проверить DNS через https-dns-proxy.'));
 	}
 	cleanup_stage();
 	return envelope({ applied: true, source_mode: mode, count: length(parsed.values), blocks: blocks, status: status_data() });
 }
 
-function rollback_config_stage(previous) {
+function rollback_config_stage(previous, enabled_before) {
 	if (previous)
 		system(`mv ${CONFIG_BACKUP} ${CONFIG}`);
 	else
 		unlink(CONFIG);
 	unlink(CONFIG_BACKUP);
+	restore_mihomo_enabled(enabled_before);
 }
 
 function apply_raw_config(request) {
@@ -504,6 +567,12 @@ function apply_raw_config(request) {
 		return failure('invalid_config', 'Введите конфигурацию Mihomo в формате YAML.');
 	if (length(raw) > MAX_INPUT)
 		return failure('invalid_config', 'Размер конфигурации не должен превышать 1 МБ.');
+	const blocks = blocks_from_config(raw);
+	const dependency = block_error(blocks);
+	if (dependency) return dependency;
+	const raw_port = int(config_value(raw, 'mixed-port', '0'));
+	if (blocks.secure_dns && (!raw_port || raw_port < 1 || raw_port > 65535))
+		return failure('invalid_port', 'Для защищённого DNS нужен корректный mixed-port Mihomo.');
 
 	const previous = system(`[ -f ${CONFIG} ]`) == 0;
 	cleanup_stage();
@@ -526,20 +595,38 @@ function apply_raw_config(request) {
 		rollback_config_stage(previous);
 		return failure('write_failed', 'Не удалось заменить конфигурацию Mihomo.');
 	}
+	let enabled_before = null;
 	try {
 		const config = cursor();
+		enabled_before = config.get('mihomo', 'main', 'enabled') || '0';
 		config.set('mihomo', 'main', 'enabled', '1');
 		config.commit('mihomo');
 	}
 	catch (error) {
-		rollback_config_stage(previous);
+		rollback_config_stage(previous, enabled_before);
 		return failure('write_failed', error?.message || 'Не удалось сохранить настройки службы Mihomo.');
+	}
+	const dns_stage = https_dns_stage(blocks.secure_dns, raw_port);
+	if (dns_stage && dns_stage.ok === false) {
+		rollback_config_stage(previous, enabled_before);
+		return dns_stage;
 	}
 	const action = run_capture(`${INIT} restart`, 8192);
 	if (action.rc != 0) {
-		rollback_config_stage(previous);
+		https_dns_rollback(dns_stage);
+		rollback_config_stage(previous, enabled_before);
 		run_capture(`${INIT} restart`, 8192);
 		return failure('service_failed', trim(action.error || action.output || 'Не удалось перезапустить Mihomo.'));
+	}
+	let dns_action = dns_stage?.proxy_changed ? https_dns_restart() : { rc: 0 };
+	if (dns_action.rc == 0 && blocks.secure_dns)
+		dns_action = https_dns_health();
+	if (dns_action.rc != 0) {
+		https_dns_rollback(dns_stage);
+		https_dns_restart();
+		rollback_config_stage(previous, enabled_before);
+		run_capture(`${INIT} restart`, 8192);
+		return failure('service_failed', trim(dns_action.error || dns_action.output || 'Не удалось проверить DNS через https-dns-proxy.'));
 	}
 	cleanup_stage();
 	return envelope({ applied: true, mode: 'manual', status: status_data() });
@@ -610,6 +697,20 @@ function service_action(request) {
 	return envelope({ status: status_data() });
 }
 
+function detach_dns() {
+	const stage = https_dns_stage(false, 0);
+	if (stage && stage.ok === false) return stage;
+	if (stage.proxy_changed) {
+		const action = https_dns_restart();
+		if (action.rc != 0) {
+			https_dns_rollback(stage);
+			https_dns_restart();
+			return failure('service_failed', trim(action.error || action.output || 'Не удалось восстановить https-dns-proxy.'));
+		}
+	}
+	return envelope({ detached: !!stage.changed });
+}
+
 function logs_data() {
 	const result = run_capture('logread -e mihomo | tail -n 120', 32768);
 	return envelope({ text: result.output || result.error || '' });
@@ -632,6 +733,10 @@ const methods = {
 	} },
 	service: { args: { api_version: 0, action: '' }, call: function(request) {
 		try { const error = checked(request); return error || service_action(request); }
+		catch (error) { return failure('internal_error', error?.message || `${error}`); }
+	} },
+	detach_dns: { args: { api_version: 0 }, call: function(request) {
+		try { const error = checked(request); return error || detach_dns(); }
 		catch (error) { return failure('internal_error', error?.message || `${error}`); }
 	} },
 	logs: { args: { api_version: 0 }, call: function(request) { const error = checked(request); return error || logs_data(); } }

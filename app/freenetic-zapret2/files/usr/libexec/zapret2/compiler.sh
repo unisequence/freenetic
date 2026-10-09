@@ -105,6 +105,22 @@ collect_plain() {
 	case "$value" in ''|*[[:space:]]*) input_error="$label entries must not be empty or contain whitespace";; *) printf '%s\n' "$value" >>"$file";; esac
 }
 collect_wan() { collect_plain "$1" "$wan_file" WAN; }
+collect_freenetic_wans() {
+	local name scope device
+	# Multi-WAN can route through a Freenetic-owned secondary interface. Include
+	# only active owned uplinks; user-owned mwan3 interfaces stay explicit UCI.
+	for name in $(uci -q show mwan3 2>/dev/null |
+		sed -n 's/^mwan3\.\([A-Za-z0-9_]*\)=interface$/\1/p'); do
+		[ "$(uci -q get "mwan3.$name.enabled" 2>/dev/null || printf 1)" != 0 ] || continue
+		[ "$(uci -q get "network.$name.freenetic_managed" 2>/dev/null || true)" = 1 ] || continue
+		scope=$(uci -q get "network.$name.freenetic_scope" 2>/dev/null || true)
+		case "$scope" in ethernet-port|wifi-uplink|modem-uplink) ;; *) continue ;; esac
+		device=''
+		network_get_device device "$name"
+		safe_network "$device" && [ -e "/sys/class/net/$device" ] || continue
+		grep -Fqx "$name" "$wan_file" || printf '%s\n' "$name" >>"$wan_file"
+	done
+}
 collect_source() { collect_plain "$1" "$source_file" source-network; }
 collect_include_mark() { collect_plain "$1" "$include_mark_file" include-mark; }
 collect_exclude_mark() { collect_plain "$1" "$exclude_mark_file" exclude-mark; }
@@ -238,6 +254,7 @@ load_config() {
 	config_get ctrack_udp_timeout main ctrack_udp_timeout 60
 	config_get lua_gc_interval main lua_gc_interval 300
 	config_list_foreach main wan_network collect_wan
+	collect_freenetic_wans
 	config_list_foreach main source_network collect_source
 	config_list_foreach main include_mark collect_include_mark
 	config_list_foreach main exclude_mark collect_exclude_mark
@@ -768,7 +785,16 @@ resolve_network_file() {
 	local file="$1" kind="$2" network device result=''
 	while IFS= read -r network; do
 		safe_network "$network" || { set_error "invalid $kind network name: $network"; return 1; }
-		network_get_device device "$network"; safe_network "$device" && [ -e "/sys/class/net/$device" ] || { set_error "cannot resolve $kind network '$network' to an existing device"; return 1; }
+		device=''
+		network_get_device device "$network"
+		if ! safe_network "$device" || [ ! -e "/sys/class/net/$device" ]; then
+			if [ "$kind" != WAN ] || [ "$(uci -q get "network.$network" 2>/dev/null || true)" != interface ]; then
+				set_error "cannot resolve $kind network '$network' to an existing device"
+				return 1
+			fi
+			add_warning "WAN network '$network' is currently unavailable"
+			continue
+		fi
 		case " $result " in *" $device "*) ;; *) result="$result $device";; esac
 	done <"$file"
 	[ -n "$result" ] || { set_error "at least one usable $kind network is required"; return 1; }

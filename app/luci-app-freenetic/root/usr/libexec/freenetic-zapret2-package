@@ -61,11 +61,20 @@ download_checked() {
 }
 
 remove_fail() {
+	if [ "${remove_stopped:-0}" = 1 ] && [ "${remove_was_running:-0}" = 1 ]; then
+		if [ ! -x /etc/init.d/zapret2 ]; then
+			set -- "$*; Zapret2 service files are missing after the failed removal; backup directory: $backup_dir"
+		elif ! /etc/init.d/zapret2 start >/dev/null 2>&1; then
+			set -- "$*; Zapret2 could not be restarted; backup directory: $backup_dir"
+		fi
+	fi
 	reply 1 "" "$*"
 	exit 0
 }
 
 remove_package() {
+	remove_stopped=0
+	remove_was_running=0
 	case "$package_manager" in
 		apk) apk info -e freenetic-zapret2 >/dev/null 2>&1 || { reply 0 "" ""; return; } ;;
 		opkg) opkg status freenetic-zapret2 2>/dev/null | grep -q '^Status: .* installed$' || { reply 0 "" ""; return; } ;;
@@ -95,6 +104,8 @@ remove_package() {
 		flock -x 200 || remove_fail "Cannot acquire the package manager lock; backup directory: $backup_dir"
 	fi
 	if [ -x /etc/init.d/zapret2 ]; then
+		/etc/init.d/zapret2 status >/dev/null 2>&1 && remove_was_running=1
+		remove_stopped=1
 		/etc/init.d/zapret2 stop >/dev/null 2>&1 || remove_fail "Cannot stop Zapret2; backup directory: $backup_dir"
 	fi
 	case "$package_manager" in

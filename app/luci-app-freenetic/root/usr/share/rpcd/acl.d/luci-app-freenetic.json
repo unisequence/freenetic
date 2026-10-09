@@ -59,7 +59,7 @@
 			"ubus": {
 				"uci": [ "add", "apply", "commit", "confirm", "delete", "order", "rename", "rollback", "set" ],
 				"zapret2": [ "service", "list_put", "list_delete", "list_clear" ],
-				"mihomo": [ "apply", "apply_raw", "apply_external", "service" ],
+				"mihomo": [ "apply", "apply_raw", "apply_external", "service", "detach_dns" ],
 				"network": [ "reload" ],
 				"luci.wireguard": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],
 				"luci.amneziawg": [ "generateKeyPair", "getPublicAndPrivateKeyFromPrivate", "generatePsk" ],

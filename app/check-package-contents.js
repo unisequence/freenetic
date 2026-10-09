@@ -161,7 +161,7 @@ function findArchive(packageRoot, packageName, format, additionalRoots = []) {
 		.map(entry => path.join(root, entry.name)));
 	if (candidates.length !== 1)
 		throw new Error('Expected exactly one ' + format.toUpperCase() + ' for ' + packageName +
-			', found ' + candidates.length + ': ' + candidates.map(path.basename).join(', '));
+			', found ' + candidates.length + ': ' + candidates.map(candidate => path.basename(candidate)).join(', '));
 	if (fs.statSync(candidates[0]).size === 0)
 		throw new Error('Package archive is empty: ' + candidates[0]);
 	return candidates[0];

@@ -2912,6 +2912,9 @@ msgstr "MTU должен быть от 576 до 8940."
 msgid "Firewall mark must be hexadecimal, for example 0x1000."
 msgstr "Метка межсетевого экрана должна быть шестнадцатеричной, например 0x1000."
 
+msgid "Firewall mark overlaps bits reserved by Freenetic traffic services."
+msgstr "Метка межсетевого экрана пересекается с битами, зарезервированными сетевыми службами Freenetic."
+
 msgid "DNS servers must be valid IP addresses."
 msgstr "DNS-серверы должны быть корректными IP-адресами."
 

@@ -12,8 +12,7 @@ every device in that target family being tested.
   the tested feature set is listed explicitly.
 - **Expected compatible** — the release preflight and package/ABI rules allow
   the profile, but a real-device test is still wanted.
-- **Known issues** — current limitations or areas intentionally outside the
-  `0.3.x` promise.
+- **Known issues** — current limitations or areas that need device testing.
 
 ## Developer tested
 
@@ -34,6 +33,7 @@ every device in that target family being tested.
 |---|---|---|
 | Globitel BT-RB300 | 24.10.8, `mediatek/filogic`, aarch64 | initramfs boot, package deployment, Freenetic UI smoke test, Wi-Fi toggle in both directions, configuration restored afterward |
 | Globitel BT-RB300 | SNAPSHOT `r0+36055-4d9e2a8a08`, `mediatek/filogic`, aarch64, APK | `0.3.0` GA candidate: signed-package install, LuCI/assets, helper boundaries, isolated Ethernet segment and fw4 runtime, safe/full uninstall ownership, cache/session reset, repeat install, reboot persistence and byte-identical configuration restore |
+| Globitel BT-RB300 | 25.12.5, `mediatek/filogic`, aarch64, APK | `0.4.0` fresh install and local `0.4.1` fixes: UI routes and package lifecycle, service and sysupgrade backup checks. No firmware upgrade or LAN/WAN reassignment was performed. |
 
 The real-device list should grow only from reproducible reports. Add the
 OpenWrt version, target/subtarget, device, RAM and the Freenetic features
@@ -48,14 +48,16 @@ device in that family.
   ABI artifact and the package preflight resource minimums.
 - OpenWrt 24.10.x and 25.12.x on `x86/64`, with the matching `x86_64` `fnc`
   artifact and the package preflight resource minimums.
-- Other OpenWrt targets are not part of the `0.3.x` release promise, even if
+- Other OpenWrt targets are not part of the `0.4.x` release promise, even if
   their LuCI JavaScript happens to render.
 
 Check the concrete release assets and the router preflight before installing.
 
 ## Known issues and boundaries
 
-- The `0.3.x` line does not contain MWS/mesh orchestration or Multi-WAN.
+- The `0.4.x` line does not contain MWS/mesh orchestration. Multi-WAN is
+  available, but device tests have not covered every combination of uplink,
+  VPN and optional traffic service.
 - `fnc` still uses the private SONAME compatibility shim where the two
   supported OpenWrt lines expose different library dates. The shim does not
   replace or alter system libraries; broader ABI coverage remains future work.

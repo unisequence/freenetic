@@ -6,6 +6,22 @@ which they became user-visible.
 
 ## [Unreleased]
 
+- Restore Zapret2's previous running state if package removal fails.
+- Preserve the shared HEV tunnel service state through Mixomo disconnects and
+  rollbacks, and serialize Mixomo changes with other Freenetic network actions.
+- Include available Freenetic-managed secondary WANs in Zapret2's compiled
+  egress set; tolerate a temporarily unavailable configured WAN when another
+  usable WAN remains.
+- Remove Freenetic-managed `mwan3` and HEV sections during explicit full
+  uninstall, reload affected services, and restore their configuration if the
+  package transaction fails.
+- Restart PBR after the Ethernet port editor enables its first VPN policy.
+- Reject WireGuard firewall marks that overlap bits reserved for Zapret2.
+- Keep operator edits to `https-dns-proxy` when Freenetic releases Mihomo DNS
+  ownership; update the owned proxy after raw YAML mixed-port changes, and
+  detach it before removing the Mihomo runtime. Bootstrap Mihomo's direct DNS
+  independently and roll back an apply if the DoH listener fails a live query.
+
 ## [0.4.1] — 2026-10-04
 
 This release fixes problems found after fresh installs of 0.4.0.
