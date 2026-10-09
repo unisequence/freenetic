@@ -15,6 +15,10 @@ This maintenance release fixes service cleanup and routing behavior in the
   repository lists are initially empty, refresh installed state after package
   changes, and reject overlapping package operations. Correct the USB printer
   server package name to `p910nd`.
+- Fix `fnc` interface address changes so protocol and address are committed
+  together; clear stale addresses when switching to DHCP. Reject routes with
+  no matching gateway interface and malformed or extra arguments. Show the
+  CLI build identifier with `fnc --version`.
 - Restore Zapret2's previous running state if package removal fails.
 - Preserve the shared HEV tunnel service state through Mixomo disconnects and
   rollbacks, and serialize Mixomo changes with other Freenetic network actions.

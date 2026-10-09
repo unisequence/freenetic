@@ -13,12 +13,13 @@ struct help_entry {
  * команды просто дописываются сюда одной строкой. */
 static const struct help_entry help_table[] = {
 	{ "general", "help [section]", "список команд (весь или по разделу)" },
+	{ "general", "--version", "версия сборки fnc" },
 	{ "general", "exit / quit", "выйти из контекста или из оболочки" },
 	{ "show", "show version", "модель, версия прошивки, ревизия" },
 	{ "show", "show system", "аптайм, load average, память" },
 	{ "show", "show interface [name]", "статус/proto/устройство интерфейсов" },
 	{ "show", "show ip [name]", "IPv4/IPv6-адреса интерфейсов" },
-	{ "show", "show running-config", "вся текущая конфигурация (uci export)" },
+	{ "show", "show running-config", "вся конфигурация, включая пароли и ключи" },
 	{ "show", "show ip arp", "ARP/ND-таблица" },
 	{ "show", "show mac-table", "MAC-таблица свитча (нужен пакет ip-bridge)" },
 	{ "interface", "interface <name>", "войти в контекст интерфейса" },
@@ -71,7 +72,7 @@ int fnc_help(const char *topic)
 			fprintf(stderr, "fnc: неизвестный раздел '%s'\n", topic);
 			print_sections();
 		}
-		return 0;
+		return found ? 0 : 1;
 	}
 
 	{

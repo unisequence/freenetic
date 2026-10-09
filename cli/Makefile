@@ -34,7 +34,8 @@ endif
 export STAGING_DIR := $(SYSROOT)
 
 CC      = $(TOOLCHAIN)/bin/$(TARGET_TRIPLE)-gcc
-CFLAGS  = -Wall -Wextra -O2 -std=gnu11 --sysroot=$(SYSROOT)
+FNC_BUILD_ID := $(shell git -C "$(CURDIR)/.." describe --tags --always --dirty 2>/dev/null || echo unknown)
+CFLAGS  = -Wall -Wextra -O2 -std=gnu11 --sysroot=$(SYSROOT) -DFNC_BUILD_ID=\"$(FNC_BUILD_ID)\"
 LDFLAGS = --sysroot=$(SYSROOT) -L$(SYSROOT)/usr/lib
 LIBS    = -lubus -lubox -lblobmsg_json -ljson-c -luci
 
@@ -42,8 +43,13 @@ SRCS = src/main.c src/ubus_util.c src/uci_util.c src/exec_util.c src/cmd_show.c 
 OBJS = $(SRCS:.c=.o)
 BIN  = fnc
 
-.PHONY: all clean
+.PHONY: all clean force
 all: $(BIN)
+
+force:
+
+src/main.o: src/main.c force
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)

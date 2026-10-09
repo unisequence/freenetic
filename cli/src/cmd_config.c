@@ -35,9 +35,12 @@ static int valid_ipv4_cidr(const char *cidr)
 	addr[addrlen] = '\0';
 	if (inet_pton(AF_INET, addr, &in) != 1)
 		return 0;
+	for (const char *p = slash + 1; *p; p++)
+		if (*p < '0' || *p > '9')
+			return 0;
 
 	prefix = strtol(slash + 1, &end, 10);
-	if (*end != '\0' || prefix < 0 || prefix > 32)
+	if (end == slash + 1 || *end != '\0' || prefix < 0 || prefix > 32)
 		return 0;
 	return 1;
 }
@@ -49,7 +52,7 @@ int fnc_set_ip_address(struct ubus_context *ctx, const char *ifname,
 		fprintf(stderr, "fnc: неверный формат адреса, ожидается A.B.C.D/N\n");
 		return -1;
 	}
-	if (fnc_uci_set("network", ifname, "ipaddr", cidr) != 0)
+	if (fnc_uci_set_interface_address(ifname, cidr) != 0)
 		return -1;
 
 	printf("ipaddr %s сохранён, применяю (network reload)...\n", cidr);
@@ -58,7 +61,7 @@ int fnc_set_ip_address(struct ubus_context *ctx, const char *ifname,
 
 int fnc_set_dhcp_client(struct ubus_context *ctx, const char *ifname)
 {
-	if (fnc_uci_set("network", ifname, "proto", "dhcp") != 0)
+	if (fnc_uci_set_interface_dhcp(ifname) != 0)
 		return -1;
 
 	printf("proto dhcp сохранён, применяю (network reload)...\n");

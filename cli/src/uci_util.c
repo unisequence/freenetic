@@ -5,41 +5,6 @@
 
 #include "uci_util.h"
 
-int fnc_uci_set(const char *package, const char *section,
-		 const char *option, const char *value)
-{
-	struct uci_context *ctx;
-	struct uci_ptr ptr;
-	char expr[256];
-	int ret = -1;
-
-	ctx = uci_alloc_context();
-	if (!ctx)
-		return -1;
-
-	if (snprintf(expr, sizeof(expr), "%s.%s.%s=%s", package, section,
-		     option, value) < 0 || strlen(expr) >= sizeof(expr) - 1) {
-		fprintf(stderr, "fnc: uci: выражение слишком длинное\n");
-		goto out;
-	}
-	if (uci_lookup_ptr(ctx, &ptr, expr, true) != UCI_OK) {
-		fprintf(stderr, "fnc: uci: не удалось разобрать '%s'\n", expr);
-		goto out;
-	}
-	if (uci_set(ctx, &ptr) != UCI_OK) {
-		fprintf(stderr, "fnc: uci: set не удался\n");
-		goto out;
-	}
-	if (uci_commit(ctx, &ptr.p, false) != UCI_OK) {
-		fprintf(stderr, "fnc: uci: commit не удался\n");
-		goto out;
-	}
-	ret = 0;
-out:
-	uci_free_context(ctx);
-	return ret;
-}
-
 static int set_option(struct uci_context *ctx, struct uci_package *pkg,
 		       struct uci_section *sec, const char *option,
 		       const char *value)
@@ -52,6 +17,57 @@ static int set_option(struct uci_context *ctx, struct uci_package *pkg,
 	};
 
 	return uci_set(ctx, &ptr) == UCI_OK ? 0 : -1;
+}
+
+static int set_interface(const char *section, const char *proto,
+			 const char *cidr)
+{
+	struct uci_context *ctx = uci_alloc_context();
+	struct uci_package *pkg = NULL;
+	struct uci_section *sec;
+	int ret = -1;
+
+	if (!ctx)
+		return -1;
+	if (uci_load(ctx, "network", &pkg) != UCI_OK ||
+	    !(sec = uci_lookup_section(ctx, pkg, section)) ||
+	    strcmp(sec->type, "interface") != 0) {
+		fprintf(stderr, "fnc: network.%s: нет такого интерфейса\n", section);
+		goto out;
+	}
+	if (set_option(ctx, pkg, sec, "proto", proto) != 0 ||
+	    (cidr && set_option(ctx, pkg, sec, "ipaddr", cidr) != 0)) {
+		fprintf(stderr, "fnc: uci: set не удался\n");
+		goto out;
+	}
+	if (!cidr) {
+		struct uci_option *option = uci_lookup_option(ctx, sec, "ipaddr");
+		if (option) {
+			struct uci_ptr ptr = { .p = pkg, .s = sec, .o = option };
+			if (uci_delete(ctx, &ptr) != UCI_OK) {
+				fprintf(stderr, "fnc: uci: delete ipaddr не удался\n");
+				goto out;
+			}
+		}
+	}
+	if (uci_commit(ctx, &pkg, false) != UCI_OK) {
+		fprintf(stderr, "fnc: uci: commit не удался\n");
+		goto out;
+	}
+	ret = 0;
+out:
+	uci_free_context(ctx);
+	return ret;
+}
+
+int fnc_uci_set_interface_address(const char *section, const char *cidr)
+{
+	return set_interface(section, "static", cidr);
+}
+
+int fnc_uci_set_interface_dhcp(const char *section)
+{
+	return set_interface(section, "dhcp", NULL);
 }
 
 int fnc_uci_add_route(const char *target_cidr, const char *gateway,

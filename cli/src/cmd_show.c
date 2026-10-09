@@ -278,6 +278,7 @@ static void print_addresses(struct blob_attr *arr, const char *label)
 struct dump_ctx {
 	const char *filter;
 	int ip_only;
+	int found;
 };
 
 static void dump_cb(struct ubus_request *req, int type, struct blob_attr *msg)
@@ -306,6 +307,7 @@ static void dump_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 		name = blobmsg_get_string(itb[IF_INTERFACE]);
 		if (dctx->filter && strcmp(dctx->filter, name) != 0)
 			continue;
+		dctx->found = 1;
 
 		if (dctx->ip_only) {
 			printf("interface %s (%s):\n", name,
@@ -340,6 +342,10 @@ static int show_dump(struct ubus_context *ctx, const char *filter, int ip_only)
 	}
 	if (ubus_invoke(ctx, id, "dump", NULL, dump_cb, &dctx, 3000)) {
 		fprintf(stderr, "fnc: network.interface->dump не удался\n");
+		return -1;
+	}
+	if (filter && !dctx.found) {
+		fprintf(stderr, "fnc: интерфейс '%s' не найден\n", filter);
 		return -1;
 	}
 	return 0;

@@ -44,6 +44,8 @@ static int addr_covers(const char *addr_str, int prefix, struct in_addr gw)
 
 	if (inet_pton(AF_INET, addr_str, &net) != 1)
 		return 0;
+	if (prefix < 0 || prefix > 32)
+		return 0;
 	mask = prefix == 0 ? 0 : htonl(~0u << (32 - prefix));
 	return (net.s_addr & mask) == (gw.s_addr & mask);
 }
@@ -148,9 +150,12 @@ static int valid_ipv4_cidr(const char *cidr)
 	addr[addrlen] = '\0';
 	if (!valid_ipv4(addr))
 		return 0;
+	for (const char *p = slash + 1; *p; p++)
+		if (*p < '0' || *p > '9')
+			return 0;
 
 	prefix = strtol(slash + 1, &end, 10);
-	if (*end != '\0' || prefix < 0 || prefix > 32)
+	if (end == slash + 1 || *end != '\0' || prefix < 0 || prefix > 32)
 		return 0;
 	return 1;
 }
@@ -171,10 +176,11 @@ int fnc_ip_route_add(struct ubus_context *ctx, const char *target_cidr,
 	}
 
 	ifname = find_interface_for_gateway(ctx, gateway, ifbuf, sizeof(ifbuf));
-	if (!ifname)
-		fprintf(stderr, "fnc: не нашёл интерфейс с подсетью для шлюза %s "
-				 "— маршрут добавлю, но netifd может его проигнорировать\n",
+	if (!ifname) {
+		fprintf(stderr, "fnc: не нашёл интерфейс с подсетью для шлюза %s; маршрут не добавлен\n",
 			gateway);
+		return -1;
+	}
 
 	if (fnc_uci_add_route(target_cidr, gateway, metric, ifname) != 0)
 		return -1;

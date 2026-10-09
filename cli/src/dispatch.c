@@ -17,21 +17,21 @@ static int dispatch_show(struct ubus_context *ctx, int argc, char **argv)
 		fnc_help("show");
 		return 1;
 	}
-	if (strcmp(argv[1], "version") == 0)
+	if (argc == 2 && strcmp(argv[1], "version") == 0)
 		return fnc_show_version(ctx) ? 1 : 0;
-	if (strcmp(argv[1], "system") == 0)
+	if (argc == 2 && strcmp(argv[1], "system") == 0)
 		return fnc_show_system(ctx) ? 1 : 0;
-	if (strcmp(argv[1], "interface") == 0)
+	if (argc <= 3 && strcmp(argv[1], "interface") == 0)
 		return fnc_show_interface(ctx, argc > 2 ? argv[2] : NULL) ? 1 : 0;
-	if (strcmp(argv[1], "ip") == 0 && argc > 2 && strcmp(argv[2], "route") == 0)
+	if (argc == 3 && strcmp(argv[1], "ip") == 0 && strcmp(argv[2], "route") == 0)
 		return fnc_show_ip_route() ? 1 : 0;
-	if (strcmp(argv[1], "ip") == 0 && argc > 2 && strcmp(argv[2], "arp") == 0)
+	if (argc == 3 && strcmp(argv[1], "ip") == 0 && strcmp(argv[2], "arp") == 0)
 		return fnc_show_arp() ? 1 : 0;
-	if (strcmp(argv[1], "ip") == 0)
+	if (argc <= 3 && strcmp(argv[1], "ip") == 0)
 		return fnc_show_ip(ctx, argc > 2 ? argv[2] : NULL) ? 1 : 0;
-	if (strcmp(argv[1], "running-config") == 0)
+	if (argc == 2 && strcmp(argv[1], "running-config") == 0)
 		return fnc_show_running_config() ? 1 : 0;
-	if (strcmp(argv[1], "mac-table") == 0)
+	if (argc == 2 && strcmp(argv[1], "mac-table") == 0)
 		return fnc_show_mac_table() ? 1 : 0;
 
 	fnc_help("show");
@@ -44,8 +44,11 @@ static int valid_metric(const char *value)
 	char *end = NULL;
 	unsigned long long number;
 
-	if (!value || !*value || *value == '-')
+	if (!value || !*value)
 		return 0;
+	for (const char *p = value; *p; p++)
+		if (*p < '0' || *p > '9')
+			return 0;
 	errno = 0;
 	number = strtoull(value, &end, 10);
 	return errno == 0 && end && *end == '\0' && number <= 4294967295ULL;
@@ -143,10 +146,12 @@ int fnc_dispatch(struct ubus_context *ctx, int argc, char **argv)
 	if (strcmp(argv[0], "no") == 0)
 		return dispatch_no(ctx, argc, argv);
 	if (strcmp(argv[0], "ping") == 0)
-		return argc > 1 ? (fnc_ping(argv[1]) ? 1 : 0) : (fnc_help("diag"), 1);
+		return argc == 2 && argv[1][0] != '-' ?
+			(fnc_ping(argv[1]) ? 1 : 0) : (fnc_help("diag"), 1);
 	if (strcmp(argv[0], "traceroute") == 0)
-		return argc > 1 ? (fnc_traceroute(argv[1]) ? 1 : 0) : (fnc_help("diag"), 1);
-	if (strcmp(argv[0], "help") == 0)
+		return argc == 2 && argv[1][0] != '-' ?
+			(fnc_traceroute(argv[1]) ? 1 : 0) : (fnc_help("diag"), 1);
+	if (strcmp(argv[0], "help") == 0 && argc <= 2)
 		return fnc_help(argc > 1 ? argv[1] : NULL);
 
 	fnc_help(NULL);

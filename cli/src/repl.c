@@ -235,7 +235,14 @@ int fnc_repl(struct ubus_context *ctx)
 			continue;
 		}
 
-		if (cur_if[0] && strcmp(argv[0], "show") != 0)
+		if (cur_if[0] && strcmp(argv[0], "show") != 0 &&
+		    strcmp(argv[0], "help") != 0 &&
+		    strcmp(argv[0], "ping") != 0 &&
+		    strcmp(argv[0], "traceroute") != 0 &&
+		    strcmp(argv[0], "system") != 0 &&
+		    strcmp(argv[0], "no") != 0 &&
+		    !(strcmp(argv[0], "ip") == 0 && argc > 1 &&
+		      strcmp(argv[1], "route") == 0))
 			fnc_dispatch_interface_cmd(ctx, cur_if, argc, argv);
 		else
 			fnc_dispatch(ctx, argc, argv);

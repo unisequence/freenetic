@@ -3,11 +3,9 @@
 
 #include <stddef.h>
 
-/* Sets package.section.option = value and commits it to disk (does not
- * apply it — callers reload the relevant service themselves, e.g. via
- * ubus). Returns 0 on success. */
-int fnc_uci_set(const char *package, const char *section,
-		 const char *option, const char *value);
+/* Change both protocol and address in one UCI commit. Callers reload network. */
+int fnc_uci_set_interface_address(const char *section, const char *cidr);
+int fnc_uci_set_interface_dhcp(const char *section);
 
 /* Looks up the type of package.section (e.g. uci show network.lan ->
  * "interface") into out. Returns 0 on success, -1 if not found. */
