@@ -4,7 +4,7 @@
 
 Security fixes are developed on the active release branch and are published
 only after the complete verification matrix passes. The current stable source
-release is `v0.4.1`; its release matrix covers OpenWrt 24.10.8 (IPK/`opkg`)
+release is `v0.4.2`; its release matrix covers OpenWrt 24.10.8 (IPK/`opkg`)
 and 25.12.5 (APK/`apk`) on Filogic, MT7621 and x86/64. Consult the release
 assets and `COMPATIBILITY.md` for the tested scope of each device. Older
 releases may be useful for reproducing a problem, but should be upgraded

@@ -6,6 +6,11 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.4.2] — 2026-10-09
+
+This maintenance release fixes service cleanup and routing behavior in the
+0.4.x integrations.
+
 - Restore Zapret2's previous running state if package removal fails.
 - Preserve the shared HEV tunnel service state through Mixomo disconnects and
   rollbacks, and serialize Mixomo changes with other Freenetic network actions.
