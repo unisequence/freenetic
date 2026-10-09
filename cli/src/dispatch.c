@@ -5,6 +5,7 @@
 
 #include "cmd_config.h"
 #include "cmd_diag.h"
+#include "cmd_freenetic.h"
 #include "cmd_help.h"
 #include "cmd_route.h"
 #include "cmd_show.h"
@@ -21,6 +22,14 @@ static int dispatch_show(struct ubus_context *ctx, int argc, char **argv)
 		return fnc_show_version(ctx) ? 1 : 0;
 	if (argc == 2 && strcmp(argv[1], "system") == 0)
 		return fnc_show_system(ctx) ? 1 : 0;
+	if (argc == 2 && strcmp(argv[1], "wan") == 0)
+		return fnc_show_wan(ctx) ? 1 : 0;
+	if (argc == 2 && strcmp(argv[1], "multiwan") == 0)
+		return fnc_show_multiwan() ? 1 : 0;
+	if (argc == 2 && strcmp(argv[1], "dns") == 0)
+		return fnc_show_dns(ctx) ? 1 : 0;
+	if (argc <= 3 && strcmp(argv[1], "applications") == 0)
+		return fnc_show_applications(argc == 3 ? argv[2] : NULL) ? 1 : 0;
 	if (argc <= 3 && strcmp(argv[1], "interface") == 0)
 		return fnc_show_interface(ctx, argc > 2 ? argv[2] : NULL) ? 1 : 0;
 	if (argc == 3 && strcmp(argv[1], "ip") == 0 && strcmp(argv[2], "route") == 0)

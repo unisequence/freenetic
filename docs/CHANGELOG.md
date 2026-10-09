@@ -6,6 +6,10 @@ which they became user-visible.
 
 ## [Unreleased]
 
+- Add read-only `fnc show wan`, `show multiwan`, `show dns` and
+  `show applications [package]` commands backed by netifd, UCI and the
+  existing Freenetic status helpers.
+
 ## [0.4.2] — 2026-10-09
 
 This maintenance release fixes service cleanup and routing behavior in the
