@@ -92,6 +92,26 @@ default_rule_owned() {
 	[ "$(uci -q get "mwan3.$name.freenetic_scope" 2>/dev/null || true)" = multiwan-default ]
 }
 
+remove_stock_https_rule() {
+	# The package's sample HTTPS rule precedes the default rules and pins
+	# TCP/443 to the sample balanced policy, which has no new Wi-Fi uplink.
+	# Let the selected family defaults handle HTTPS. Only migrate the exact
+	# sample: extra match conditions or options indicate a custom rule.
+	[ "$(section_type https)" = rule ] || return 0
+	[ "$(uci -q get mwan3.https.dest_port 2>/dev/null || true)" = 443 ] || return 0
+	[ "$(uci -q get mwan3.https.proto 2>/dev/null || true)" = tcp ] || return 0
+	[ "$(uci -q get mwan3.https.sticky 2>/dev/null || true)" = 1 ] || return 0
+	[ "$(uci -q get mwan3.https.use_policy 2>/dev/null || true)" = balanced ] || return 0
+	options=$(uci -q show mwan3.https 2>/dev/null |
+		sed -n 's/^mwan3\.https\.\([^=]*\)=.*/\1/p')
+	for option in $options; do
+		case "$option" in dest_port|proto|sticky|use_policy) ;;
+			*) return 0 ;;
+		esac
+	done
+	uci -q delete mwan3.https || fail uci-write "Cannot remove the sample HTTPS rule."
+}
+
 discover_uplinks() {
 	uplinks=
 	# Keep the primary first regardless of UCI section order.
@@ -365,6 +385,7 @@ apply_mode() {
 	selected_policies=
 	apply_family "$mode" ipv4
 	apply_family "$mode" ipv6
+	remove_stock_https_rule
 	uci -q commit mwan3 || fail commit "Cannot commit the Multi-WAN configuration."
 	/etc/init.d/mwan3 reload >/dev/null 2>&1 || fail reload "mwan3 did not reload the new configuration."
 

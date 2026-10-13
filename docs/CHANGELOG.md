@@ -6,6 +6,21 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.4.3] — 2026-10-13
+
+Hotfix for HTTPS failing after selecting a Wi-Fi Internet connection.
+
+- When applying a Multi-WAN mode, remove mwan3's unchanged sample
+  `https → balanced` rule so TCP/443 follows the selected default policy.
+  Previously, this rule could keep HTTPS on an unavailable wired connection
+  while HTTP used Wi-Fi. Modified HTTPS rules remain unchanged, and a failed
+  apply restores the previous configuration.
+- Add regression coverage for Wi-Fi selection, custom-rule preservation and
+  rollback. Verify HTTP and HTTPS on a CMCC RAX3000M with mwan3 running.
+
+After updating, apply the desired mode again on the Multi-WAN page to migrate
+the sample rule. Installing the update alone does not change routing rules.
+
 ## [0.4.2] — 2026-10-09
 
 This release fixes service cleanup and routing behavior in the 0.4.x

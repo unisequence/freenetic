@@ -31,6 +31,7 @@ every device in that target family being tested.
 
 | Device | OpenWrt profile | Tested path |
 |---|---|---|
+| CMCC RAX3000M | 25.12.4, `mediatek/filogic`, aarch64, APK | Local `0.4.3` helper hotfix: select the Wi-Fi uplink in single-connection mode with mwan3 running; migrate the unchanged sample HTTPS rule; verify HTTP/HTTPS downloads and the marked route through Wi-Fi. Configuration and helper were backed up before deployment. |
 | Globitel BT-RB300 | 24.10.8, `mediatek/filogic`, aarch64 | initramfs boot, package deployment, Freenetic UI smoke test, Wi-Fi toggle in both directions, configuration restored afterward |
 | Globitel BT-RB300 | SNAPSHOT `r0+36055-4d9e2a8a08`, `mediatek/filogic`, aarch64, APK | `0.3.0` GA candidate: signed-package install, LuCI/assets, helper boundaries, isolated Ethernet segment and fw4 runtime, safe/full uninstall ownership, cache/session reset, repeat install, reboot persistence and byte-identical configuration restore |
 | Globitel BT-RB300 | 25.12.5, `mediatek/filogic`, aarch64, APK | `0.4.0` fresh install and local `0.4.1` fixes: UI routes and package lifecycle, service and sysupgrade backup checks. No firmware upgrade or LAN/WAN reassignment was performed. |
