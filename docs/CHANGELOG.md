@@ -6,6 +6,16 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.4.4] — 2026-10-13
+
+Fix dashboard updates from older Freenetic installations, including 0.2.5.
+The installer in the source tag now downloads the generated release installer,
+checks its tag, checksum and shell syntax, then runs it. This allows the old
+updater to install the current release through the usual Update button.
+
+Generated release installers still carry the package checksums and APK signing
+key hash. Existing release tags remain unchanged.
+
 ## [0.4.3] — 2026-10-13
 
 Hotfix for HTTPS failing after selecting a Wi-Fi Internet connection.

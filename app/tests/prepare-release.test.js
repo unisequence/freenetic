@@ -83,6 +83,8 @@ try {
 	assert.equal(result.assetCount, 36, 'release must contain core packages, Zapret2 builds and keys, binaries, installer and manifest');
 	assert.ok(fs.statSync(installerPath).mode & 0o111, 'generated installer must be executable');
 	assert.match(installer, /RELEASE_TAG="v9\.8\.7"/);
+	assert.match(installer, /^SOURCE_INSTALLER="0"$/m,
+		'generated installers must not delegate back to their own release asset');
 	assert.match(installer, /ASSET_VERSION="26\.257\.51426\.deadbee"/);
 	assert.match(installer, /releases\/download\/v9\.8\.7\/install\.sh/);
 	assert.match(installer, /^MIN_OVERLAY_MIB_FILOGIC=16$/m,

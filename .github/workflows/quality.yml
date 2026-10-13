@@ -311,6 +311,9 @@ jobs:
           git fetch --no-tags origin "refs/tags/$RELEASE_TAG"
           test "$(git cat-file -t FETCH_HEAD)" = tag
           test "$(git rev-list -n 1 FETCH_HEAD)" = "$(git rev-parse HEAD)"
+          # Updaters through 0.2.5 validate the raw-tag installer before
+          # launching it. Keep that entry point compatible with every tag.
+          grep -Fqx "RELEASE_TAG=\"$RELEASE_TAG\"" install.sh
 
       - name: Download 24.10 mediatek IPK build
         uses: actions/download-artifact@v4

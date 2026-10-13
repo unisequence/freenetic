@@ -2,16 +2,44 @@
 # Freenetic one-shot installer for supported OpenWrt routers.
 #
 # Usage:
-#   wget -qO- 'https://raw.githubusercontent.com/unisequence/freenetic/v0.2.5/install.sh' | sh
+#   wget -qO- 'https://github.com/unisequence/freenetic/releases/download/v0.4.4/install.sh' | sh
 #
 # The release and checksums are deliberately pinned. Do not install a
 # partially downloaded or silently replaced package.
 set -eu
 
-RELEASE_TAG="v0.2.5"
+RELEASE_TAG="v0.4.4"
+# Old dashboard updaters fetch this source file instead of the release asset.
+# Release preparation disables this bridge in the generated, pinned installer.
+SOURCE_INSTALLER="1"
 # GitHub normalizes the '~' in the OpenWrt-derived package version to '.'.
 ASSET_VERSION="26.257.51426.6a30103"
 RELEASE_BASE_URL="${FREENETIC_RELEASE_BASE_URL:-https://github.com/unisequence/freenetic/releases/download/$RELEASE_TAG}"
+
+if [ "$SOURCE_INSTALLER" = 1 ]; then
+	bridge_dir=$(mktemp -d /tmp/freenetic-release-bridge.XXXXXX)
+	trap 'rm -rf "$bridge_dir"' EXIT
+	trap 'exit 1' HUP INT TERM
+	bridge_fail() { echo "Freenetic installer: FAIL: $*" >&2; exit 1; }
+	bridge_download() {
+		wget -4 -T 30 -qO "$2" "$RELEASE_BASE_URL/$1" ||
+			wget -T 30 -qO "$2" "$RELEASE_BASE_URL/$1"
+	}
+	echo 'Freenetic installer: stage: download'
+	bridge_download install.sh "$bridge_dir/install.sh" || bridge_fail 'Cannot download release installer'
+	bridge_download SHA256SUMS.txt "$bridge_dir/SHA256SUMS.txt" || bridge_fail 'Cannot download release checksums'
+	echo 'Freenetic installer: stage: manifest'
+	bridge_bytes=$(wc -c < "$bridge_dir/install.sh")
+	[ "$bridge_bytes" -gt 0 ] && [ "$bridge_bytes" -le 262144 ] || bridge_fail 'Invalid installer size'
+	grep -Fqx "RELEASE_TAG=\"$RELEASE_TAG\"" "$bridge_dir/install.sh" || bridge_fail 'Release tag mismatch'
+	grep -Fqx 'SOURCE_INSTALLER="0"' "$bridge_dir/install.sh" || bridge_fail 'Expected a generated release installer'
+	bridge_hash=$(sed -n 's/^\([0-9a-f]\{64\}\)  \.\/install\.sh$/\1/p' "$bridge_dir/SHA256SUMS.txt")
+	[ "${#bridge_hash}" = 64 ] || bridge_fail 'Missing or ambiguous installer checksum'
+	printf '%s  %s\n' "$bridge_hash" "$bridge_dir/install.sh" | sha256sum -c - >/dev/null || bridge_fail 'Installer checksum mismatch'
+	sh -n "$bridge_dir/install.sh" || bridge_fail 'Invalid installer syntax'
+	sh "$bridge_dir/install.sh"
+	exit $?
+fi
 
 MIN_RAM_MIB=128
 MIN_CPU_CORES=2

@@ -90,6 +90,7 @@ function releaseHashes(releaseDir, assetVersion) {
 function patchInstaller(template, tag, assetVersion, hashes) {
 	let installer = template;
 	installer = replaceAssignment(installer, 'RELEASE_TAG', tag);
+	installer = replaceAssignment(installer, 'SOURCE_INSTALLER', '0');
 	installer = replaceAssignment(installer, 'ASSET_VERSION', assetVersion);
 	installer = replaceTargetAssignment(installer, 'mediatek/filogic', 'fnc_sha256_apk', hashes.fnc.filogic.apk);
 	installer = replaceTargetAssignment(installer, 'mediatek/filogic', 'fnc_sha256_ipk', hashes.fnc.filogic.ipk);
