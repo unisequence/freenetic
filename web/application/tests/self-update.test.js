@@ -209,6 +209,23 @@ const samePlan = helpers.freeneticReleasePlan(
 );
 assert.equal(samePlan.comparison, 0, 'tilde and dot package revisions must compare as one build');
 
+for (const [current, candidate, expected] of [
+	[ 'v0.4.4', 'v0.4.3', -1 ],
+	[ 'v0.4.3', 'v0.4.4', 1 ],
+	[ 'v0.4.4', 'v0.4.4', 0 ],
+	[ 'v0.4.4-beta.1', 'v0.4.4', 1 ],
+	[ 'v0.4.4', 'v0.4.4-beta.1', -1 ]
+]) {
+	const candidateRelease = release('apk', 'mipsel_24kc');
+	candidateRelease.tag_name = candidate;
+	const state = { ...updater('apk', 'mipsel_24kc'), installed_release: current };
+	assert.equal(helpers.freeneticReleasePlan(candidateRelease, state, installed(version)).comparison,
+		expected, 'releases sharing a package build must compare their recorded tags');
+}
+assert.equal(helpers.freeneticReleasePlan(release('apk', 'mipsel_24kc'),
+	{ ...updater('apk', 'mipsel_24kc'), installed_release: 'invalid' }, installed(version)).comparison, 0,
+	'invalid release metadata must retain package-build comparison');
+
 const incomplete = release('apk', 'aarch64_cortex-a53');
 incomplete.assets.pop();
 assert.deepEqual(

@@ -86,6 +86,10 @@ function freeneticReleasePlan(release, updater, installedPackages) {
 		comparison = comparisons.some(value => value > 0) ? 1 :
 			(comparisons.every(value => value === 0) ? 0 : -1);
 	}
+	// Installer-only releases can share the same LuCI package build. The
+	// recorded release tag distinguishes their installer and CLI versions.
+	if (comparison === 0 && releaseTagParts(updater.installed_release))
+		comparison = compareFreeneticReleaseTags(tag, updater.installed_release);
 
 	return { compatible: true, tag, version, comparison, required };
 }
