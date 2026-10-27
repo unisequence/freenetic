@@ -6,6 +6,13 @@ which they became user-visible.
 
 ## [Unreleased]
 
+## [0.4.5] — 2026-10-27
+
+- Build the APK release matrix with OpenWrt 25.12.6 SDKs for Filogic,
+  MT7621 and x86/64. The IPK matrix remains on OpenWrt 24.10.8.
+- Compare release tags when two releases share the same LuCI package build,
+  so installer or CLI updates can still be offered by the dashboard.
+
 ## [0.4.4] — 2026-10-13
 
 Fix dashboard updates from older Freenetic installations, including 0.2.5.

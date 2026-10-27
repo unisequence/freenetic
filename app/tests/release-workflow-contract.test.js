@@ -10,24 +10,24 @@ const prepare = fs.readFileSync(path.join(root, 'app', 'prepare-release.js'), 'u
 
 assert.match(workflow, /name: OpenWrt 24\.10\.8 mediatek\/filogic \(IPK\)[\s\S]*?include_fnc: true/,
 	'filogic IPK build must publish the legacy-ABI fnc artifact');
-assert.match(workflow, /name: OpenWrt 25\.12\.5 ramips\/mt7621 \(APK \+ fnc\)/,
+assert.match(workflow, /name: OpenWrt 25\.12\.6 ramips\/mt7621 \(APK \+ fnc\)/,
 	'the matrix must build an MT7621 fnc binary for the APK ABI');
 assert.match(workflow, /fnc-\$asset_version-\$ASSET_ARCH-\$PACKAGE_FORMAT/,
 	'fnc assets must identify their package-manager ABI');
 assert.match(workflow, /asset_arch: mipsel_24kc/, 'the MT7621 build must declare its release architecture');
 assert.match(workflow, /name: OpenWrt 24\.10\.8 x86\/64 \(IPK \+ fnc\)/,
 	'the matrix must build an x86_64 fnc binary for the IPK ABI');
-assert.match(workflow, /name: OpenWrt 25\.12\.5 x86\/64 \(APK \+ fnc\)/,
+assert.match(workflow, /name: OpenWrt 25\.12\.6 x86\/64 \(APK \+ fnc\)/,
 	'the matrix must build an x86_64 fnc binary for the APK ABI');
 assert.match(workflow, /asset_arch: x86_64/, 'the x86/64 builds must declare their release architecture');
 assert.match(workflow, /cli_target: x86_64/, 'the x86/64 builds must use the x86_64 CLI toolchain');
 assert.match(workflow, /openwrt-sdk-24\.10\.8-x86-64_gcc-13\.3\.0_musl\.Linux-x86_64\.tar\.zst/,
 	'the x86/64 IPK job must use the official 24.10 SDK');
-assert.match(workflow, /openwrt-sdk-25\.12\.5-x86-64_gcc-14\.3\.0_musl\.Linux-x86_64\.tar\.zst/,
+assert.match(workflow, /openwrt-sdk-25\.12\.6-x86-64_gcc-14\.3\.0_musl\.Linux-x86_64\.tar\.zst/,
 	'the x86/64 APK job must use the official 25.12 SDK');
 assert.match(workflow, /sdk_sha256: ac4a0405d2eea821b06f93c14ba13ffa90ad0457648903df7dde02570027ab21/,
 	'the x86/64 IPK SDK checksum must be pinned');
-assert.match(workflow, /sdk_sha256: 0c8df0151a1e88feb7c03d694d61f6a18d51872815b7c811d76e2b77504d5e9c/,
+assert.match(workflow, /sdk_sha256: 1864152619092e781fa36a401960c8e9ae42d6a364c44ee5f0b197ca5f3c0fcc/,
 	'the x86/64 APK SDK checksum must be pinned');
 assert.match(workflow, /scripts\/feeds\" update packages/, 'the SDK must refresh the packages feed for Zapret2 dependencies');
 assert.match(workflow, /scripts\/feeds\" install firewall4 nftables/, 'the SDK must install firewall4 and nftables for Zapret2');

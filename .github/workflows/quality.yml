@@ -49,8 +49,8 @@ jobs:
             publish_packages: false
             sdk_archive: openwrt-sdk-24.10.8-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst
             sdk_sha256: 9dd11b0517883b016ad7684f5c408a3483eec5b2455b2ffe004c9edd84063e45
-          - name: OpenWrt 25.12.5 mediatek/filogic (APK)
-            release: 25.12.5
+          - name: OpenWrt 25.12.6 mediatek/filogic (APK)
+            release: 25.12.6
             target: mediatek
             subtarget: filogic
             format: apk
@@ -58,10 +58,10 @@ jobs:
             asset_arch: aarch64_cortex-a53
             include_fnc: true
             publish_packages: true
-            sdk_archive: openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst
-            sdk_sha256: ff4a38a397caa2cfe1c39e18f84ddede14878221b3593c3f2c4cfe24e3ec4c25
-          - name: OpenWrt 25.12.5 ramips/mt7621 (APK + fnc)
-            release: 25.12.5
+            sdk_archive: openwrt-sdk-25.12.6-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+            sdk_sha256: 1c04ac47bdfc361d6aab299eb520d570e368013dedcb8d29cf39dc7168ae642e
+          - name: OpenWrt 25.12.6 ramips/mt7621 (APK + fnc)
+            release: 25.12.6
             target: ramips
             subtarget: mt7621
             format: apk
@@ -69,8 +69,8 @@ jobs:
             asset_arch: mipsel_24kc
             include_fnc: true
             publish_packages: false
-            sdk_archive: openwrt-sdk-25.12.5-ramips-mt7621_gcc-14.3.0_musl.Linux-x86_64.tar.zst
-            sdk_sha256: 9962084f4131610e90e48bc864c6ceade0b238f15f335de5f672910532b20e9c
+            sdk_archive: openwrt-sdk-25.12.6-ramips-mt7621_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+            sdk_sha256: e4e3f25962ddf3ed55207fed456ecd1d6e55f3482c976b3183a640df6ef0adf0
           - name: OpenWrt 24.10.8 x86/64 (IPK + fnc)
             release: 24.10.8
             target: x86
@@ -82,8 +82,8 @@ jobs:
             publish_packages: false
             sdk_archive: openwrt-sdk-24.10.8-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
             sdk_sha256: ac4a0405d2eea821b06f93c14ba13ffa90ad0457648903df7dde02570027ab21
-          - name: OpenWrt 25.12.5 x86/64 (APK + fnc)
-            release: 25.12.5
+          - name: OpenWrt 25.12.6 x86/64 (APK + fnc)
+            release: 25.12.6
             target: x86
             subtarget: 64
             format: apk
@@ -91,8 +91,8 @@ jobs:
             asset_arch: x86_64
             include_fnc: true
             publish_packages: false
-            sdk_archive: openwrt-sdk-25.12.5-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
-            sdk_sha256: 0c8df0151a1e88feb7c03d694d61f6a18d51872815b7c811d76e2b77504d5e9c
+            sdk_archive: openwrt-sdk-25.12.6-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+            sdk_sha256: 1864152619092e781fa36a401960c8e9ae42d6a364c44ee5f0b197ca5f3c0fcc
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
