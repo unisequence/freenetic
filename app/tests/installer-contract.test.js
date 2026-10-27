@@ -44,6 +44,11 @@ for (const marker of [
 
 assert.match(installer, /^RELEASE_TAG="v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?"$/m,
 	'release installer must carry a semver release tag');
+const latestRelease = fs.readFileSync(path.join(__dirname, '../../docs/CHANGELOG.md'), 'utf8')
+	.match(/^## \[([0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?)\]/m);
+assert.ok(latestRelease, 'changelog must contain a release section');
+assert.ok(installer.includes(`RELEASE_TAG="v${latestRelease[1]}"`),
+	'the source installer must match the latest changelog release');
 assert.match(installer, /^ASSET_VERSION="[0-9]{2}\.[0-9]{3}\.[0-9]+\.[0-9a-f]+"$/m,
 	'release installer must carry the OpenWrt-derived asset version');
 assert.match(installer, /^MIN_OVERLAY_MIB_FILOGIC=16$/m,

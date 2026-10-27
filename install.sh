@@ -2,13 +2,13 @@
 # Freenetic one-shot installer for supported OpenWrt routers.
 #
 # Usage:
-#   wget -qO- 'https://github.com/unisequence/freenetic/releases/download/v0.4.4/install.sh' | sh
+#   wget -qO- 'https://github.com/unisequence/freenetic/releases/download/v0.4.5/install.sh' | sh
 #
 # The release and checksums are deliberately pinned. Do not install a
 # partially downloaded or silently replaced package.
 set -eu
 
-RELEASE_TAG="v0.4.4"
+RELEASE_TAG="v0.4.5"
 # Old dashboard updaters fetch this source file instead of the release asset.
 # Release preparation disables this bridge in the generated, pinned installer.
 SOURCE_INSTALLER="1"
